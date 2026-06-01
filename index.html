@@ -1800,6 +1800,7 @@ function showScreen(id){
 }
 function goHome(){if(appMode)showScreen('s-dash');else showScreen('s-home');}
 function enterApp(){
+  dbLoadUserTrips();
   appMode=true;
   document.getElementById('nav-right-auth').style.display='none';
   document.getElementById('nav-right-app').style.display='flex';
@@ -3162,6 +3163,7 @@ function createTrip(){
   var cu=cover||'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=90';
   var newTrip={id:Date.now(),dest:dest.split(',')[0].trim(),country:(dest.split(',')[1]||'').trim()||dest.split(',')[0].trim(),flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public'};
   trips.unshift(newTrip);closeModal();renderDash();toast(flag+' '+newTrip.dest+' '+t('addedToast'));
+  dbSaveTrip(newTrip);
   setTimeout(function(){openTrip(newTrip.id);},300);
 }
 function selTripWith(el){_tripWith=el.dataset.w;document.querySelectorAll('#at-with-pills .fpill').forEach(function(p){p.classList.toggle('active',p===el);});var adultsInp=document.getElementById('at-adults');if(!adultsInp)return;if(_tripWith==='solo')adultsInp.value=1;else if(_tripWith==='couple')adultsInp.value=2;else if(_tripWith==='friends'||_tripWith==='family')adultsInp.value=3;else adultsInp.value=2;}
@@ -3178,6 +3180,7 @@ function savePlace(){
   var place={id:Date.now(),cat:selectedCat,name:name,note:document.getElementById('pl-note').value.trim(),rating:selectedRating};
   if(_selectedGPlace){place.lat=_selectedGPlace.lat;place.lng=_selectedGPlace.lon;place.q=_selectedGPlace.display_name;}
   currentTrip.places.push(place);
+  dbSavePlace(place, currentTrip.id);
   _selectedGPlace=null;
   closeModal();
   var f=document.querySelector('#places-filter .filter-pill.active');
@@ -11382,7 +11385,9 @@ function saveEditedPlace(){
 }
 function deleteEditedPlace(){
   if(!currentTrip||!_editingPlaceId)return;
+  var _delId=_editingPlaceId;
   currentTrip.places=currentTrip.places.filter(function(p){return p.id!==_editingPlaceId;});
+  dbDeletePlace(_delId);
   closeModal();renderPlaces(currentFilter||'all');toast(t('removedToast'));_editingPlaceId=null;
 }
 function setEditPlaceRating(n){document.querySelectorAll('.ep-rstar').forEach(function(s,i){s.classList.toggle('on',i<n);});}
@@ -11444,6 +11449,85 @@ function onStoryCitySearch(val) {
       });
     }).catch(function(){ res.innerHTML = '<div style="padding:8px 14px;font-size:12px;color:var(--ink-4)">'+t('searchUnavailable')+'</div>'; });
 }
+
+
+// ══ SUPABASE DATABASE HELPERS ═════════════════════════════════════════════
+
+async function dbSaveTrip(trip){
+  if(!sb||!userData.id)return;
+  try{
+    await sb.from('trips').upsert({
+      id: trip.id,
+      user_id: userData.id,
+      dest: trip.dest,
+      country: trip.country||'',
+      flag: trip.flag||'',
+      date_from: trip.startDate||null,
+      date_to: trip.endDate||null,
+      cover_url: trip.cover||'',
+      privacy: trip.privacy||'public'
+    });
+  }catch(e){console.error('dbSaveTrip error:',e);}
+}
+
+async function dbSavePlace(place, tripId){
+  if(!sb||!userData.id)return;
+  try{
+    await sb.from('places').upsert({
+      id: place.id,
+      trip_id: tripId,
+      user_id: userData.id,
+      name: place.name,
+      cat: place.cat||'see',
+      note: place.note||'',
+      rating: place.rating||0
+    });
+  }catch(e){console.error('dbSavePlace error:',e);}
+}
+
+async function dbDeletePlace(placeId){
+  if(!sb||!userData.id)return;
+  try{
+    await sb.from('places').delete().eq('id', placeId);
+  }catch(e){console.error('dbDeletePlace error:',e);}
+}
+
+async function dbLoadUserTrips(){
+  if(!sb||!userData.id)return;
+  try{
+    var res = await sb.from('trips').select('*').eq('user_id', userData.id).order('created_at',{ascending:false});
+    if(res.data && res.data.length > 0){
+      // Merge DB trips with local demo trips or replace
+      var dbTrips = res.data.map(function(t){
+        return {
+          id: t.id, dest: t.dest, country: t.country, flag: t.flag||'🌍',
+          dates: t.date_from ? new Date(t.date_from).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : 'Upcoming',
+          startDate: t.date_from||'', endDate: t.date_to||'',
+          days: t.date_from&&t.date_to ? Math.max(1,Math.round((new Date(t.date_to)-new Date(t.date_from))/86400000)+1) : 5,
+          starred: false, cover: t.cover_url||'', privacy: t.privacy||'public',
+          notes:'', missed:[], places:[], photos:[], itin:[], actualItin:[], expenses:[]
+        };
+      });
+      trips = dbTrips;
+      renderDash();
+    }
+  }catch(e){console.error('dbLoadUserTrips error:',e);}
+}
+
+async function dbSaveProfile(){
+  if(!sb||!userData.id)return;
+  try{
+    await sb.from('profiles').upsert({
+      id: userData.id,
+      name: userData.name||'',
+      username: userData.username||'',
+      bio: userData.bio||'',
+      currency: userData.currency||'AED',
+      is_public: userData.isPublic!==false
+    });
+  }catch(e){console.error('dbSaveProfile error:',e);}
+}
+
 
 (function init(){
   renderSharePage();
