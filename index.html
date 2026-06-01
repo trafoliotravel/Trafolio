@@ -1738,9 +1738,34 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
     if(meta.avatar_url || meta.picture){
       userData.photoURL = meta.avatar_url || meta.picture;
     }
-    if(!document.getElementById('s-dash').classList.contains('active')){
+    var alreadyIn = document.getElementById('s-dash').classList.contains('active');
+    if(!alreadyIn){
+      // Clear demo trips before entering app
+      trips = [];
       enterApp();
       if(showWelcome) toast('Welcome back, '+fullName.split(' ')[0]+'!');
+    }
+    // Save profile first (creates row in profiles table if not exists)
+    // This must happen before saving trips (foreign key constraint)
+    if(sb && userData.id){
+      sb.from('profiles').upsert({
+        id: userData.id,
+        name: userData.name || '',
+        username: userData.username || '',
+        bio: userData.bio || '',
+        currency: userData.currency || 'AED',
+        is_public: true
+      }, {onConflict: 'id'}).then(function(res){
+        if(res.error) console.error('Profile save error:', res.error);
+        else console.log('Profile saved to DB');
+        // Now safe to load trips
+        dbLoadUserTrips();
+      }).catch(function(e){
+        console.error('Profile upsert failed:', e);
+        dbLoadUserTrips(); // still try to load trips
+      });
+    } else {
+      dbLoadUserTrips();
     }
     // Update avatar
     var av = document.getElementById('top-av');
@@ -1820,7 +1845,6 @@ function showScreen(id){
 }
 function goHome(){if(appMode)showScreen('s-dash');else showScreen('s-home');}
 function enterApp(){
-  dbLoadUserTrips();
   appMode=true;
   document.getElementById('nav-right-auth').style.display='none';
   document.getElementById('nav-right-app').style.display='flex';
@@ -3566,22 +3590,6 @@ async function fetchCoverOptions(city,country){
   var sources=[],seen={};
   var add=function(url,label){if(url&&!seen[url]){seen[url]=1;sources.push({url:url,label:label});}};
   // GOOGLE PLACES PHOTOS (best quality)
-  if(window._googleMapsReady&&window.google&&google.maps&&google.maps.places){
-    try{
-      var dummy2=document.createElement('div');
-      var ps=new google.maps.places.PlacesService(dummy2);
-      await new Promise(function(resolve){
-        ps.findPlaceFromQuery({query:city+(country?' '+country:''),fields:['photos','name']},function(results,status){
-          if(status===google.maps.places.PlacesServiceStatus.OK&&results&&results[0]&&results[0].photos){
-            results[0].photos.slice(0,3).forEach(function(ph){
-              add(ph.getUrl({maxWidth:600,maxHeight:400}),'Google');
-            });
-          }
-          resolve();
-        });
-      });
-    }catch(e){}
-  }
   // PRIMARY: Wikipedia page image — reliable, a real current photo of the city
   try{
     var wr=await fetch('https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(city+(country?' '+country:''))+'&prop=pageimages&format=json&pithumbsize=900&origin=*');
@@ -11582,8 +11590,10 @@ async function dbLoadUserTrips(){
   if(!sb||!userData.id)return;
   try{
     var res = await sb.from('trips').select('*').eq('user_id', userData.id).order('created_at',{ascending:false});
+    // Always clear demo trips when we get a DB response
+    trips = [];
+    console.log('DB trips loaded:', (res.data||[]).length);
     if(res.data && res.data.length > 0){
-      // Merge DB trips with local demo trips or replace
       var dbTrips = res.data.map(function(t){
         return {
           id: t.id, dest: t.dest, country: t.country, flag: t.flag||'🌍',
