@@ -11303,15 +11303,11 @@ function isUsernameTaken(uname){
 // real GIS flow (token verified server-side at /api/auth/google). Otherwise we fall back to a
 // simulated account chooser so the app still works without OAuth set up.
 var _googleClientId='';
+var _plSearchTimer=null;
 var _googleReady=false;
 function initGoogleAuth(){
-  fetch('/api/config').then(function(r){return r.json();}).then(function(c){
-    _googleClientId=(c&&c.googleClientId)||'';
-    if(_googleClientId&&window.google&&google.accounts&&google.accounts.id){
-      google.accounts.id.initialize({client_id:_googleClientId,callback:onGoogleCredential});
-      _googleReady=true;
-    }
-  }).catch(function(){/* server/config unavailable — fallback path is used */});
+  // Using Supabase OAuth — no /api/config needed
+  _googleReady=false;
 }
 function onGoogleCredential(resp){
   if(!resp||!resp.credential){return;}
@@ -11600,6 +11596,11 @@ async function dbSaveProfile(){
   }catch(e){console.error('dbSaveProfile error:',e);}
 }
 
+
+function closeLB(){
+  var lb=document.getElementById('lightbox');
+  if(lb){lb.classList.remove('on');lb.style.display='none';}
+}
 
 (function init(){
   renderSharePage();
