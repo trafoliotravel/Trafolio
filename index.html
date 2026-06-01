@@ -380,6 +380,7 @@ body.app-active .lang-selector{display:block}
 [dir="rtl"] .lp-app-badge{text-align:right}
 .auth-inp{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:13px 16px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;box-sizing:border-box;outline:none;transition:border .15s;margin-bottom:14px}.auth-inp:focus{border-color:var(--ember)}.auth-inp::placeholder{color:rgba(255,255,255,.25)}button.place-edit-btn{background:none;border:none;font-size:20px;color:var(--ink-4);cursor:pointer;padding:4px 2px;line-height:1;flex-shrink:0;border-radius:8px}button.place-edit-btn:active{background:var(--paper-3)}.dest-card{cursor:pointer!important;transition:transform .15s}.dest-card:active{transform:scale(.97)}</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <nav class="topnav" id="topnav">
@@ -1713,6 +1714,41 @@ body.app-active .lang-selector{display:block}
   </div>
 </div><!-- /s-profile -->
 <script>
+// ══ SUPABASE ══════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://kmihuvrhitdabdpusyky.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_S0V20D0pwQfwc4BCeUSFuQ_ikV4w0xP';
+const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+
+// ── Supabase session handling ─────────────────────────────────────────────
+(function initSupabaseSession(){
+  if(!sb) return;
+  // Handle OAuth redirect
+  sb.auth.onAuthStateChange(function(event, session){
+    if((event==='SIGNED_IN'||event==='INITIAL_SESSION') && session && session.user){
+      var user = session.user;
+      var meta = user.user_metadata || {};
+      var fullName = meta.full_name || meta.name || user.email.split('@')[0];
+      var uname = meta.preferred_username || meta.user_name || fullName.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+      userData.name = fullName;
+      userData.username = uname;
+      userData.id = user.id;
+      userData.email = user.email;
+      if(meta.avatar_url || meta.picture){
+        userData.photoURL = meta.avatar_url || meta.picture;
+        var av = document.getElementById('top-av');
+        if(av){ av.style.backgroundImage='url('+userData.photoURL+')'; av.textContent=''; }
+      }
+      if(!document.getElementById('s-dash').classList.contains('active')){
+        enterApp();
+        toast('Welcome, '+fullName.split(' ')[0]+'!');
+      }
+    }
+    if(event === 'SIGNED_OUT'){ exitApp(); }
+  });
+})();
+
+
 // ─── UTILITIES ────────────────────────────────────────────────────
 function getFlagEmoji(cc){if(!cc)return'🌍';var m={ae:'🇦🇪',us:'🇺🇸',gb:'🇬🇧',fr:'🇫🇷',jp:'🇯🇵',it:'🇮🇹',es:'🇪🇸',de:'🇩🇪',gr:'🇬🇷',pt:'🇵🇹',tr:'🇹🇷',ma:'🇲🇦',id:'🇮🇩',th:'🇹🇭',sg:'🇸🇬',cn:'🇨🇳',kr:'🇰🇷',mx:'🇲🇽',au:'🇦🇺',in:'🇮🇳',sa:'🇸🇦',lb:'🇱🇧',bh:'🇧🇭',kw:'🇰🇼',om:'🇴🇲',qa:'🇶🇦',mv:'🇲🇻',is:'🇮🇸',nl:'🇳🇱',vn:'🇻🇳',my:'🇲🇾',ch:'🇨🇭',eg:'🇪🇬',se:'🇸🇪',dk:'🇩🇰',no:'🇳🇴',hr:'🇭🇷',at:'🇦🇹',ph:'🇵🇭'};return m[cc.toLowerCase()]||'🌍';}
 
@@ -1772,7 +1808,7 @@ function enterApp(){
   renderDash();showScreen('s-dash');setActiveNav('bnav-trips');
   buildLangBar();
 }
-function exitApp(){
+function exitApp(){ if(sb){ sb.auth.signOut().catch(function(){}); }
   appMode=false;
   document.getElementById('nav-right-auth').style.display='';
   document.getElementById('nav-right-app').style.display='none';
@@ -11272,33 +11308,26 @@ function onGoogleCredential(resp){
     }).catch(function(){toast(t('socialAuthFailed'));});
 }
 function socialAuthFallback(provider){
-  var isG=provider==='google';
-  var pretty=isG?'Google':'Facebook';
-  var url=isG?'https://accounts.google.com/signin':'https://www.facebook.com/login.php';
-  var email=(window.prompt(t('socialAuthPrompt').replace('{provider}',pretty),'')||'').trim();
-  if(!email)return;
-  var id=deriveIdentityFromEmail(email);
-  var name=id.name, base=id.username, uname=base, i=1;
-  while(isUsernameTaken(uname)){uname=base+i;i++;}
-  try{window.open(url,'_blank','noopener');}catch(e){}
-  userData.name=name;userData.username=uname;userData.email=email;
+  var pretty = provider==='google' ? 'Google' : 'Facebook';
+  var email = (window.prompt('Sign in with '+pretty+' — enter your email:','')||'').trim();
+  if(!email) return;
+  var id = deriveIdentityFromEmail(email);
+  var name = id.name, base = id.username, uname = base, i = 1;
+  while(isUsernameTaken(uname)){ uname = base+i; i++; }
+  userData.name=name; userData.username=uname; userData.email=email;
   applyIdentity();
-  enterApp();toast(t('welcomePrefix')+' '+name+'!');
+  enterApp(); toast('Welcome, '+name+'!');
 }
 function doSocialAuth(provider){
-  // Real Google flow when a client id is configured; everything else uses the fallback.
-  if(provider==='google'&&_googleReady&&window.google&&google.accounts&&google.accounts.id){
-    google.accounts.id.prompt(function(n){
-      if(n&&(n.isNotDisplayed&&n.isNotDisplayed()||n.isSkippedMoment&&n.isSkippedMoment())){
-        socialAuthFallback('google');
-      }
-    });
-    return;
-  }
-  socialAuthFallback(provider);
+  if(!sb){ socialAuthFallback(provider); return; }
+  var provName = provider === 'google' ? 'google' : 'facebook';
+  sb.auth.signInWithOAuth({
+    provider: provName,
+    options: { redirectTo: window.location.origin }
+  }).then(function(res){
+    if(res.error){ toast('Sign in failed: ' + res.error.message); }
+  });
 }
-var _placeSearchResults=[],_selectedGPlace=null;
-var _plSearchTimer;
 function onPlaceSearch(val){
   _selectedGPlace=null;var q=(val||'').trim();var res=document.getElementById('pl-search-results');
   var glink=document.getElementById('pl-gmaps-link');if(glink)glink.style.display='none';
