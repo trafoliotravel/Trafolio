@@ -1725,26 +1725,44 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
 // ── Supabase session handling ─────────────────────────────────────────────
 (function initSupabaseSession(){
   if(!sb) return;
-  // Handle OAuth redirect
+
+  function applySession(user, showWelcome){
+    if(!user)return;
+    var meta = user.user_metadata || {};
+    var fullName = meta.full_name || meta.name || (user.email ? user.email.split('@')[0] : 'Traveller');
+    var uname = meta.preferred_username || meta.user_name || fullName.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    userData.name = fullName;
+    userData.username = uname;
+    userData.id = user.id;
+    userData.email = user.email || '';
+    if(meta.avatar_url || meta.picture){
+      userData.photoURL = meta.avatar_url || meta.picture;
+    }
+    if(!document.getElementById('s-dash').classList.contains('active')){
+      enterApp();
+      if(showWelcome) toast('Welcome back, '+fullName.split(' ')[0]+'!');
+    }
+    // Update avatar
+    var av = document.getElementById('top-av');
+    if(av && userData.photoURL){
+      av.style.backgroundImage='url('+userData.photoURL+')';
+      av.textContent='';
+    } else if(av && userData.name){
+      av.textContent = userData.name.charAt(0).toUpperCase();
+    }
+  }
+
+  // Check existing session on load (handles refresh)
+  sb.auth.getSession().then(function(result){
+    if(result.data && result.data.session && result.data.session.user){
+      applySession(result.data.session.user, false);
+    }
+  }).catch(function(e){ console.log('Session check error:', e); });
+
+  // Listen for auth changes (handles sign in / sign out / OAuth redirect)
   sb.auth.onAuthStateChange(function(event, session){
-    if((event==='SIGNED_IN'||event==='INITIAL_SESSION') && session && session.user){
-      var user = session.user;
-      var meta = user.user_metadata || {};
-      var fullName = meta.full_name || meta.name || user.email.split('@')[0];
-      var uname = meta.preferred_username || meta.user_name || fullName.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
-      userData.name = fullName;
-      userData.username = uname;
-      userData.id = user.id;
-      userData.email = user.email;
-      if(meta.avatar_url || meta.picture){
-        userData.photoURL = meta.avatar_url || meta.picture;
-        var av = document.getElementById('top-av');
-        if(av){ av.style.backgroundImage='url('+userData.photoURL+')'; av.textContent=''; }
-      }
-      if(!document.getElementById('s-dash').classList.contains('active')){
-        enterApp();
-        toast('Welcome, '+fullName.split(' ')[0]+'!');
-      }
+    if(event === 'SIGNED_IN' && session && session.user){
+      applySession(session.user, true);
     }
     if(event === 'SIGNED_OUT'){ exitApp(); }
   });
