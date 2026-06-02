@@ -94,6 +94,7 @@ a.place-name-link:hover { text-decoration: underline; }
 .star-dot.on { color: var(--ember); }
 .trip-hero { position: relative; height: 44vh; min-height: 240px; overflow: hidden; background: var(--ink); }
 .trip-hero img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
+@media(min-width:768px){.trip-hero{height:35vh}.trip-hero img{width:50%;margin:0 auto;display:block;border-radius:0 0 12px 12px}}
 .trip-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,28,48,.8) 0%, rgba(0,28,48,.15) 55%, transparent 100%); }
 .trip-hero-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 20px 16px; display: flex; align-items: flex-end; justify-content: space-between; }
 .trip-hero-actions { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 56px + 10px); left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 14px; }
@@ -354,8 +355,7 @@ body.show-lbar .lbar{display:none}
 .ep-label{font-size:11px;color:var(--ink-3);display:block;margin-bottom:6px;font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
 
 /* ── LANGUAGE DROPDOWN ── */
-.lang-selector{position:relative;display:none}
-body.app-active .lang-selector{display:block}
+.lang-selector{position:relative;display:block}
 .lang-btn{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(0,28,48,.06);border:1px solid var(--paper-3);border-radius:20px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--ink-2);letter-spacing:.04em;transition:all .15s;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 .lang-btn:active{transform:scale(.94)}
 .lang-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:white;border:1px solid var(--paper-3);border-radius:var(--r-lg);box-shadow:0 8px 32px rgba(0,28,48,.14);z-index:200;min-width:165px;overflow:hidden;display:none}
@@ -378,7 +378,13 @@ body.app-active .lang-selector{display:block}
 [dir="rtl"] .lang-native-select{padding:7px 11px 7px 28px;background-position:left 10px center}
 [dir="rtl"] .lp-app-badges{margin-left:0;margin-right:auto}
 [dir="rtl"] .lp-app-badge{text-align:right}
-.auth-inp{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:13px 16px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;box-sizing:border-box;outline:none;transition:border .15s;margin-bottom:14px}.auth-inp:focus{border-color:var(--ember)}.auth-inp::placeholder{color:rgba(255,255,255,.25)}button.place-edit-btn{background:none;border:none;font-size:20px;color:var(--ink-4);cursor:pointer;padding:4px 2px;line-height:1;flex-shrink:0;border-radius:8px}button.place-edit-btn:active{background:var(--paper-3)}.dest-card{cursor:pointer!important;transition:transform .15s}.dest-card:active{transform:scale(.97)}</style>
+.auth-inp{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:13px 16px;color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;box-sizing:border-box;outline:none;transition:border .15s;margin-bottom:14px}.auth-inp:focus{border-color:var(--ember)}.auth-inp::placeholder{color:rgba(255,255,255,.25)}button.place-edit-btn{background:none;border:none;font-size:20px;color:var(--ink-4);cursor:pointer;padding:4px 2px;line-height:1;flex-shrink:0;border-radius:8px}button.place-edit-btn:active{background:var(--paper-3)}.dest-card{cursor:pointer!important;transition:transform .15s}.dest-card:active{transform:scale(.97)}
+/* ── TOP SEARCH ── */
+.top-search-wrap{padding:8px 16px 4px;background:var(--white);border-bottom:1px solid var(--paper-3)}
+.top-search-inp{width:100%;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:24px;padding:9px 16px 9px 38px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;box-sizing:border-box}
+.top-search-inp:focus{border-color:var(--ember);background:white}
+.top-search-icon{position:absolute;left:28px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4);pointer-events:none}
+</style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>var _googleMapsReady=false;function onGoogleMapsLoaded(){_googleMapsReady=true;}</script>
@@ -413,29 +419,27 @@ body.app-active .lang-selector{display:block}
       <div class="lang-dropdown" id="lang-dropdown"></div>
     </div>
     <button id="top-saved-btn" onclick="openSaved()" aria-label="Saved &amp; starred" title="Saved &amp; starred" data-i18n-title="savedTitle" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🔖</button>
+    <button id="top-msg-btn" onclick="openInbox()" aria-label="Messages" title="Messages" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></button>
     <button id="top-cart-btn" onclick="openCart()" aria-label="Cart" title="Cart" data-i18n-title="cartTitle" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🛒<span id="top-cart-count" style="display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--ember);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;line-height:17px;text-align:center;box-sizing:border-box">0</span></button>
     <div class="avatar" id="top-av" onclick="showScreen('s-profile')">J</div>
   </div>
 </nav>
 <nav class="bottom-nav" id="bottom-nav" style="display:none">
   <div class="bnav-item" id="bnav-feed" onclick="showScreen('s-feed');setActiveNav('bnav-feed');renderFeed()">
-    <div class="bnav-icon">🏠</div><div class="bnav-label" data-i18n="navFeed">FEED</div>
+    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5"/><path d="M5 9v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M9 21v-6h6v6"/></svg></div><div class="bnav-label" data-i18n="navFeed">Feed</div>
   </div>
   <div class="bnav-item" id="bnav-explore" onclick="showScreen('s-explore');setActiveNav('bnav-explore');renderExploreContent()">
-    <div class="bnav-icon">🔍</div><div class="bnav-label" data-i18n="navExplore">EXPLORE</div>
+    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><path d="M21 21l-4.3-4.3"/></svg></div><div class="bnav-label" data-i18n="navExplore">Explore</div>
   </div>
   <div class="bnav-item" id="bnav-add" onclick="openAddTrip()">
-    <div class="bnav-icon" style="font-size:26px;margin-top:-2px;color:var(--ember)">+</div>
+    <div class="bnav-icon" style="margin-top:-2px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ember)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
     <div class="bnav-label" style="color:var(--ember)" data-i18n="navAddTrip">Add Trip</div>
   </div>
   <div class="bnav-item active" id="bnav-trips" onclick="showScreen('s-dash');setActiveNav('bnav-trips')">
-    <div class="bnav-icon">&#9992;&#65039;</div><div class="bnav-label" data-i18n="trips">TRIPS</div>
-  </div>
-  <div class="bnav-item" id="bnav-messages" onclick="openInbox();setActiveNav('bnav-messages')">
-    <div class="bnav-icon">💬</div><div class="bnav-label" data-i18n="messagesTitle">MESSAGES</div>
+    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5a2.12 2.12 0 0 0-3-3L13 8 4.8 6.2a1 1 0 0 0-.9 1.7l5.6 3.3-2 2.5-2.4-.4a1 1 0 0 0-.9 1.6l2.2 2.2 2.2 2.2a1 1 0 0 0 1.6-.9l-.4-2.4 2.5-2 3.3 5.6a1 1 0 0 0 1.7-.9z"/></svg></div><div class="bnav-label" data-i18n="trips">Trips</div>
   </div>
   <div class="bnav-item" id="bnav-profile" onclick="showScreen('s-profile');setActiveNav('bnav-profile')">
-    <div class="bnav-icon">&#128100;</div><div class="bnav-label" data-i18n="profile">PROFILE</div>
+    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></div><div class="bnav-label" data-i18n="profile">Profile</div>
   </div>
 </nav>
 <div id="toast"></div>
@@ -1235,11 +1239,11 @@ body.app-active .lang-selector{display:block}
     </div>
     <div class="tab-bar" id="trip-tabs">
       <button class="tab-btn active" data-tab="places" onclick="switchTab(this)" data-i18n="tabPlaces">Places</button>
-      <button class="tab-btn" data-tab="photos" onclick="switchTab(this)" data-i18n="tabPhotos">Photos</button>
       <button class="tab-btn" data-tab="notes" onclick="switchTab(this)" data-i18n="tabNotes">Notes</button>
       <button class="tab-btn" data-tab="blog" onclick="switchTab(this)" data-i18n="tabBlog">Blog</button>
-      <button class="tab-btn" data-tab="share" onclick="switchTab(this)" data-i18n="tabShare">Share</button>
+      <button class="tab-btn" data-tab="photos" onclick="switchTab(this)" data-i18n="tabPhotos">Photos</button>
       <button class="tab-btn" data-tab="book" onclick="switchTab(this)" data-i18n="tabBook">Memory Book</button>
+      <button class="tab-btn" data-tab="share" onclick="switchTab(this)" data-i18n="tabShare">Share</button>
     </div>
 
     <!-- TAB: PLACES -->
@@ -1276,6 +1280,7 @@ body.app-active .lang-selector{display:block}
       </div>
       <div id="photo-no-exif" style="display:none;margin:12px 16px 0;background:var(--ember-lt);border:1px solid var(--ember);border-radius:var(--r-md);padding:12px 14px">
         <div style="font-size:13px;font-weight:500;color:var(--ember-dk);margin-bottom:5px" data-i18n-html="noDateFound">No date found in <span id="no-exif-count"></span> photo(s)</div>
+        <div style="font-size:11px;color:var(--ember-dk);opacity:.8;margin-bottom:8px;line-height:1.4">📅 Choose which day these photos belong to — this sorts them into the right page of your memory book.</div>
         <div id="no-exif-thumbs" style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px"></div>
         <div style="display:flex;gap:7px;align-items:center">
           <select id="no-exif-day" class="inp" style="padding:8px 28px 8px 10px;font-size:13px;appearance:none;-webkit-appearance:none;flex:1"></select>
@@ -1322,7 +1327,7 @@ body.app-active .lang-selector{display:block}
           <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="tripVisibility">Trip visibility</div>
           <div style="display:flex;flex-direction:column;gap:7px" id="trip-privacy-opts">
             <div class="sopt on" id="tpriv-public" onclick="setTripPrivacy('public')"><div><div style="font-size:14px;font-weight:500;color:var(--ink)">&#127759; <span data-i18n="publicLabel">Public</span></div><div style="font-size:12px;color:var(--ink-3);margin-top:2px" data-i18n="publicSub">Anyone with the link can view</div></div><div class="srad on" id="tprad-public"></div></div>
-            <div class="sopt" id="tpriv-followers" onclick="setTripPrivacy('followers')"><div><div style="font-size:14px;font-weight:500;color:var(--ink)">&#128101; <span data-i18n="followersLabel">Followers only</span></div><div style="font-size:12px;color:var(--ink-3);margin-top:2px" data-i18n="followersSub">Only people who follow you can view</div></div><div class="srad" id="tprad-followers"></div></div>
+            <div class="sopt" id="tpriv-followers" onclick="setTripPrivacy('followers')"><div><div style="font-size:14px;font-weight:500;color:var(--ink)">&#9992;&#65039; <span data-i18n="followersLabel">Trafollowers only</span></div><div style="font-size:12px;color:var(--ink-3);margin-top:2px" data-i18n="followersSub">Only people who follow you can view</div></div><div class="srad" id="tprad-followers"></div></div>
             <div class="sopt" id="tpriv-private" onclick="setTripPrivacy('private')"><div><div style="font-size:14px;font-weight:500;color:var(--ink)">&#128274; <span data-i18n="privateLabel">Private</span></div><div style="font-size:12px;color:var(--ink-3);margin-top:2px" data-i18n="privateSub">Only you can see this trip</div></div><div class="srad" id="tprad-private"></div></div>
           </div>
         </div>
@@ -1594,7 +1599,7 @@ body.app-active .lang-selector{display:block}
         </div>
         <div class="bb-actions">
           <button class="btn btn-ghost" onclick="bbPreview()">&#128065; <span data-i18n="bbPreviewBtn">Preview &amp; download</span></button>
-          <button class="btn btn-ghost" onclick="printBook()">&#128424; <span data-i18n="bbPrint">Print</span></button>
+          <button class="btn btn-ghost" onclick="printBook(event)">&#128424; <span data-i18n="bbPrint">Print</span></button>
           <button class="btn btn-ghost" onclick="bbAddToCart()">&#128722; <span data-i18n="addToCartBtn">Add to cart</span></button>
           <button class="btn btn-ember" onclick="bbBuy()">&#128213; <span data-i18n="buyNowBtn">Buy now</span></button>
         </div>
@@ -1711,11 +1716,19 @@ body.app-active .lang-selector{display:block}
       <span style="color:var(--ink-4);font-size:16px">›</span>
     </div>
     <div style="padding:28px 20px 0;text-align:center">
-      <button onclick="exitApp()" style="font-size:13px;color:var(--ink-4);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.06em" data-i18n="signOut">SIGN OUT</button>
+      <button onclick="exitApp()" style="font-size:13px;color:var(--ink-4);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.06em" data-i18n="signOut">SIGN OUT</button><div class="lang-selector" id="lang-selector" style="display:block;margin:16px 20px 0">
+  <div class="lang-btn" id="lang-btn" onclick="toggleLangDropdown(event)" style="justify-content:center;padding:10px 16px;border-radius:12px;font-size:13px">
+    <span id="lang-flag-disp" style="font-size:16px">🌐</span>
+    <span id="lang-code-disp" style="font-family:DM Mono,monospace;font-size:12px;font-weight:500">EN</span>
+    <span style="font-size:10px;color:var(--ink-3);margin-left:4px">▾</span>
+  </div>
+  <div class="lang-dropdown" id="lang-dropdown" style="left:0;right:0;min-width:unset"></div>
+</div>
     </div>
   </div>
 </div><!-- /s-profile -->
 <script>
+// ══ SUPABASE ═════════════════════════════
 // ══ SUPABASE ══════════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://kmihuvrhitdabdpusyky.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_S0V20D0pwQfwc4BCeUSFuQ_ikV4w0xP';
@@ -1798,7 +1811,7 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
 function getFlagEmoji(cc){if(!cc)return'🌍';var m={ae:'🇦🇪',us:'🇺🇸',gb:'🇬🇧',fr:'🇫🇷',jp:'🇯🇵',it:'🇮🇹',es:'🇪🇸',de:'🇩🇪',gr:'🇬🇷',pt:'🇵🇹',tr:'🇹🇷',ma:'🇲🇦',id:'🇮🇩',th:'🇹🇭',sg:'🇸🇬',cn:'🇨🇳',kr:'🇰🇷',mx:'🇲🇽',au:'🇦🇺',in:'🇮🇳',sa:'🇸🇦',lb:'🇱🇧',bh:'🇧🇭',kw:'🇰🇼',om:'🇴🇲',qa:'🇶🇦',mv:'🇲🇻',is:'🇮🇸',nl:'🇳🇱',vn:'🇻🇳',my:'🇲🇾',ch:'🇨🇭',eg:'🇪🇬',se:'🇸🇪',dk:'🇩🇰',no:'🇳🇴',hr:'🇭🇷',at:'🇦🇹',ph:'🇵🇭'};return m[cc.toLowerCase()]||'🌍';}
 
 // ─── DATA ─────────────────────────────────────────────────────────
-const CAT_ICONS={eat:'🍽️',stay:'🛏️',see:'🏛️',do:'🎭',shop:'🛍️'};
+const CAT_ICONS={eat:'\uD83C\uDF74',stay:'\uD83C\uDFE8',see:'\uD83D\uDDFD',do:'\uD83C\uDFAB',shop:'\uD83D\uDECD\uFE0F'};
 const CAT_FLAGS={eat:'#DCF4FF',stay:'#DCF4FF',see:'#DCF4FF',do:'#DCF4FF',shop:'#DCF4FF'};
 const CAT_NAMES={eat:'Eat',stay:'Stay',see:'See',do:'Do',shop:'Shop'};
 let currentTrip=null,currentTab='places',selectedCat='eat',selectedRating=4,appMode=false,currentFilter='all';
@@ -2855,7 +2868,27 @@ function cartItemFrom(trip,fmt){
   (trip.book||[]).forEach(function(pg){var cells=pg.cells||[];(pg.photos||[]).forEach(function(u,i){if(cells[i]&&cells[i].isText)return;if(typeof u==='string'&&/^https?:\/\//i.test(u))assets.push(u);});});
   return {dest:trip.dest,flag:trip.flag,cover:trip.cover,sku:fmt.sku,fmtName:fmt.name,coverFinish:fmt.cover,price:parsePrice(fmt.price),assets:assets};
 }
-function bbAddToCart(){if(!currentTrip)return;bbEnsure();cart.push(cartItemFrom(currentTrip,bbFormat()));updateCartBtn();toast(t('addedToCart'));}
+function checkMissingPages(){
+  if(!currentTrip)return [];
+  var totalDays=currentTrip.days||1;
+  var daysWithPhotos={};
+  (currentTrip.photos||[]).forEach(function(p){if(p.day)daysWithPhotos[p.day]=true;});
+  var missing=[];
+  for(var d=1;d<=totalDays;d++){if(!daysWithPhotos[d])missing.push(d);}
+  return missing;
+}
+function bbAddToCart(){
+  var missing=checkMissingPages();
+  if(missing.length>0){
+    var msg=missing.length===1?'Day '+missing[0]+' has no photos yet. ':'Days '+missing.join(', ')+' have no photos yet. ';
+    if(!confirm(msg+'These pages will be empty in your book.\n\nAdd to cart anyway?')){
+      toast('Tip: add photos to Day '+missing[0]+' for a fuller book');
+      return;
+    }
+  }
+  _bbAddToCart_orig();
+}
+function _bbAddToCart_orig(){if(!currentTrip)return;bbEnsure();cart.push(cartItemFrom(currentTrip,bbFormat()));updateCartBtn();toast(t('addedToCart'));}
 function updateCartBtn(){var b=document.getElementById('bb-cart-btn');if(b){var c=document.getElementById('bb-cart-count');if(c)c.textContent=cart.length;b.style.display=cart.length?'flex':'none';}var tc=document.getElementById('top-cart-count');if(tc){tc.textContent=cart.length;tc.style.display=cart.length?'block':'none';}}
 function cartSubtotal(){return cart.reduce(function(a,it){return a+it.price;},0);}
 function openCart(){
@@ -3376,7 +3409,7 @@ async function generateAIPlan(){if(!currentTrip)return;var btn=document.getEleme
 function addAIPlanToTrip(){if(!currentTrip||!aipGenerated)return;if(!currentTrip.itin)currentTrip.itin=[];aipGenerated.forEach(function(d){var day=currentTrip.itin.find(function(x){return x.day===d.day;});if(!day){day={day:d.day,items:[]};currentTrip.itin.push(day);}(d.items||[]).forEach(function(item){day.items.push({id:Date.now()+Math.random(),cat:item.cat||'do',name:item.name,time:item.time||'',note:item.note||''});});});currentTrip.itin.sort(function(a,b){return a.day-b.day;});toast(t('addedToPlanTab'));}
 
 // ─── MEMORY BOOK / PRINT ──────────────────────────────────────────
-function printBook(){if(!currentTrip)return;var t=currentTrip;var win=window.open('','_blank');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+t.dest+' — Memory Book</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;color:#111;max-width:680px;margin:0 auto;padding:40px 32px}img.cover{width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:28px}h1{font-family:Georgia,serif;font-size:48px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}.meta{font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:24px}.note{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#444;line-height:1.65;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #eee}.photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:28px}.photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px}.place{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}.place-dot{width:8px;height:8px;border-radius:50%;background:#00A8E8;flex-shrink:0;margin-top:6px}.place-name{font-family:Georgia,serif;font-size:17px;font-weight:500;margin-bottom:2px}.place-note{font-size:12px;color:#888;font-style:italic}.section-label{font-family:monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#aaa;margin-bottom:14px}.footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;text-align:center;font-family:monospace;font-size:10px;color:#ccc;letter-spacing:.12em}@media print{@page{margin:15mm}body{padding:0}}</style></head><body>');win.document.write('<img class="cover" src="'+t.cover+'" alt="'+t.dest+'">');win.document.write('<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:32px">'+ t.flag+'</span><h1>'+t.dest+'</h1></div>');win.document.write('<div class="meta">'+ t.dates+' · '+t.days+' days · '+t.country+' · '+t.places.length+' places</div>');if(t.notes)win.document.write('<p class="note">"'+ t.notes+'"</p>');if(t.photos.length){win.document.write('<div class="photos">');t.photos.slice(0,6).forEach(function(p){win.document.write('<img src="'+p.url+'" alt="">');});win.document.write('</div>');}win.document.write('<div class="section-label">Places we loved</div>');t.places.forEach(function(p){win.document.write('<div class="place"><div class="place-dot"></div><div><div class="place-name">'+ CAT_ICONS[p.cat]+' '+p.name+'</div>'+(p.note?'<div class="place-note">'+ p.note+'</div>':'')+'</div></div>');});win.document.write('<div class="footer">TRAFOLIO.TRAVEL · '+ userData.username.toUpperCase()+'\'S '+t.dest.toUpperCase()+' GUIDE</div>');win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},600);}
+function printBook(){if(!currentTrip)return;var t=currentTrip;var win=window.open('','_blank');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+t.dest+' — Memory Book</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;color:#111;max-width:680px;margin:0 auto;padding:40px 32px}img.cover{width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:28px}h1{font-family:Georgia,serif;font-size:48px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}.meta{font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:24px}.note{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#444;line-height:1.65;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #eee}.photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:28px}.photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px}@media screen and (min-width:768px){body{max-width:600px}.photos{grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;max-width:480px;margin-left:auto;margin-right:auto}.photos img{border-radius:4px}img.cover{height:200px;width:70%;margin-left:auto;margin-right:auto;display:block}}.place{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}.place-dot{width:8px;height:8px;border-radius:50%;background:#00A8E8;flex-shrink:0;margin-top:6px}.place-name{font-family:Georgia,serif;font-size:17px;font-weight:500;margin-bottom:2px}.place-note{font-size:12px;color:#888;font-style:italic}.section-label{font-family:monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#aaa;margin-bottom:14px}.footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;text-align:center;font-family:monospace;font-size:10px;color:#ccc;letter-spacing:.12em}@media print{@page{margin:15mm}body{padding:0}}</style></head><body>');win.document.write('<img class="cover" src="'+t.cover+'" alt="'+t.dest+'">');win.document.write('<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:32px">'+ t.flag+'</span><h1>'+t.dest+'</h1></div>');win.document.write('<div class="meta">'+ t.dates+' · '+t.days+' days · '+t.country+' · '+t.places.length+' places</div>');if(t.notes)win.document.write('<p class="note">"'+ t.notes+'"</p>');if(t.photos.length){win.document.write('<div class="photos">');t.photos.slice(0,6).forEach(function(p){win.document.write('<img src="'+p.url+'" alt="">');});win.document.write('</div>');}win.document.write('<div class="section-label">Places we loved</div>');t.places.forEach(function(p){win.document.write('<div class="place"><div class="place-dot"></div><div><div class="place-name">'+ CAT_ICONS[p.cat]+' '+p.name+'</div>'+(p.note?'<div class="place-note">'+ p.note+'</div>':'')+'</div></div>');});win.document.write('<div class="footer">TRAFOLIO.TRAVEL · '+ userData.username.toUpperCase()+'\'S '+t.dest.toUpperCase()+' GUIDE</div>');win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},600);}
 // Prodigi shipping rates → AUD (base cost, hidden from buyer). [audCost, minDays, maxDays, name]
 var SHIP_RATES={'AD':[26.73,2,4,"Andorra"],'AE':[30.36,3,5,"United Arab Emirates"],'AR':[35.64,3,5,"Argentina"],'AT':[12.54,2,4,"Austria"],'AU':[15.15,2,5,"Australia"],'AW':[38.9,3,6,"Aruba"],'BB':[38.9,3,6,"Barbados"],'BE':[14.27,2,4,"Belgium"],'BG':[16.09,2,4,"Bulgaria"],'BH':[38.9,3,6,"Bahrain"],'BO':[38.9,3,6,"Bolivia"],'BR':[35.64,3,5,"Brazil"],'CA':[24.62,2,5,"Canada"],'CH':[25.0,2,4,"Switzerland"],'CL':[35.64,3,5,"Chile"],'CN':[38.9,3,6,"China"],'CO':[38.9,3,6,"Colombia"],'CR':[38.9,3,6,"Costa Rica"],'CY':[58.82,2,4,"Cyprus"],'CZ':[17.82,2,4,"Czech Republic"],'DE':[8.91,1,2,"Germany"],'DK':[16.09,2,4,"Denmark"],'DO':[38.9,3,6,"Dominican Republic"],'EE':[32.09,2,4,"Estonia"],'ES':[16.09,2,3,"Spain"],'FI':[17.82,2,4,"Finland"],'FR':[16.09,2,3,"France"],'GB':[10.72,2,4,"United Kingdom"],'GF':[38.9,3,6,"French Guiana"],'GH':[38.9,3,6,"Ghana"],'GI':[26.73,2,4,"Gibraltar"],'GP':[38.9,3,6,"Guadeloupe"],'GR':[26.73,2,4,"Greece"],'GT':[38.9,3,6,"Guatemala"],'HK':[24.85,3,6,"Hong Kong"],'HR':[26.73,2,4,"Croatia"],'HU':[16.09,2,4,"Hungary"],'ID':[38.9,3,6,"Indonesia"],'IE':[16.09,2,3,"Ireland"],'IL':[26.73,3,5,"Israel"],'IN':[14.27,2,5,"India"],'IT':[16.09,2,3,"Italy"],'JE':[35.64,2,4,"Jersey"],'JP':[24.85,3,6,"Japan"],'KE':[38.9,3,6,"Kenya"],'KR':[38.9,3,6,"South Korea"],'KW':[38.9,3,6,"Kuwait"],'KZ':[38.9,3,6,"Kazakhstan"],'LI':[26.73,2,4,"Liechtenstein"],'LK':[38.9,3,6,"Sri Lanka"],'LT':[30.36,2,4,"Lithuania"],'LU':[12.54,2,4,"Luxembourg"],'LV':[32.09,2,4,"Latvia"],'MC':[17.82,2,4,"Monaco"],'MQ':[38.9,3,6,"Martinique"],'MT':[26.73,2,4,"Malta"],'MU':[38.9,3,6,"Mauritius"],'MX':[14.27,2,5,"Mexico"],'MY':[38.9,3,6,"Malaysia"],'NA':[38.9,3,6,"Namibia"],'NC':[26.73,3,5,"New Caledonia"],'NG':[38.9,3,6,"Nigeria"],'NI':[38.9,3,6,"Nicaragua"],'NL':[10.72,2,3,"Netherlands"],'NO':[30.36,2,4,"Norway"],'NZ':[21.6,2,5,"New Zealand"],'OM':[35.64,3,5,"Oman"],'PA':[38.9,3,6,"Panama"],'PF':[38.9,3,6,"French Polynesia"],'PH':[35.64,3,5,"Philippines"],'PL':[16.09,2,4,"Poland"],'PR':[35.64,3,5,"Puerto Rico"],'PT':[14.27,2,4,"Portugal"],'QA':[38.9,3,6,"Qatar"],'RE':[17.82,3,5,"Reunion"],'RO':[16.09,2,4,"Romania"],'RS':[26.73,2,4,"Serbia"],'SA':[38.9,3,6,"Saudi Arabia"],'SE':[30.36,3,5,"Sweden"],'SG':[24.85,3,6,"Singapore"],'SI':[26.73,2,4,"Slovenia"],'SK':[16.09,2,4,"Slovakia"],'TH':[38.9,3,6,"Thailand"],'TT':[38.9,3,6,"Trinidad and Tobago"],'TW':[38.9,3,6,"Taiwan"],'US':[11.55,3,5,"United States"],'VN':[38.9,3,6,"Vietnam"],'ZA':[26.73,3,5,"South Africa"]};
 var SHIP_FALLBACK=[39.00,4,8,'']; // rest of world
@@ -4186,7 +4219,7 @@ const S={
     tripVisibility:'Trip visibility',
     publicLabel:'🌏 Public',
     publicSub:'Anyone with the link can view',
-    followersLabel:'👥 Followers only',
+    followersLabel:'✈️ Trafollowers only',
     followersSub:'Only people who follow you can view',
     privateLabel:'🔒 Private',
     privateSub:'Only you can see this trip',
@@ -11385,7 +11418,7 @@ function onPlaceSearch(val){
 function doPlaceSearch(q){
   var res=document.getElementById('pl-search-results');if(!res)return;
   var dest=currentTrip?currentTrip.dest:'';
-  var searchQ=q+(dest?' in '+dest:'');
+  var country=currentTrip&&currentTrip.country?currentTrip.country:'';var searchQ=q+(country?' '+country:(dest?' '+dest:''));
   if(window._googleMapsReady&&window.google&&google.maps&&google.maps.places){
     doGooglePlaceSearch(searchQ,res);
   }else{
@@ -11395,7 +11428,12 @@ function doPlaceSearch(q){
 
 function doGooglePlaceSearch(q,res){
   var service=new google.maps.places.AutocompleteService();
-  service.getPlacePredictions({input:q,types:['establishment','geocode']},function(predictions,status){
+  // Search whole country, not just the city — allows day trips to other cities
+  var country=currentTrip&&currentTrip.country?currentTrip.country:'';
+  var searchInput=q;
+  // If query already has the city, keep it; otherwise bias to country
+  var req={input:searchInput,types:['establishment','geocode']};
+  service.getPlacePredictions(req,function(predictions,status){
     if(status!==google.maps.places.PlacesServiceStatus.OK||!predictions){doNominatimSearch(q,res);return;}
     res.innerHTML='';
     predictions.slice(0,5).forEach(function(pred){
@@ -11630,6 +11668,61 @@ function closeLB(){
   if(lb){lb.classList.remove('on');lb.style.display='none';}
 }
 
+// ── GLOBAL SEARCH ─────────────────────────────────────────────────────────
+function onGlobalSearch(q){
+  var res=document.getElementById('global-search-results');
+  if(!res)return;
+  if(!q.trim()){res.style.display='none';return;}
+  q=q.toLowerCase();
+  var results=[];
+  
+  // Search trips
+  trips.forEach(function(t){
+    if(t.dest.toLowerCase().includes(q)||((t.notes||'').toLowerCase().includes(q))){
+      results.push({type:'trip',icon:'✈️',title:t.dest,sub:t.dates||'',id:t.id});
+    }
+  });
+  
+  // Search places across all trips
+  trips.forEach(function(t){
+    (t.places||[]).forEach(function(p){
+      if(p.name.toLowerCase().includes(q)||((p.note||'').toLowerCase().includes(q))){
+        results.push({type:'place',icon:'📍',title:p.name,sub:'in '+t.dest,tripId:t.id});
+      }
+    });
+  });
+  
+  // Search trafollowers
+  allUsers.forEach(function(u){
+    if(u.name.toLowerCase().includes(q)||u.handle.toLowerCase().includes(q)){
+      results.push({type:'user',icon:'👤',title:u.name,sub:'@'+u.handle,userId:u.id});
+    }
+  });
+  
+  if(!results.length){
+    res.innerHTML='<div style="padding:12px 16px;font-size:13px;color:var(--ink-4)">No results for "'+q+'"</div>';
+    res.style.display='block';return;
+  }
+  
+  res.innerHTML='';
+  res.style.display='block';
+  results.slice(0,8).forEach(function(r){
+    var d=document.createElement('div');
+    d.style.cssText='display:flex;align-items:center;gap:10px;padding:11px 16px;border-bottom:1px solid var(--paper-3);cursor:pointer';
+    d.innerHTML='<div style="font-size:20px;width:28px;text-align:center">'+r.icon+'</div>'
+      +'<div><div style="font-size:14px;font-weight:500;color:var(--ink)">'+r.title+'</div>'
+      +'<div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace">'+r.sub+'</div></div>';
+    d.addEventListener('click',function(){
+      res.style.display='none';
+      document.getElementById('global-search-inp').value='';
+      if(r.type==='trip'){openTrip(r.id);}
+      else if(r.type==='place'){openTrip(r.tripId);}
+      else if(r.type==='user'){openUserProfile(r.userId);}
+    });
+    res.appendChild(d);
+  });
+}
+
 (function init(){
   renderSharePage();
   trips.forEach(function(t){
@@ -11666,4 +11759,10 @@ function closeLB(){
 <div id="s-explore" class="screen"><div class="pt-nav pb-safe"><div style="padding:18px 20px 12px"><div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;letter-spacing:-.01em;margin-bottom:12px" data-i18n="exploreTitle">Explore</div><div style="position:relative"><span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--ink-4)">&#128269;</span><input class="inp" id="exp-search" data-i18n-ph="exploreSearchPh" placeholder="People, cities, stories..." style="padding-left:38px" oninput="onExploreSearch(this.value)"></div></div><div style="display:flex;border-bottom:2px solid var(--paper-3);padding:0 8px"><button class="tab-btn active" id="exp-tab-people" onclick="switchExploreTab('people')">&#128101; <span data-i18n="tabPeople">People</span></button><button class="tab-btn" id="exp-tab-cities" onclick="switchExploreTab('cities')">&#127759; <span data-i18n="tabCities">Cities</span></button><button class="tab-btn" id="exp-tab-stories" onclick="switchExploreTab('stories')">&#9997; <span data-i18n="tabStories">Stories</span></button></div><div id="explore-body"></div></div></div>
 
 </body>
-</html>
+</html><div style="position:sticky;top:56px;z-index:30;background:white;padding:10px 16px 8px;border-bottom:1px solid var(--paper-3)">
+  <div style="position:relative">
+    <span class="top-search-icon">🔍</span>
+    <input class="top-search-inp" placeholder="Search trips, places, Trafollowers…" oninput="onGlobalSearch(this.value)" id="global-search-inp">
+  </div>
+  <div id="global-search-results" style="display:none;background:white;border:1px solid var(--paper-3);border-radius:var(--r-md);margin-top:6px;overflow:hidden;max-height:300px;overflow-y:auto;box-shadow:var(--sh-2)"></div>
+</div>
