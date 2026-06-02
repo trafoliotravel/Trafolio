@@ -2658,6 +2658,7 @@ function bbImportNew(input){
         if(exif&&exif.lat!=null)photoObj.gps={lat:exif.lat,lng:exif.lng};
         if(exif&&exif.dateTime){var d=getPhotoDay(exif.dateTime);if(d>=1&&d<=(currentTrip.days||999))photoObj.day=d;}
         currentTrip.photos.push(photoObj);
+        dbSavePhoto(photoObj, currentTrip.id);
         URL.revokeObjectURL(objUrl);
         done++;
         if(done===total){
@@ -3267,7 +3268,13 @@ function savePlace(){
   var name=(document.getElementById('pl-name').value||'').trim();
   if(!name||!currentTrip){toast(t('pleaseEnterPlace'));return;}
   var place={id:Date.now(),cat:selectedCat,name:name,note:document.getElementById('pl-note').value.trim(),rating:selectedRating};
-  if(_selectedGPlace){place.lat=_selectedGPlace.lat;place.lng=_selectedGPlace.lon;place.q=_selectedGPlace.display_name;}
+  if(_selectedGPlace){
+    place.lat=_selectedGPlace.lat||(_selectedGPlace.geometry&&_selectedGPlace.geometry.location&&_selectedGPlace.geometry.location.lat)||null;
+    place.lng=_selectedGPlace.lng||_selectedGPlace.lon||null;
+    place.q=_selectedGPlace.display_name||_selectedGPlace.formatted_address||(_selectedGPlace.name?(_selectedGPlace.name+(_selectedGPlace.address?', '+_selectedGPlace.address:'')):name);
+    place.placeId=_selectedGPlace.place_id||null;
+    if(_selectedGPlace.rating)place.gRating=_selectedGPlace.rating;
+  }
   currentTrip.places.push(place);
   dbSavePlace(place, currentTrip.id);
   _selectedGPlace=null;
@@ -3421,7 +3428,68 @@ async function generateAIPlan(){if(!currentTrip)return;var btn=document.getEleme
 function addAIPlanToTrip(){if(!currentTrip||!aipGenerated)return;if(!currentTrip.itin)currentTrip.itin=[];aipGenerated.forEach(function(d){var day=currentTrip.itin.find(function(x){return x.day===d.day;});if(!day){day={day:d.day,items:[]};currentTrip.itin.push(day);}(d.items||[]).forEach(function(item){day.items.push({id:Date.now()+Math.random(),cat:item.cat||'do',name:item.name,time:item.time||'',note:item.note||''});});});currentTrip.itin.sort(function(a,b){return a.day-b.day;});toast(t('addedToPlanTab'));}
 
 // ─── MEMORY BOOK / PRINT ──────────────────────────────────────────
-function printBook(ev){if(ev&&ev.preventDefault){ev.preventDefault();ev.stopPropagation();}if(!currentTrip)return;var t=currentTrip;var win=window.open('','_blank');if(!win){toast('Allow popups to print your book');return false;}win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+t.dest+' — Memory Book</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;color:#111;max-width:680px;margin:0 auto;padding:40px 32px}img.cover{width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:28px}h1{font-family:Georgia,serif;font-size:48px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}.meta{font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:24px}.note{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#444;line-height:1.65;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #eee}.photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:28px}.photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px}@media screen and (min-width:768px){.photos{grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;max-width:400px;margin-left:auto;margin-right:auto}.photos img{border-radius:4px}}.place{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}.place-dot{width:8px;height:8px;border-radius:50%;background:#00A8E8;flex-shrink:0;margin-top:6px}.place-name{font-family:Georgia,serif;font-size:17px;font-weight:500;margin-bottom:2px}.place-note{font-size:12px;color:#888;font-style:italic}.section-label{font-family:monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#aaa;margin-bottom:14px}.footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;text-align:center;font-family:monospace;font-size:10px;color:#ccc;letter-spacing:.12em}@media print{@page{margin:15mm}body{padding:0}}</style></head><body>');win.document.write('<img class="cover" src="'+t.cover+'" alt="'+t.dest+'">');win.document.write('<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:32px">'+ t.flag+'</span><h1>'+t.dest+'</h1></div>');win.document.write('<div class="meta">'+ t.dates+' · '+t.days+' days · '+t.country+' · '+t.places.length+' places</div>');if(t.notes)win.document.write('<p class="note">"'+ t.notes+'"</p>');if(t.photos.length){win.document.write('<div class="photos">');t.photos.slice(0,6).forEach(function(p){win.document.write('<img src="'+p.url+'" alt="">');});win.document.write('</div>');}win.document.write('<div class="section-label">Places we loved</div>');t.places.forEach(function(p){win.document.write('<div class="place"><div class="place-dot"></div><div><div class="place-name">'+ CAT_ICONS[p.cat]+' '+p.name+'</div>'+(p.note?'<div class="place-note">'+ p.note+'</div>':'')+'</div></div>');});win.document.write('<div class="footer">TRAFOLIO.TRAVEL · '+ userData.username.toUpperCase()+'\'S '+t.dest.toUpperCase()+' GUIDE</div>');win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},600);return false;}
+function printBook(ev){
+  if(ev&&ev.preventDefault){ev.preventDefault();ev.stopPropagation();}
+  if(!currentTrip)return false;
+  var t=currentTrip;
+  var win=window.open('','_blank');
+  if(!win){toast('Allow popups to download your book');return false;}
+
+  var css='*{margin:0;padding:0;box-sizing:border-box}'
+    +'body{font-family:Georgia,serif;color:#111;max-width:680px;margin:0 auto;padding:40px 32px}'
+    +'img.cover{width:100%;height:300px;object-fit:cover;border-radius:12px;margin-bottom:28px}'
+    +'h1{font-family:Georgia,serif;font-size:48px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}'
+    +'.meta{font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:24px}'
+    +'.note{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#444;line-height:1.65;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #eee}'
+    +'.photos{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:28px}'
+    +'.photos img{width:100%;height:220px;object-fit:cover;border-radius:6px}'
+    +'.section-label{font-family:monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#aaa;margin-bottom:14px;margin-top:8px}'
+    +'.place{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}'
+    +'.place-dot{width:8px;height:8px;border-radius:50%;background:#00A8E8;flex-shrink:0;margin-top:6px}'
+    +'.place-name{font-family:Georgia,serif;font-size:17px;font-weight:500;margin-bottom:2px}'
+    +'.place-note{font-size:12px;color:#888;font-style:italic}'
+    +'.footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;text-align:center;font-family:monospace;font-size:10px;color:#ccc;letter-spacing:.12em}'
+    +'@media print{@page{margin:12mm;size:A4}body{padding:0;max-width:100%}.photos img{height:200px}}';
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+t.dest+' - Memory Book</title><style>'+css+'</style></head><body>';
+  html+='<img class="cover" src="'+t.cover+'" alt="'+t.dest+'" crossorigin="anonymous">';
+  html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:32px">'+t.flag+'</span><h1>'+t.dest+'</h1></div>';
+  html+='<div class="meta">'+t.dates+' &middot; '+t.days+' days &middot; '+t.country+' &middot; '+t.places.length+' places</div>';
+  if(t.notes)html+='<p class="note">"'+t.notes+'"</p>';
+  if(t.photos&&t.photos.length){
+    html+='<div class="section-label">Photo memories</div><div class="photos">';
+    t.photos.forEach(function(p){ html+='<img src="'+p.url+'" alt="" crossorigin="anonymous">'; });
+    html+='</div>';
+  }
+  html+='<div class="section-label">Places we loved</div>';
+  t.places.forEach(function(p){
+    html+='<div class="place"><div class="place-dot"></div><div><div class="place-name">'+CAT_ICONS[p.cat]+' '+p.name+'</div>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div></div>';
+  });
+  html+='<div class="footer">TRAFOLIO.TRAVEL &middot; '+(userData.username||'').toUpperCase()+"'S "+t.dest.toUpperCase()+' MEMORY BOOK</div>';
+  html+='</body></html>';
+
+  win.document.write(html);
+  win.document.close();
+
+  // Wait for ALL images to load before printing, so none are missing in the PDF
+  win.onload=function(){
+    var imgs=win.document.images;
+    var total=imgs.length, loaded=0;
+    if(total===0){ triggerPrint(); return; }
+    function check(){ loaded++; if(loaded>=total) triggerPrint(); }
+    for(var k=0;k<total;k++){
+      if(imgs[k].complete){ check(); }
+      else { imgs[k].onload=check; imgs[k].onerror=check; }
+    }
+    // Safety: print anyway after 4s even if an image hangs
+    setTimeout(triggerPrint, 4000);
+  };
+  var printed=false;
+  function triggerPrint(){ if(printed)return; printed=true; win.focus(); win.print(); }
+
+  toast('Tip: in the print dialog, choose "Save as PDF"');
+  return false;
+}
 // Prodigi shipping rates → AUD (base cost, hidden from buyer). [audCost, minDays, maxDays, name]
 var SHIP_RATES={'AD':[26.73,2,4,"Andorra"],'AE':[30.36,3,5,"United Arab Emirates"],'AR':[35.64,3,5,"Argentina"],'AT':[12.54,2,4,"Austria"],'AU':[15.15,2,5,"Australia"],'AW':[38.9,3,6,"Aruba"],'BB':[38.9,3,6,"Barbados"],'BE':[14.27,2,4,"Belgium"],'BG':[16.09,2,4,"Bulgaria"],'BH':[38.9,3,6,"Bahrain"],'BO':[38.9,3,6,"Bolivia"],'BR':[35.64,3,5,"Brazil"],'CA':[24.62,2,5,"Canada"],'CH':[25.0,2,4,"Switzerland"],'CL':[35.64,3,5,"Chile"],'CN':[38.9,3,6,"China"],'CO':[38.9,3,6,"Colombia"],'CR':[38.9,3,6,"Costa Rica"],'CY':[58.82,2,4,"Cyprus"],'CZ':[17.82,2,4,"Czech Republic"],'DE':[8.91,1,2,"Germany"],'DK':[16.09,2,4,"Denmark"],'DO':[38.9,3,6,"Dominican Republic"],'EE':[32.09,2,4,"Estonia"],'ES':[16.09,2,3,"Spain"],'FI':[17.82,2,4,"Finland"],'FR':[16.09,2,3,"France"],'GB':[10.72,2,4,"United Kingdom"],'GF':[38.9,3,6,"French Guiana"],'GH':[38.9,3,6,"Ghana"],'GI':[26.73,2,4,"Gibraltar"],'GP':[38.9,3,6,"Guadeloupe"],'GR':[26.73,2,4,"Greece"],'GT':[38.9,3,6,"Guatemala"],'HK':[24.85,3,6,"Hong Kong"],'HR':[26.73,2,4,"Croatia"],'HU':[16.09,2,4,"Hungary"],'ID':[38.9,3,6,"Indonesia"],'IE':[16.09,2,3,"Ireland"],'IL':[26.73,3,5,"Israel"],'IN':[14.27,2,5,"India"],'IT':[16.09,2,3,"Italy"],'JE':[35.64,2,4,"Jersey"],'JP':[24.85,3,6,"Japan"],'KE':[38.9,3,6,"Kenya"],'KR':[38.9,3,6,"South Korea"],'KW':[38.9,3,6,"Kuwait"],'KZ':[38.9,3,6,"Kazakhstan"],'LI':[26.73,2,4,"Liechtenstein"],'LK':[38.9,3,6,"Sri Lanka"],'LT':[30.36,2,4,"Lithuania"],'LU':[12.54,2,4,"Luxembourg"],'LV':[32.09,2,4,"Latvia"],'MC':[17.82,2,4,"Monaco"],'MQ':[38.9,3,6,"Martinique"],'MT':[26.73,2,4,"Malta"],'MU':[38.9,3,6,"Mauritius"],'MX':[14.27,2,5,"Mexico"],'MY':[38.9,3,6,"Malaysia"],'NA':[38.9,3,6,"Namibia"],'NC':[26.73,3,5,"New Caledonia"],'NG':[38.9,3,6,"Nigeria"],'NI':[38.9,3,6,"Nicaragua"],'NL':[10.72,2,3,"Netherlands"],'NO':[30.36,2,4,"Norway"],'NZ':[21.6,2,5,"New Zealand"],'OM':[35.64,3,5,"Oman"],'PA':[38.9,3,6,"Panama"],'PF':[38.9,3,6,"French Polynesia"],'PH':[35.64,3,5,"Philippines"],'PL':[16.09,2,4,"Poland"],'PR':[35.64,3,5,"Puerto Rico"],'PT':[14.27,2,4,"Portugal"],'QA':[38.9,3,6,"Qatar"],'RE':[17.82,3,5,"Reunion"],'RO':[16.09,2,4,"Romania"],'RS':[26.73,2,4,"Serbia"],'SA':[38.9,3,6,"Saudi Arabia"],'SE':[30.36,3,5,"Sweden"],'SG':[24.85,3,6,"Singapore"],'SI':[26.73,2,4,"Slovenia"],'SK':[16.09,2,4,"Slovakia"],'TH':[38.9,3,6,"Thailand"],'TT':[38.9,3,6,"Trinidad and Tobago"],'TW':[38.9,3,6,"Taiwan"],'US':[11.55,3,5,"United States"],'VN':[38.9,3,6,"Vietnam"],'ZA':[26.73,3,5,"South Africa"]};
 var SHIP_FALLBACK=[39.00,4,8,'']; // rest of world
@@ -11618,17 +11686,27 @@ async function dbSaveTrip(trip){
 
 async function dbSavePlace(place, tripId){
   if(!sb||!userData.id){console.warn('dbSavePlace: no sb or userData.id');return;}
+  // Use the trip's DB id (dbId) not the local id
+  var realTripId = tripId;
+  var tr = trips.find(function(t){ return t.id===tripId || t.dbId===tripId; });
+  if(tr && tr.dbId) realTripId = tr.dbId;
   try{
-    var res=await sb.from('places').insert({
-      trip_id: tripId,
+    var row={
+      trip_id: realTripId,
       user_id: userData.id,
       name: place.name,
       cat: place.cat||'see',
       note: place.note||'',
       rating: place.rating||0
-    }).select();
+    };
+    if(place.lat) row.lat = place.lat;
+    if(place.lng) row.lng = place.lng;
+    var res=await sb.from('places').insert(row).select();
     if(res.error){console.error('dbSavePlace DB error:',res.error);}
-    else{console.log('Place saved to DB:',res.data);}
+    else{
+      console.log('Place saved to DB:',res.data);
+      if(res.data&&res.data[0]) place.dbId=res.data[0].id;
+    }
   }catch(e){console.error('dbSavePlace error:',e);}
 }
 
@@ -11643,18 +11721,32 @@ async function dbLoadUserTrips(){
   if(!sb||!userData.id)return;
   try{
     var res = await sb.from('trips').select('*').eq('user_id', userData.id).order('created_at',{ascending:false});
-    // Always clear demo trips when we get a DB response
     trips = [];
     console.log('DB trips loaded:', (res.data||[]).length);
     if(res.data && res.data.length > 0){
+      // Load ALL places for this user in one query
+      var placesRes = await sb.from('places').select('*').eq('user_id', userData.id);
+      var allPlaces = placesRes.data || [];
+      console.log('DB places loaded:', allPlaces.length);
+      var photosRes = await sb.from('photos').select('*').eq('user_id', userData.id);
+      var allPhotos = photosRes.data || [];
+      console.log('DB photos loaded:', allPhotos.length);
+
       var dbTrips = res.data.map(function(t){
+        // Match places to this trip by trip_id
+        var tripPlaces = allPlaces.filter(function(p){ return p.trip_id === t.id; }).map(function(p){
+          return { id:p.id, dbId:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, lat:p.lat, lng:p.lng };
+        });
+        var tripPhotos = allPhotos.filter(function(p){ return p.trip_id === t.id; }).map(function(p){
+          return { url:p.url, caption:p.caption||'', day:p.day, dbId:p.id, wide:false };
+        });
         return {
-          id: t.id, dest: t.dest, country: t.country, flag: t.flag||'🌍',
+          id: t.id, dbId: t.id, dest: t.dest, country: t.country, flag: t.flag||'🌍',
           dates: t.date_from ? new Date(t.date_from).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : 'Upcoming',
           startDate: t.date_from||'', endDate: t.date_to||'',
           days: t.date_from&&t.date_to ? Math.max(1,Math.round((new Date(t.date_to)-new Date(t.date_from))/86400000)+1) : 5,
           starred: false, cover: t.cover_url||'', privacy: t.privacy||'public',
-          notes:'', missed:[], places:[], photos:[], itin:[], actualItin:[], expenses:[]
+          notes: t.notes||'', missed:[], places: tripPlaces, photos: tripPhotos, itin:[], actualItin:[], expenses:[]
         };
       });
       trips = dbTrips;
@@ -11773,6 +11865,35 @@ async function dbDeleteTrip(tripId){
     if(res.error)console.error('dbDeleteTrip error:',res.error);
     else console.log('Trip deleted from DB');
   }catch(e){console.error('dbDeleteTrip error:',e);}
+}
+
+
+// ── Save a photo to DB ────────────────────────────────────────────────────
+async function dbSavePhoto(photoObj, tripId){
+  if(!sb||!userData.id)return;
+  var realTripId=tripId;
+  var tr=trips.find(function(t){return t.id===tripId||t.dbId===tripId;});
+  if(tr&&tr.dbId)realTripId=tr.dbId;
+  try{
+    var row={
+      trip_id: realTripId,
+      user_id: userData.id,
+      url: photoObj.url,
+      caption: photoObj.caption||'',
+      day: photoObj.day||null
+    };
+    var res=await sb.from('photos').insert(row).select();
+    if(res.error){console.error('dbSavePhoto error:',res.error);}
+    else if(res.data&&res.data[0]){photoObj.dbId=res.data[0].id;console.log('Photo saved to DB');}
+  }catch(e){console.error('dbSavePhoto error:',e);}
+}
+
+// ── Save trip notes ───────────────────────────────────────────────────────
+async function dbSaveTripNotes(trip){
+  if(!sb||!userData.id||!trip)return;
+  var id=trip.dbId||trip.id;
+  try{ await sb.from('trips').update({notes:trip.notes||''}).eq('id',id); }
+  catch(e){console.error('dbSaveTripNotes error:',e);}
 }
 
 
