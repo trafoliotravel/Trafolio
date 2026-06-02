@@ -525,7 +525,7 @@ body.show-lbar .lbar{display:none}
       <input class="inp" id="pl-name" data-i18n-ph="searchPlacePh" placeholder="Search a place, or just type a name…" autocomplete="off" oninput="onPlaceSearch(this.value)">
       <div class="loc-dropdown" id="pl-search-results" style="display:none"></div>
     </div>
-    <a id="pl-gmaps-link" href="#" target="_blank" rel="noopener" style="display:none;align-items:center;gap:8px;margin-top:8px;padding:9px 12px;background:var(--paper-2);border-radius:var(--r-md);text-decoration:none">
+    <a id="pl-gmaps-link" href="#" onclick="event.preventDefault();event.stopPropagation();if(this.href&&this.href!=='#')window.open(this.href,'_blank','noopener');return false;" style="display:none;align-items:center;gap:8px;margin-top:8px;padding:9px 12px;background:var(--paper-2);border-radius:var(--r-md);text-decoration:none">
       <span style="font-size:15px">📍</span>
       <span class="pl-gmaps-name" style="flex:1;min-width:0;font-size:12px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
       <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--ember)">VIEW ON MAPS ↗</span>
@@ -1709,7 +1709,7 @@ body.show-lbar .lbar{display:none}
       </div>
       <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px" data-i18n="allTrips">All trips</div>
     </div>
-    <div id="profile-trip-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:24px"></div>
+    <div id="profile-trip-grid" class="trip-grid-dash-responsive" style="display:grid;gap:8px;padding:0 16px;margin-bottom:24px"></div>
     <div style="padding:0 20px 4px;display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="tabStories">Stories</div>
       <button onclick="openWriteStory()" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ember);font-weight:600" data-i18n="writeBtn">WRITE</button>
@@ -1978,6 +1978,8 @@ function applyBlogCaptions(){
   toast('✨ '+t('blogCaptionsApplied'));
   if(typeof renderPhotosTab==='function')renderPhotosTab();
 }
+
+function openMapLink(ev,url){if(ev){ev.preventDefault();ev.stopPropagation();}window.open(url,'_blank','noopener');return false;}
 function gmapsUrl(p,trip){
   trip=trip||currentTrip;
   var base='https://www.google.com/maps/search/?api=1&query=';
@@ -1990,7 +1992,7 @@ function renderPlaces(filter){
   var places=filter==='all'?currentTrip.places:currentTrip.places.filter(function(p){return p.cat===filter;});
   if(!places.length){list.innerHTML='<div style="padding:40px 0;text-align:center;color:var(--ink-4)"><div style="font-size:28px;margin-bottom:10px">📍</div><div style="font-size:14px">'+t('noPlacesYet')+'</div></div>';return;}
   list.innerHTML=places.map(function(p){
-    return'<div class="place-item" data-pid="'+p.id+'">'+'<div class="place-cat-dot cat-'+p.cat+'">'+CAT_ICONS[p.cat]+'</div><div><a class="place-name place-name-link" href="'+gmapsUrl(p)+'" target="_blank" rel="noopener" title="Locate on Google Maps" onclick="event.stopPropagation()">'+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'<button class="place-edit-btn">⋮</button></div></div>';
+    return'<div class="place-item" data-pid="'+p.id+'">'+'<div class="place-cat-dot cat-'+p.cat+'">'+CAT_ICONS[p.cat]+'</div><div><a class="place-name place-name-link" href="'+gmapsUrl(p)+'" target="_blank" rel="noopener" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.href,\'_blank\',\'noopener\');return false;">'+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'<button class="place-edit-btn">⋮</button></div></div>';
   }).join('');
   list.querySelectorAll('.place-edit-btn').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=this.closest('[data-pid]');if(item)openEditPlace(parseInt(item.dataset.pid));});});
 }
@@ -3117,7 +3119,7 @@ function renderShPlaces(t,filter){
     if(filter&&filter!=='all'&&p.cat!==filter)return false;
     return sel.everything||sel.cats[p.cat];
   });
-  list.innerHTML=places.map(function(p){return'<div class="place-item"><div class="place-cat-dot cat-'+p.cat+'">'+CAT_ICONS[p.cat]+'</div><div><a class="place-name place-name-link" href="'+gmapsUrl(p,t)+'" target="_blank" rel="noopener" title="Locate on Google Maps">'+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'</div></div>';}).join('')||'<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+tt('nothingSharedYet')+'</div>';
+  list.innerHTML=places.map(function(p){return'<div class="place-item"><div class="place-cat-dot cat-'+p.cat+'">'+CAT_ICONS[p.cat]+'</div><div><a class="place-name place-name-link" href="'+gmapsUrl(p,t)+'" target="_blank" rel="noopener" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.href,\'_blank\',\'noopener\');return false;">'+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'</div></div>';}).join('')||'<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+tt('nothingSharedYet')+'</div>';
 }
 function renderShPhotos(t){var grid=document.getElementById('share-photo-strip');if(!grid)return;var sel=shareSelOf(t);if(!(sel.everything||sel.photos)){grid.innerHTML='';return;}if(!t.photos.length)return;var html='';t.photos.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+ph.url+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+ph.caption+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=t.photos[idx]?t.photos[idx].url:'';var c=t.photos[idx]?t.photos[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
 function shareFilter(el){document.querySelectorAll('#share-filter-strip .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderShPlaces(currentTrip||trips[0],el.dataset.f);}
@@ -3395,7 +3397,7 @@ function renderPack(){if(!currentTrip)return;if(!currentTrip.packingList){curren
 function handlePackClick(el){var cat=el.dataset.pcat;var i=parseInt(el.dataset.pidx);if(!currentTrip||!currentTrip.packingList[cat])return;currentTrip.packingList[cat][i].done=!currentTrip.packingList[cat][i].done;renderPack();}
 function handlePackDel(e,btn){e.stopPropagation();var cat=btn.dataset.dcat;var i=parseInt(btn.dataset.didx);if(!currentTrip||!currentTrip.packingList[cat])return;currentTrip.packingList[cat].splice(i,1);renderPack();}
 function openPackAdd(){var name=prompt('Item to add:');if(!name||!currentTrip)return;if(!currentTrip.packingList)currentTrip.packingList={};if(!currentTrip.packingList.other)currentTrip.packingList.other=[];currentTrip.packingList.other.push({id:Date.now(),name:name.trim(),done:false});renderPack();}
-function printPack(){if(!currentTrip||!currentTrip.packingList)return;var win=window.open('','_blank');var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Packing</title><style>body{font-family:Georgia,serif;max-width:580px;margin:28px auto;color:#111}h1{font-size:22px}p{font-size:11px;color:#888;margin:0 0 18px}.cat{margin-bottom:14px}.ct{font-size:13px;font-weight:600;margin-bottom:6px}.item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;border-bottom:1px solid #FFFFFF}.cb{width:14px;height:14px;border:1.5px solid #ccc;border-radius:3px;flex-shrink:0}.done{text-decoration:line-through;color:#bbb}</style></head><body>';h+='<h1>'+currentTrip.dest+' Packing</h1><p>'+currentTrip.dates+' · '+currentTrip.days+' days</p>';Object.entries(currentTrip.packingList).forEach(function(pair){var cat=pair[0];var items=pair[1];if(!items||!items.length||typeof items[0]!=='object')return;h+='<div class="cat"><div class="ct">'+ cat.charAt(0).toUpperCase()+cat.slice(1)+'</div>';items.forEach(function(item){h+='<div class="item"><div class="cb">'+(item.done?'✓':'')+'</div><span class="'+(item.done?'done':'')+'">'+item.name+'</span></div>';});h+='</div>';});h+='</body></html>';win.document.write(h);win.document.close();setTimeout(function(){win.print();},500);}
+function printPack(ev){if(ev&&ev.preventDefault){ev.preventDefault();ev.stopPropagation();}if(!currentTrip||!currentTrip.packingList)return false;var win=window.open('','_blank');if(!win){toast('Allow popups to print');return false;}var h='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Packing</title><style>body{font-family:Georgia,serif;max-width:580px;margin:28px auto;color:#111}h1{font-size:22px}p{font-size:11px;color:#888;margin:0 0 18px}.cat{margin-bottom:14px}.ct{font-size:13px;font-weight:600;margin-bottom:6px}.item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;border-bottom:1px solid #FFFFFF}.cb{width:14px;height:14px;border:1.5px solid #ccc;border-radius:3px;flex-shrink:0}.done{text-decoration:line-through;color:#bbb}</style></head><body>';h+='<h1>'+currentTrip.dest+' Packing</h1><p>'+currentTrip.dates+' · '+currentTrip.days+' days</p>';Object.entries(currentTrip.packingList).forEach(function(pair){var cat=pair[0];var items=pair[1];if(!items||!items.length||typeof items[0]!=='object')return;h+='<div class="cat"><div class="ct">'+ cat.charAt(0).toUpperCase()+cat.slice(1)+'</div>';items.forEach(function(item){h+='<div class="item"><div class="cb">'+(item.done?'✓':'')+'</div><span class="'+(item.done?'done':'')+'">'+item.name+'</span></div>';});h+='</div>';});h+='</body></html>';win.document.write(h);win.document.close();setTimeout(function(){win.print();},500);}
 
 // ─── AI PLANNER ───────────────────────────────────────────────────
 var aipGenerated=null;
@@ -4089,7 +4091,7 @@ function openUserCity(id,city){
   if(places&&places.length){
     rows=places.map(function(p){
       var url=gmapsUrl({q:p.n+', '+city});
-      return'<a href="'+url+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--paper-3);text-decoration:none">'
+      return'<a href="'+url+'" onclick="event.preventDefault();event.stopPropagation();window.open(this.href,\'_blank\',\'noopener\');return false;" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--paper-3);text-decoration:none">'
         +'<div style="width:38px;height:38px;border-radius:10px;background:var(--paper-2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+p.e+'</div>'
         +'<div style="flex:1"><div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink)">'+p.n+'</div>'
         +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--ink-4);margin-top:1px">VIEW ON GOOGLE MAPS ↗</div></div>'
@@ -4099,7 +4101,7 @@ function openUserCity(id,city){
     var cats=[{l:'Top attractions',e:'🏛️'},{l:'Best restaurants',e:'🍽️'},{l:'Cafés',e:'☕'},{l:'Hotels',e:'🛏️'},{l:'Neighborhoods to explore',e:'🏙️'}];
     rows=cats.map(function(p){
       var url=gmapsUrl({q:p.l+' in '+city});
-      return'<a href="'+url+'" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--paper-3);text-decoration:none">'
+      return'<a href="'+url+'" onclick="event.preventDefault();event.stopPropagation();window.open(this.href,\'_blank\',\'noopener\');return false;" style="display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--paper-3);text-decoration:none">'
         +'<div style="width:38px;height:38px;border-radius:10px;background:var(--paper-2);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">'+p.e+'</div>'
         +'<div style="flex:1"><div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink)">'+p.l+'</div>'
         +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--ink-4);margin-top:1px">SEARCH ON GOOGLE MAPS ↗</div></div>'
