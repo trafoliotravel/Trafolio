@@ -83,7 +83,7 @@ html, body {
 .place-item:last-child { border-bottom: none; }
 .place-item:active { opacity: .6; }
 .place-cat-dot { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; margin-top: 1px; }
-.cat-eat { background: #DCF4FF; } .cat-stay { background: #DCF4FF; } .cat-see { background: #DCF4FF; } .cat-do { background: #DCF4FF; } .cat-shop { background: #DCF4FF; }
+.cat-eat { background: #DCF4FF; } .cat-stay { background: #DCF4FF; } .cat-see { background: #DCF4FF; } .cat-do { background: #DCF4FF; } .cat-fun { background: #DCF4FF; } .cat-view { background: #DCF4FF; } .cat-shop { background: #DCF4FF; }
 .place-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 500; color: var(--ink); letter-spacing: -0.01em; line-height: 1.2; }
 a.place-name-link { text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
 a.place-name-link:hover { text-decoration: underline; }
@@ -384,6 +384,9 @@ body.show-lbar .lbar{display:none}
 .top-search-inp{width:100%;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:24px;padding:9px 16px 9px 38px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;box-sizing:border-box}
 .top-search-inp:focus{border-color:var(--ember);background:white}
 .top-search-icon{position:absolute;left:28px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4);pointer-events:none}
+
+.trip-grid-dash-responsive{grid-template-columns:1fr 1fr}
+@media(min-width:768px){.trip-grid-dash-responsive{grid-template-columns:1fr 1fr 1fr}}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -506,12 +509,14 @@ body.show-lbar .lbar{display:none}
   <div class="modal-sub" data-i18n="whatLoved">What did you love?</div>
   <div class="add-form-field">
     <label class="add-form-label" data-i18n="category">Category</label>
-    <div class="cat-select-grid" id="cat-grid">
-      <div class="cat-opt on" data-cat="eat" onclick="selectCat(this)"><span>&#127869;&#65039;</span><span class="cat-lbl" data-i18n="eat">Eat</span></div>
-      <div class="cat-opt" data-cat="stay" onclick="selectCat(this)"><span>&#128716;&#65039;</span><span class="cat-lbl" data-i18n="stay">Stay</span></div>
-      <div class="cat-opt" data-cat="see" onclick="selectCat(this)"><span>&#127963;&#65039;</span><span class="cat-lbl" data-i18n="see">See</span></div>
-      <div class="cat-opt" data-cat="do" onclick="selectCat(this)"><span>&#127917;</span><span class="cat-lbl" data-i18n="doAct">Do</span></div>
-      <div class="cat-opt" data-cat="shop" onclick="selectCat(this)"><span>&#128717;&#65039;</span><span class="cat-lbl" data-i18n="shop">Shop</span></div>
+    <div class="cat-select-grid" id="cat-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="cat-opt on" data-cat="eat" onclick="selectCat(this)"><span>🍴</span><span class="cat-lbl" data-i18n="eat">Eat</span></div>
+      <div class="cat-opt" data-cat="stay" onclick="selectCat(this)"><span>🛎️</span><span class="cat-lbl" data-i18n="stay">Stay</span></div>
+      <div class="cat-opt" data-cat="see" onclick="selectCat(this)"><span>🏛️</span><span class="cat-lbl" data-i18n="see">See</span></div>
+      <div class="cat-opt" data-cat="do" onclick="selectCat(this)"><span>🎫</span><span class="cat-lbl" data-i18n="doAct">Do</span></div>
+      <div class="cat-opt" data-cat="fun" onclick="selectCat(this)"><span>🎡</span><span class="cat-lbl" data-i18n="fun">Fun</span></div>
+      <div class="cat-opt" data-cat="view" onclick="selectCat(this)"><span>🌅</span><span class="cat-lbl" data-i18n="view">View</span></div>
+      <div class="cat-opt" data-cat="shop" onclick="selectCat(this)"><span>🛍️</span><span class="cat-lbl" data-i18n="shop">Shop</span></div>
     </div>
   </div>
   <div class="add-form-field">
@@ -1207,7 +1212,7 @@ body.show-lbar .lbar{display:none}
       <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;letter-spacing:-0.01em" data-i18n="yourTrips">Your trips</div>
       <div style="font-size:12px;color:var(--ink-4);font-family:'DM Mono',monospace;letter-spacing:.06em;cursor:pointer" onclick="openAddTrip()">+ <span data-i18n="add">ADD</span></div>
     </div>
-    <div id="trip-grid-dash" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 6px"></div>
+    <div id="trip-grid-dash" class="trip-grid-dash-responsive" style="display:grid;gap:8px;padding:0 16px 6px"></div>
     <div id="trip-empty" style="padding:60px 24px;text-align:center;display:none">
       <div style="font-size:36px;margin-bottom:14px">&#9992;&#65039;</div>
       <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:400;margin-bottom:8px" data-i18n="nextTripTitle">Your next trip starts here</div>
@@ -1227,6 +1232,7 @@ body.show-lbar .lbar{display:none}
         <div style="display:flex;gap:8px">
           <button class="btn-icon" onclick="openShareSheet()" title="Share">&#8599;</button>
           <button class="btn-icon" onclick="toggleStar()" id="star-btn" title="Star">&#9734;</button>
+          <button class="btn-icon" onclick="confirmDeleteTrip()" title="Delete trip" style="color:#fff">&#128465;&#65039;</button>
         </div>
       </div>
       <div class="trip-hero-content">
@@ -1250,11 +1256,13 @@ body.show-lbar .lbar{display:none}
     <div id="tab-places" class="tab-content">
       <div class="filter-strip" id="places-filter">
         <div class="filter-pill active" data-f="all" onclick="filterPlaces(this)" data-i18n="all">All</div>
-        <div class="filter-pill" data-f="eat" onclick="filterPlaces(this)">&#127869;&#65039; <span data-i18n="eat">Eat</span></div>
-        <div class="filter-pill" data-f="stay" onclick="filterPlaces(this)">&#128716;&#65039; <span data-i18n="stay">Stay</span></div>
-        <div class="filter-pill" data-f="see" onclick="filterPlaces(this)">&#127963;&#65039; <span data-i18n="see">See</span></div>
-        <div class="filter-pill" data-f="do" onclick="filterPlaces(this)">&#127917; <span data-i18n="doAct">Do</span></div>
-        <div class="filter-pill" data-f="shop" onclick="filterPlaces(this)">&#128717;&#65039; <span data-i18n="shop">Shop</span></div>
+        <div class="filter-pill" data-f="eat" onclick="filterPlaces(this)">🍴 <span data-i18n="eat">Eat</span></div>
+        <div class="filter-pill" data-f="stay" onclick="filterPlaces(this)">🛎️ <span data-i18n="stay">Stay</span></div>
+        <div class="filter-pill" data-f="see" onclick="filterPlaces(this)">🏛️ <span data-i18n="see">See</span></div>
+        <div class="filter-pill" data-f="do" onclick="filterPlaces(this)">🎫 <span data-i18n="doAct">Do</span></div>
+        <div class="filter-pill" data-f="fun" onclick="filterPlaces(this)">🎡 <span data-i18n="fun">Fun</span></div>
+        <div class="filter-pill" data-f="view" onclick="filterPlaces(this)">🌅 <span data-i18n="view">View</span></div>
+        <div class="filter-pill" data-f="shop" onclick="filterPlaces(this)">🛍️ <span data-i18n="shop">Shop</span></div>
       </div>
       <div id="places-list" style="padding:0 20px"></div>
       <div style="padding:20px"><button class="btn btn-ghost btn-full" onclick="openAddPlace()">+ <span data-i18n="addPlace">Add a place</span></button></div>
@@ -1354,7 +1362,7 @@ body.show-lbar .lbar{display:none}
     .bb-pages-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 20px 12px;flex-wrap:wrap}
     .bb-pages-head>span:first-child{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.16em;color:var(--ink-3)}
     .bb-pages-hint{font-size:11px;color:var(--ink-4)}
-    #bb-pages{display:flex;flex-direction:column;gap:18px;padding:0 16px}
+    #bb-pages{display:flex;flex-direction:column;gap:18px;padding:0 16px}@media(min-width:768px){#bb-pages{max-width:420px;margin:0 auto}.bb-page-card{max-width:420px}}
     .bb-page-card{background:#fff;border:1px solid var(--paper-3);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-1)}
     .bb-page-top{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--paper-2);border-bottom:1px solid var(--paper-3)}
     .bb-page-num{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;color:var(--ink-3)}
@@ -1716,13 +1724,13 @@ body.show-lbar .lbar{display:none}
       <span style="color:var(--ink-4);font-size:16px">›</span>
     </div>
     <div style="padding:28px 20px 0;text-align:center">
-      <button onclick="exitApp()" style="font-size:13px;color:var(--ink-4);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.06em" data-i18n="signOut">SIGN OUT</button><div class="lang-selector" id="lang-selector" style="display:block;margin:16px 20px 0">
-  <div class="lang-btn" id="lang-btn" onclick="toggleLangDropdown(event)" style="justify-content:center;padding:10px 16px;border-radius:12px;font-size:13px">
-    <span id="lang-flag-disp" style="font-size:16px">🌐</span>
-    <span id="lang-code-disp" style="font-family:DM Mono,monospace;font-size:12px;font-weight:500">EN</span>
-    <span style="font-size:10px;color:var(--ink-3);margin-left:4px">▾</span>
+      <button onclick="exitApp()" style="font-size:13px;color:var(--ink-4);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.06em" data-i18n="signOut">SIGN OUT</button><div class="lang-selector" id="lang-selector" style="display:flex;justify-content:center;margin:14px 20px 0;position:relative">
+  <div class="lang-btn" id="lang-btn" onclick="toggleLangDropdown(event)" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;width:auto">
+    <span id="lang-flag-disp" style="font-size:15px">🇬🇧</span>
+    <span id="lang-code-disp" style="font-family:DM Mono,monospace;font-size:11px;font-weight:500;color:var(--ink-2)">EN</span>
+    <span style="font-size:8px;color:var(--ink-3)">▾</span>
   </div>
-  <div class="lang-dropdown" id="lang-dropdown" style="left:0;right:0;min-width:unset"></div>
+  <div class="lang-dropdown" id="lang-dropdown" style="bottom:100%;top:auto;margin-bottom:6px;min-width:180px;left:50%;transform:translateX(-50%)"></div>
 </div>
     </div>
   </div>
@@ -1748,6 +1756,10 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
     userData.username = uname;
     userData.id = user.id;
     userData.email = user.email || '';
+    // Real accounts start with zero followers/following
+    userData.followers = userData.followers && userData.followers._real ? userData.followers : [];
+    userData.following = userData.following && userData.following._real ? userData.following : [];
+    userData.bio = userData.bio && userData.bio !== 'Dubai-based traveller. Always planning the next trip. Food-first explorer.' ? userData.bio : '';
     if(meta.avatar_url || meta.picture){
       userData.photoURL = meta.avatar_url || meta.picture;
     }
@@ -1811,9 +1823,9 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
 function getFlagEmoji(cc){if(!cc)return'🌍';var m={ae:'🇦🇪',us:'🇺🇸',gb:'🇬🇧',fr:'🇫🇷',jp:'🇯🇵',it:'🇮🇹',es:'🇪🇸',de:'🇩🇪',gr:'🇬🇷',pt:'🇵🇹',tr:'🇹🇷',ma:'🇲🇦',id:'🇮🇩',th:'🇹🇭',sg:'🇸🇬',cn:'🇨🇳',kr:'🇰🇷',mx:'🇲🇽',au:'🇦🇺',in:'🇮🇳',sa:'🇸🇦',lb:'🇱🇧',bh:'🇧🇭',kw:'🇰🇼',om:'🇴🇲',qa:'🇶🇦',mv:'🇲🇻',is:'🇮🇸',nl:'🇳🇱',vn:'🇻🇳',my:'🇲🇾',ch:'🇨🇭',eg:'🇪🇬',se:'🇸🇪',dk:'🇩🇰',no:'🇳🇴',hr:'🇭🇷',at:'🇦🇹',ph:'🇵🇭'};return m[cc.toLowerCase()]||'🌍';}
 
 // ─── DATA ─────────────────────────────────────────────────────────
-const CAT_ICONS={eat:'\uD83C\uDF74',stay:'\uD83C\uDFE8',see:'\uD83D\uDDFD',do:'\uD83C\uDFAB',shop:'\uD83D\uDECD\uFE0F'};
-const CAT_FLAGS={eat:'#DCF4FF',stay:'#DCF4FF',see:'#DCF4FF',do:'#DCF4FF',shop:'#DCF4FF'};
-const CAT_NAMES={eat:'Eat',stay:'Stay',see:'See',do:'Do',shop:'Shop'};
+const CAT_ICONS={eat:'🍴',stay:'🛎️',see:'🏛️',do:'🎫',fun:'🎡',view:'🌅',shop:'🛍️'};
+const CAT_FLAGS={eat:'#DCF4FF',stay:'#DCF4FF',see:'#DCF4FF',do:'#DCF4FF',fun:'#DCF4FF',view:'#DCF4FF',shop:'#DCF4FF'};
+const CAT_NAMES={eat:'Eat',stay:'Stay',see:'See',do:'Do',fun:'Fun',view:'View',shop:'Shop'};
 let currentTrip=null,currentTab='places',selectedCat='eat',selectedRating=4,appMode=false,currentFilter='all';
 var FALLBACK_COVER='https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=85';
 const allUsers=[
@@ -3409,7 +3421,7 @@ async function generateAIPlan(){if(!currentTrip)return;var btn=document.getEleme
 function addAIPlanToTrip(){if(!currentTrip||!aipGenerated)return;if(!currentTrip.itin)currentTrip.itin=[];aipGenerated.forEach(function(d){var day=currentTrip.itin.find(function(x){return x.day===d.day;});if(!day){day={day:d.day,items:[]};currentTrip.itin.push(day);}(d.items||[]).forEach(function(item){day.items.push({id:Date.now()+Math.random(),cat:item.cat||'do',name:item.name,time:item.time||'',note:item.note||''});});});currentTrip.itin.sort(function(a,b){return a.day-b.day;});toast(t('addedToPlanTab'));}
 
 // ─── MEMORY BOOK / PRINT ──────────────────────────────────────────
-function printBook(){if(!currentTrip)return;var t=currentTrip;var win=window.open('','_blank');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+t.dest+' — Memory Book</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;color:#111;max-width:680px;margin:0 auto;padding:40px 32px}img.cover{width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:28px}h1{font-family:Georgia,serif;font-size:48px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}.meta{font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:24px}.note{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#444;line-height:1.65;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #eee}.photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:28px}.photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px}@media screen and (min-width:768px){body{max-width:600px}.photos{grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;max-width:480px;margin-left:auto;margin-right:auto}.photos img{border-radius:4px}img.cover{height:200px;width:70%;margin-left:auto;margin-right:auto;display:block}}.place{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}.place-dot{width:8px;height:8px;border-radius:50%;background:#00A8E8;flex-shrink:0;margin-top:6px}.place-name{font-family:Georgia,serif;font-size:17px;font-weight:500;margin-bottom:2px}.place-note{font-size:12px;color:#888;font-style:italic}.section-label{font-family:monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#aaa;margin-bottom:14px}.footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;text-align:center;font-family:monospace;font-size:10px;color:#ccc;letter-spacing:.12em}@media print{@page{margin:15mm}body{padding:0}}</style></head><body>');win.document.write('<img class="cover" src="'+t.cover+'" alt="'+t.dest+'">');win.document.write('<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:32px">'+ t.flag+'</span><h1>'+t.dest+'</h1></div>');win.document.write('<div class="meta">'+ t.dates+' · '+t.days+' days · '+t.country+' · '+t.places.length+' places</div>');if(t.notes)win.document.write('<p class="note">"'+ t.notes+'"</p>');if(t.photos.length){win.document.write('<div class="photos">');t.photos.slice(0,6).forEach(function(p){win.document.write('<img src="'+p.url+'" alt="">');});win.document.write('</div>');}win.document.write('<div class="section-label">Places we loved</div>');t.places.forEach(function(p){win.document.write('<div class="place"><div class="place-dot"></div><div><div class="place-name">'+ CAT_ICONS[p.cat]+' '+p.name+'</div>'+(p.note?'<div class="place-note">'+ p.note+'</div>':'')+'</div></div>');});win.document.write('<div class="footer">TRAFOLIO.TRAVEL · '+ userData.username.toUpperCase()+'\'S '+t.dest.toUpperCase()+' GUIDE</div>');win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},600);}
+function printBook(){if(!currentTrip)return;var t=currentTrip;var win=window.open('','_blank');win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+t.dest+' — Memory Book</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Georgia,serif;color:#111;max-width:680px;margin:0 auto;padding:40px 32px}img.cover{width:100%;height:260px;object-fit:cover;border-radius:12px;margin-bottom:28px}h1{font-family:Georgia,serif;font-size:48px;font-weight:400;letter-spacing:-.02em;margin-bottom:4px}.meta{font-family:monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#888;margin-bottom:24px}.note{font-family:Georgia,serif;font-size:18px;font-style:italic;color:#444;line-height:1.65;margin-bottom:28px;padding-bottom:22px;border-bottom:1px solid #eee}.photos{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:28px}.photos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:6px}@media screen and (min-width:768px){.photos{grid-template-columns:1fr 1fr 1fr 1fr;gap:5px;max-width:400px;margin-left:auto;margin-right:auto}.photos img{border-radius:4px}}.place{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #f0f0f0}.place-dot{width:8px;height:8px;border-radius:50%;background:#00A8E8;flex-shrink:0;margin-top:6px}.place-name{font-family:Georgia,serif;font-size:17px;font-weight:500;margin-bottom:2px}.place-note{font-size:12px;color:#888;font-style:italic}.section-label{font-family:monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#aaa;margin-bottom:14px}.footer{margin-top:36px;padding-top:18px;border-top:1px solid #eee;text-align:center;font-family:monospace;font-size:10px;color:#ccc;letter-spacing:.12em}@media print{@page{margin:15mm}body{padding:0}}</style></head><body>');win.document.write('<img class="cover" src="'+t.cover+'" alt="'+t.dest+'">');win.document.write('<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><span style="font-size:32px">'+ t.flag+'</span><h1>'+t.dest+'</h1></div>');win.document.write('<div class="meta">'+ t.dates+' · '+t.days+' days · '+t.country+' · '+t.places.length+' places</div>');if(t.notes)win.document.write('<p class="note">"'+ t.notes+'"</p>');if(t.photos.length){win.document.write('<div class="photos">');t.photos.slice(0,6).forEach(function(p){win.document.write('<img src="'+p.url+'" alt="">');});win.document.write('</div>');}win.document.write('<div class="section-label">Places we loved</div>');t.places.forEach(function(p){win.document.write('<div class="place"><div class="place-dot"></div><div><div class="place-name">'+ CAT_ICONS[p.cat]+' '+p.name+'</div>'+(p.note?'<div class="place-note">'+ p.note+'</div>':'')+'</div></div>');});win.document.write('<div class="footer">TRAFOLIO.TRAVEL · '+ userData.username.toUpperCase()+'\'S '+t.dest.toUpperCase()+' GUIDE</div>');win.document.write('</body></html>');win.document.close();setTimeout(function(){win.print();},600);}
 // Prodigi shipping rates → AUD (base cost, hidden from buyer). [audCost, minDays, maxDays, name]
 var SHIP_RATES={'AD':[26.73,2,4,"Andorra"],'AE':[30.36,3,5,"United Arab Emirates"],'AR':[35.64,3,5,"Argentina"],'AT':[12.54,2,4,"Austria"],'AU':[15.15,2,5,"Australia"],'AW':[38.9,3,6,"Aruba"],'BB':[38.9,3,6,"Barbados"],'BE':[14.27,2,4,"Belgium"],'BG':[16.09,2,4,"Bulgaria"],'BH':[38.9,3,6,"Bahrain"],'BO':[38.9,3,6,"Bolivia"],'BR':[35.64,3,5,"Brazil"],'CA':[24.62,2,5,"Canada"],'CH':[25.0,2,4,"Switzerland"],'CL':[35.64,3,5,"Chile"],'CN':[38.9,3,6,"China"],'CO':[38.9,3,6,"Colombia"],'CR':[38.9,3,6,"Costa Rica"],'CY':[58.82,2,4,"Cyprus"],'CZ':[17.82,2,4,"Czech Republic"],'DE':[8.91,1,2,"Germany"],'DK':[16.09,2,4,"Denmark"],'DO':[38.9,3,6,"Dominican Republic"],'EE':[32.09,2,4,"Estonia"],'ES':[16.09,2,3,"Spain"],'FI':[17.82,2,4,"Finland"],'FR':[16.09,2,3,"France"],'GB':[10.72,2,4,"United Kingdom"],'GF':[38.9,3,6,"French Guiana"],'GH':[38.9,3,6,"Ghana"],'GI':[26.73,2,4,"Gibraltar"],'GP':[38.9,3,6,"Guadeloupe"],'GR':[26.73,2,4,"Greece"],'GT':[38.9,3,6,"Guatemala"],'HK':[24.85,3,6,"Hong Kong"],'HR':[26.73,2,4,"Croatia"],'HU':[16.09,2,4,"Hungary"],'ID':[38.9,3,6,"Indonesia"],'IE':[16.09,2,3,"Ireland"],'IL':[26.73,3,5,"Israel"],'IN':[14.27,2,5,"India"],'IT':[16.09,2,3,"Italy"],'JE':[35.64,2,4,"Jersey"],'JP':[24.85,3,6,"Japan"],'KE':[38.9,3,6,"Kenya"],'KR':[38.9,3,6,"South Korea"],'KW':[38.9,3,6,"Kuwait"],'KZ':[38.9,3,6,"Kazakhstan"],'LI':[26.73,2,4,"Liechtenstein"],'LK':[38.9,3,6,"Sri Lanka"],'LT':[30.36,2,4,"Lithuania"],'LU':[12.54,2,4,"Luxembourg"],'LV':[32.09,2,4,"Latvia"],'MC':[17.82,2,4,"Monaco"],'MQ':[38.9,3,6,"Martinique"],'MT':[26.73,2,4,"Malta"],'MU':[38.9,3,6,"Mauritius"],'MX':[14.27,2,5,"Mexico"],'MY':[38.9,3,6,"Malaysia"],'NA':[38.9,3,6,"Namibia"],'NC':[26.73,3,5,"New Caledonia"],'NG':[38.9,3,6,"Nigeria"],'NI':[38.9,3,6,"Nicaragua"],'NL':[10.72,2,3,"Netherlands"],'NO':[30.36,2,4,"Norway"],'NZ':[21.6,2,5,"New Zealand"],'OM':[35.64,3,5,"Oman"],'PA':[38.9,3,6,"Panama"],'PF':[38.9,3,6,"French Polynesia"],'PH':[35.64,3,5,"Philippines"],'PL':[16.09,2,4,"Poland"],'PR':[35.64,3,5,"Puerto Rico"],'PT':[14.27,2,4,"Portugal"],'QA':[38.9,3,6,"Qatar"],'RE':[17.82,3,5,"Reunion"],'RO':[16.09,2,4,"Romania"],'RS':[26.73,2,4,"Serbia"],'SA':[38.9,3,6,"Saudi Arabia"],'SE':[30.36,3,5,"Sweden"],'SG':[24.85,3,6,"Singapore"],'SI':[26.73,2,4,"Slovenia"],'SK':[16.09,2,4,"Slovakia"],'TH':[38.9,3,6,"Thailand"],'TT':[38.9,3,6,"Trinidad and Tobago"],'TW':[38.9,3,6,"Taiwan"],'US':[11.55,3,5,"United States"],'VN':[38.9,3,6,"Vietnam"],'ZA':[26.73,3,5,"South Africa"]};
 var SHIP_FALLBACK=[39.00,4,8,'']; // rest of world
@@ -4147,7 +4159,7 @@ const S={
     stay:'Stay',
     see:'See',
     doAct:'Do',
-    shop:'Shop',
+    shop:'Shop',fun:'Fun',view:'View',
     allPlaces:'All places',
     newTrip:'New trip',
     whereHeaded:'Where are you headed?',
@@ -11418,9 +11430,12 @@ function onPlaceSearch(val){
 function doPlaceSearch(q){
   var res=document.getElementById('pl-search-results');if(!res)return;
   var dest=currentTrip?currentTrip.dest:'';
-  var country=currentTrip&&currentTrip.country?currentTrip.country:'';var searchQ=q+(country?' '+country:(dest?' '+dest:''));
+  var country=currentTrip&&currentTrip.country?currentTrip.country:'';
+  var searchQ=q+(country?' '+country:(dest?' '+dest:''));
+  // Try Google if available, otherwise always use Nominatim (reliable)
   if(window._googleMapsReady&&window.google&&google.maps&&google.maps.places){
-    doGooglePlaceSearch(searchQ,res);
+    try{ doGooglePlaceSearch(searchQ,res); }
+    catch(e){ doNominatimSearch(searchQ,res); }
   }else{
     doNominatimSearch(searchQ,res);
   }
@@ -11444,7 +11459,7 @@ function doGooglePlaceSearch(q,res){
       if(types.includes('restaurant')||types.includes('food'))icon='🍽';
       else if(types.includes('cafe'))icon='☕';
       else if(types.includes('bar'))icon='🍸';
-      else if(types.includes('lodging'))icon='🛏';
+      else if(types.includes('lodging')||types.includes('hotel'))icon='🏨';
       else if(types.includes('museum'))icon='🏛';
       else if(types.includes('park'))icon='🌳';
       else if(types.includes('shopping'))icon='🛍';
@@ -11474,7 +11489,7 @@ function doGooglePlaceSearch(q,res){
 }
 
 function doNominatimSearch(q,res){
-  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=5&q='+encodeURIComponent(q),{headers:{'Accept-Language':'en'}})
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=8&accept-language=en&q='+encodeURIComponent(q))
     .then(function(r){return r.json();})
     .then(function(data){
       if(!data.length){res.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">No results found</div>';return;}
@@ -11723,6 +11738,44 @@ function onGlobalSearch(q){
   });
 }
 
+// ── DELETE TRIP ───────────────────────────────────────────────────────────
+function confirmDeleteTrip(){
+  if(!currentTrip)return;
+  var name=currentTrip.dest;
+  if(confirm('Delete "'+name+'"?\n\nThis permanently removes the trip, all its places, photos and notes. This cannot be undone.')){
+    doDeleteTrip();
+  }
+}
+
+function doDeleteTrip(){
+  if(!currentTrip)return;
+  var id=currentTrip.id;
+  var dbId=currentTrip.dbId||currentTrip.id;
+  var name=currentTrip.dest;
+  // Remove locally
+  trips=trips.filter(function(t){return t.id!==id;});
+  // Remove from database
+  dbDeleteTrip(dbId);
+  currentTrip=null;
+  showScreen('s-dash');
+  setActiveNav('bnav-trips');
+  renderDash();
+  toast(name+' deleted');
+}
+
+async function dbDeleteTrip(tripId){
+  if(!sb||!userData.id)return;
+  try{
+    // Delete places first (foreign key)
+    await sb.from('places').delete().eq('trip_id', tripId);
+    // Then delete trip
+    var res=await sb.from('trips').delete().eq('id', tripId);
+    if(res.error)console.error('dbDeleteTrip error:',res.error);
+    else console.log('Trip deleted from DB');
+  }catch(e){console.error('dbDeleteTrip error:',e);}
+}
+
+
 (function init(){
   renderSharePage();
   trips.forEach(function(t){
@@ -11739,11 +11792,13 @@ function onGlobalSearch(q){
   <div class="modal-handle"></div>
   <div class="modal-title" data-i18n="editPlace">Edit place</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-    <div class="cat-pill active" data-cat="eat" onclick="selCatEdit(this)">&#127860; <span data-i18n="eat">Eat</span></div>
-    <div class="cat-pill" data-cat="stay" onclick="selCatEdit(this)">&#128716; <span data-i18n="stay">Stay</span></div>
-    <div class="cat-pill" data-cat="see" onclick="selCatEdit(this)">&#127963; <span data-i18n="see">See</span></div>
-    <div class="cat-pill" data-cat="do" onclick="selCatEdit(this)">&#127929; <span data-i18n="doAct">Do</span></div>
-    <div class="cat-pill" data-cat="shop" onclick="selCatEdit(this)">&#128717; <span data-i18n="shop">Shop</span></div>
+    <div class="cat-pill active" data-cat="eat" onclick="selCatEdit(this)">🍴 <span data-i18n="eat">Eat</span></div>
+    <div class="cat-pill" data-cat="stay" onclick="selCatEdit(this)">🛎️ <span data-i18n="stay">Stay</span></div>
+    <div class="cat-pill" data-cat="see" onclick="selCatEdit(this)">🏛️ <span data-i18n="see">See</span></div>
+    <div class="cat-pill" data-cat="do" onclick="selCatEdit(this)">🎫 <span data-i18n="doAct">Do</span></div>
+    <div class="cat-pill" data-cat="fun" onclick="selCatEdit(this)">🎡 <span data-i18n="fun">Fun</span></div>
+    <div class="cat-pill" data-cat="view" onclick="selCatEdit(this)">🌅 <span data-i18n="view">View</span></div>
+    <div class="cat-pill" data-cat="shop" onclick="selCatEdit(this)">🛍️ <span data-i18n="shop">Shop</span></div>
   </div>
   <div class="form-field"><label class="add-form-label" data-i18n="name">Name</label><input class="inp" id="ep-place-name" data-i18n-ph="placeNamePh" placeholder="Place name"></div>
   <div class="form-field" style="margin-top:12px"><label class="add-form-label" data-i18n="yourTake">Your take</label><input class="inp" id="ep-place-note" data-i18n-ph="whatLoved" placeholder="What did you love?"></div>
