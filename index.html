@@ -2046,6 +2046,7 @@ function enterApp(){
   buildLangBar();
 }
 function exitApp(){
+  if(typeof persistState==='function')persistState(); // keep the user's data across sign-out
   // Reset the UI to logged-out FIRST (appMode=false) so the SIGNED_OUT auth event below
   // doesn't loop back into exitApp() and freeze the page.
   appMode=false;
@@ -2130,7 +2131,7 @@ function blogCmd(cmd,val){
   try{ document.execCommand(cmd,false,(val===undefined?null:val)); }catch(e){}
   saveBlog();
 }
-function saveBlog(){if(!currentTrip)return;var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');currentTrip.blogTitle=ti?ti.value:'';if(bi)currentTrip.blog=bi.innerHTML;}
+function saveBlog(){if(!currentTrip)return;var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');currentTrip.blogTitle=ti?ti.value:'';if(bi)currentTrip.blog=bi.innerHTML;if(typeof persistSoon==='function')persistSoon();}
 function blogHasContent(){ return !!(currentTrip && ((currentTrip.blogTitle||'').trim() || stripTags(currentTrip.blog||'').trim())); }
 function showBlogMode(mode){
   var ed=document.getElementById('blog-edit'),vw=document.getElementById('blog-view');
@@ -2253,8 +2254,8 @@ function renderPhotosTab(){
     el.querySelector('img').onclick=function(){openLB(currentTrip.photos[i].url,currentTrip.photos[i].caption||'');};
   });
 }
-function setPhotoCaption(i,val){if(currentTrip&&currentTrip.photos[i])currentTrip.photos[i].caption=(val||'').trim();}
-function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('trip-notes-input').value;}
+function setPhotoCaption(i,val){if(currentTrip&&currentTrip.photos[i])currentTrip.photos[i].caption=(val||'').trim();if(typeof persistSoon==='function')persistSoon();}
+function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('trip-notes-input').value;if(typeof persistSoon==='function')persistSoon();}
 function renderNotesTab(){var inp=document.getElementById('trip-notes-input');if(inp)inp.value=currentTrip?(currentTrip.notes||''):'';renderMissedList();}
 function addMissed(){var inp=document.getElementById('missed-inp');var val=(inp?inp.value:'').trim();if(!val||!currentTrip)return;if(!currentTrip.missed)currentTrip.missed=[];currentTrip.missed.push(val);inp.value='';renderMissedList();}
 function renderMissedList(){var list=document.getElementById('missed-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.missed||[]).map(function(m,i){return'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:13px;color:var(--ink-2);font-style:italic">'+m+'</div><button onclick="removeMissed('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:13px">×</button></div>';}).join('');}
@@ -3058,7 +3059,7 @@ function bbEditApply(){
     currentTrip.book[pend.idx].photos[pend.slot]=out;bbRefresh(pend.idx);closeModal();toast(t('bbApplied'));
   });
 }
-function bbRefresh(idx){var c=document.getElementById('bb-card-'+idx);if(c)c.innerHTML=bookCardInner(idx);bbUpdateThumbs();}
+function bbRefresh(idx){var c=document.getElementById('bb-card-'+idx);if(c)c.innerHTML=bookCardInner(idx);bbUpdateThumbs();if(typeof persistSoon==='function')persistSoon();}
 // Re-render only the thumbnail nodes (inline spreads + all-pages strip) in place so they keep
 // mirroring the live pages after edits, without disturbing the card being edited / its focus.
 function bbUpdateThumbs(){
@@ -3693,6 +3694,7 @@ function savePlace(){
   closeModal();
   var f=document.querySelector('#places-filter .filter-pill.active');
   renderPlaces(f?f.dataset.f:'all');renderDash();toast('📍 '+name+' '+t('placeAddedToast'));
+  if(typeof persistSoon==='function')persistSoon();
 }
 // ─── MODALS ───────────────────────────────────────────────────────
 function openModal(sheetId){document.getElementById('modal-bg').classList.add('on');document.getElementById(sheetId).classList.add('on');}
@@ -4308,6 +4310,7 @@ function acceptDayProposed(btn){
   delete buckets[day];
   btn.disabled=true;btn.style.opacity='.5';btn.textContent='✓';
   renderPhotosTab();renderDash();toast(t('photosAddedDay')+' '+day);
+  if(typeof persistSoon==='function')persistSoon();
 }
 function addNoExifPhotos(){
   var day=parseInt((document.getElementById('no-exif-day')||{value:'1'}).value)||1;
@@ -4320,6 +4323,7 @@ function addNoExifPhotos(){
   var n=document.getElementById('photo-no-exif');
   if(n)n.style.display='none';
   renderPhotosTab();renderDash();toast(t('photosAddedDay')+' '+day);
+  if(typeof persistSoon==='function')persistSoon();
 }
 // ─── AUTH ─────────────────────────────────────────────────────────
 var _amode='signup';
@@ -13041,6 +13045,7 @@ function publishStory() {
     author:{id:0, name:userData.name, initial:userData.name[0], color:'linear-gradient(135deg,var(--ember),var(--gold))'}
   });
   _storyPhoto=null;
+  if(typeof persistSoon==='function')persistSoon();
   var sp=document.getElementById('story-photo-preview');if(sp)sp.style.display='none';
   var sl=document.getElementById('story-photo-label');if(sl)sl.textContent='Add a photo';
   closeModal();
@@ -14309,13 +14314,75 @@ function openCityGuide(idx){
 }
 
 
+// ── Local persistence ───────────────────────────────────────────────────────
+// Keep the user's data (trips, photos, notes, places, blogs, stories, profile, cart)
+// across refresh / sign-out by saving to localStorage and restoring on load.
+var _LS_KEY='trafolio_state_v1';
+function _persistPayload(stripData){
+  function clean(t){
+    if(!stripData) return t;
+    var c; try{ c=JSON.parse(JSON.stringify(t)); }catch(e){ return t; }
+    if(Array.isArray(c.photos)) c.photos=c.photos.filter(function(p){return p&&typeof p.url==='string'&&p.url.indexOf('data:')!==0;});
+    (c.book||[]).forEach(function(pg){ if(Array.isArray(pg.photos)) pg.photos=pg.photos.map(function(u){return (typeof u==='string'&&u.indexOf('data:')===0)?'':u;}); });
+    return c;
+  }
+  return {
+    v:1,
+    trips:(trips||[]).map(clean),
+    userStories:userStories||[],
+    cart:cart||[],
+    savedTrips:savedTrips||[],
+    orders:orders||[],
+    user:{
+      name:userData.name,username:userData.username,bio:userData.bio,from:userData.from,livesIn:userData.livesIn,
+      avatar:userData.avatar,cover:userData.cover,currency:userData.currency,isPublic:userData.isPublic,
+      following:(userData.following||[]).map(function(f){return f&&f.id;}).filter(function(x){return x!=null;}),
+      pendingFollows:userData.pendingFollows||[]
+    }
+  };
+}
+function persistState(){
+  try{
+    localStorage.setItem(_LS_KEY, JSON.stringify(_persistPayload(false)));
+  }catch(e){
+    // Quota exceeded (large data-URL photos) → retry without embedded data: images.
+    try{ localStorage.setItem(_LS_KEY, JSON.stringify(_persistPayload(true))); }catch(e2){}
+  }
+}
+function restoreState(){
+  try{
+    var raw=localStorage.getItem(_LS_KEY); if(!raw) return false;
+    var d=JSON.parse(raw); if(!d) return false;
+    if(Array.isArray(d.trips)&&d.trips.length) trips=d.trips;
+    if(Array.isArray(d.userStories)) userStories=d.userStories;
+    if(Array.isArray(d.cart)) cart=d.cart;
+    if(Array.isArray(d.savedTrips)) savedTrips=d.savedTrips;
+    if(Array.isArray(d.orders)) orders=d.orders;
+    if(d.user){
+      var u=d.user;
+      ['name','username','bio','from','livesIn','avatar','cover','currency'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
+      if(typeof u.isPublic!=='undefined') userData.isPublic=u.isPublic;
+      if(Array.isArray(u.following)) userData.following=u.following.map(function(id){return allUsers.find(function(x){return x.id===id;});}).filter(Boolean);
+      if(Array.isArray(u.pendingFollows)) userData.pendingFollows=u.pendingFollows;
+    }
+    return true;
+  }catch(e){ return false; }
+}
+var _persistT=null;
+function persistSoon(){ if(_persistT)clearTimeout(_persistT); _persistT=setTimeout(persistState,600); }
+window.addEventListener('beforeunload', persistState);
+window.addEventListener('pagehide', persistState);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') persistState(); });
+
 (function init(){
+  restoreState(); // bring back saved data before first render
   renderSharePage();
   trips.forEach(function(t){
     if(!t.itin)t.itin=[];if(!t.actualItin)t.actualItin=[];
     if(!t.expenses)t.expenses=[];if(!t.missed)t.missed=[];
     if(typeof t.starred==='undefined')t.starred=false;
   });
+  if(typeof applyIdentity==='function')applyIdentity();
   initGoogleAuth();
 })();
 </script>
