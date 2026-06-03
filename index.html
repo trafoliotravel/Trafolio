@@ -384,6 +384,8 @@ body.show-lbar .lbar{display:none}
 .top-search-inp{width:100%;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:24px;padding:9px 16px 9px 38px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;box-sizing:border-box}
 .top-search-inp:focus{border-color:var(--ember);background:white}
 .top-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4);pointer-events:none}
+/* Desktop: make the travel-map flag pins 25% smaller, anchored at the tip */
+@media(min-width:768px){#travel-map .tm-pin{transform:translate(-50%,-100%) scale(.75)!important;transform-origin:bottom center}}
 
 .trip-grid-dash-responsive{grid-template-columns:1fr 1fr}
 @media(min-width:768px){.trip-grid-dash-responsive{grid-template-columns:1fr 1fr 1fr}}
@@ -447,14 +449,13 @@ body.show-lbar .lbar{display:none}
   <div class="bnav-item" id="bnav-explore" onclick="showScreen('s-explore');setActiveNav('bnav-explore');renderExploreContent()">
     <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7.5"/><path d="M21 21l-4.3-4.3"/></svg></div><div class="bnav-label" data-i18n="navExplore">Explore</div>
   </div>
-  <div class="bnav-item" id="bnav-concierge" onclick="showScreen('s-concierge');setActiveNav('bnav-concierge');renderConcierge()">
-    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="bnav-label">Concierge</div>
-  </div>
   <div class="bnav-item" id="bnav-add" onclick="openAddTrip()">
     <div class="bnav-icon" style="margin-top:-2px"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="var(--ember)" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg></div>
     <div class="bnav-label" style="color:var(--ember)" data-i18n="navAddTrip">Add Trip</div>
   </div>
-  
+  <div class="bnav-item" id="bnav-concierge" onclick="showScreen('s-concierge');setActiveNav('bnav-concierge');renderConcierge()">
+    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="bnav-label">Concierge</div>
+  </div>
   <div class="bnav-item" id="bnav-profile" onclick="showScreen('s-profile');setActiveNav('bnav-profile')">
     <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></div><div class="bnav-label" data-i18n="profile">Profile</div>
   </div>
@@ -1814,11 +1815,11 @@ body.show-lbar .lbar{display:none}
         </div>
         <div id="travel-map-card" style="position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--paper-3);background:#0e3450">
           <!-- ocean band on top so the name reads clearly above the north pole -->
-          <div id="tm-titleband" style="text-align:center;padding:9px 12px 8px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1;background:#0e3450">&#127757; <span id="tm-name">My travels</span></div>
+          <div id="tm-titleband" style="text-align:center;padding:9px 12px 8px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1;background:#0e3450"><span id="tm-name">My</span> Trafo<em style="font-style:italic;color:var(--ember)">l</em>io <span data-i18n="mapWord">Map</span></div>
           <div id="travel-map" style="position:relative;width:100%;aspect-ratio:2 / 1;background:#0e3450">
-            <img id="travel-map-img" crossorigin="anonymous" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Equirectangular_projection_SW.jpg/1280px-Equirectangular_projection_SW.jpg" style="width:100%;height:100%;display:block;object-fit:cover;opacity:.95">
-            <!-- stats over Antarctica (white) in black for readability -->
-            <div id="tm-stats" style="position:absolute;bottom:5px;left:0;right:0;text-align:center;color:#0a1a26;font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em"><span id="tm-cities">0</span> <span data-i18n="citiesWord">cities</span> &middot; <span id="tm-countries">0</span> <span data-i18n="countriesWord">countries</span></div>
+            <img id="travel-map-img" crossorigin="anonymous" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Equirectangular-projection.jpg/1280px-Equirectangular-projection.jpg" style="width:100%;height:100%;display:block;object-fit:cover;opacity:.95">
+            <!-- stats in white with a shadow so they read on any part of the map -->
+            <div id="tm-stats" style="position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.7);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em"><span id="tm-cities">0</span> <span data-i18n="citiesWord">cities</span> &middot; <span id="tm-countries">0</span> <span data-i18n="countriesWord">countries</span></div>
           </div>
         </div>
       </div>
@@ -1956,7 +1957,7 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
     if(event === 'SIGNED_IN' && session && session.user){
       applySession(session.user, true);
     }
-    if(event === 'SIGNED_OUT'){ exitApp(); }
+    if(event === 'SIGNED_OUT'){ if(appMode) exitApp(); } // guard: avoid exitApp→signOut→SIGNED_OUT loop
   });
 })();
 
@@ -2044,12 +2045,15 @@ function enterApp(){
   showScreen('s-profile');setActiveNav('bnav-profile');
   buildLangBar();
 }
-function exitApp(){ if(sb){ sb.auth.signOut().catch(function(){}); }
+function exitApp(){
+  // Reset the UI to logged-out FIRST (appMode=false) so the SIGNED_OUT auth event below
+  // doesn't loop back into exitApp() and freeze the page.
   appMode=false;
   document.getElementById('nav-right-auth').style.display='';
   document.getElementById('nav-right-app').style.display='none';
   document.getElementById('bottom-nav').style.display='none';
   showScreen('s-home');
+  if(sb){ try{ sb.auth.signOut().catch(function(){}); }catch(e){} }
 }
 
 // ─── DASHBOARD ────────────────────────────────────────────────────
@@ -3504,26 +3508,28 @@ function countCountries(list){
 function mapXY(lat,lng){ return { x:(lng+180)/360*100, y:(90-lat)/180*100 }; }
 function renderTravelMap(){
   var map=document.getElementById('travel-map'); if(!map)return;
-  // remove old dots
-  [].slice.call(map.querySelectorAll('.tm-dot')).forEach(function(d){d.remove();});
+  // remove old markers
+  [].slice.call(map.querySelectorAll('.tm-dot,.tm-pin')).forEach(function(d){d.remove();});
   var cities={}, countries={};
   (trips||[]).forEach(function(t){
     var co=tripCoords(t); if(!co)return;
-    cities[t.dest]=co;
+    cities[t.dest]={co:co, flag:t.flag||cityFlag(t.dest)};
     var cc=normCountry(tripCountry(t)); if(cc)countries[cc]=1;
   });
   Object.keys(cities).forEach(function(dest){
-    var co=cities[dest], pos=mapXY(co[0],co[1]);
-    var dot=document.createElement('div');
-    dot.className='tm-dot';
-    dot.title=dest;
-    dot.style.cssText='position:absolute;width:11px;height:11px;border-radius:50%;background:#E8334A;border:1.5px solid #fff;box-shadow:0 0 0 3px rgba(232,51,74,.35),0 1px 4px rgba(0,0,0,.4);transform:translate(-50%,-50%);left:'+pos.x+'%;top:'+pos.y+'%;cursor:pointer';
-    map.appendChild(dot);
+    var c=cities[dest], pos=mapXY(c.co[0],c.co[1]);
+    // Pin = a circular country flag head over a red pointer; the tip sits on the coordinate.
+    var pin=document.createElement('div');
+    pin.className='tm-pin'; pin.title=dest;
+    pin.style.cssText='position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-100%);transform-origin:bottom center;cursor:pointer;z-index:2';
+    pin.innerHTML='<div style="width:20px;height:20px;border-radius:50%;border:2px solid #E8334A;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.45)">'+(c.flag||'📍')+'</div>'
+      +'<div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:7px solid #E8334A;margin:-1px auto 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))"></div>';
+    map.appendChild(pin);
   });
   var nc=Object.keys(cities).length, ncc=Object.keys(countries).length;
   var ec=document.getElementById('tm-cities'); if(ec)ec.textContent=nc;
   var ecc=document.getElementById('tm-countries'); if(ecc)ecc.textContent=ncc;
-  var nm=document.getElementById('tm-name'); if(nm)nm.textContent=(userData.name?userData.name+'’s travels':'My travels');
+  var nm=document.getElementById('tm-name'); if(nm)nm.textContent=(userData.name?userData.name+'’s':'My');
 }
 // Render the map to a canvas and share/download it as a PNG.
 function shareTravelMap(){
@@ -3536,21 +3542,26 @@ function shareTravelMap(){
   ctx.fillStyle='#0e3450';ctx.fillRect(0,0,W,H);
   try{ ctx.drawImage(img,0,BAND,W,MH); }catch(e){ toast(t('mapShareFail')); return; }
   var cities={},countries={};
-  (trips||[]).forEach(function(tp){var co=tripCoords(tp);if(!co)return;cities[tp.dest]=co;var cc=normCountry(tripCountry(tp));if(cc)countries[cc]=1;});
+  (trips||[]).forEach(function(tp){var co=tripCoords(tp);if(!co)return;cities[tp.dest]={co:co,flag:tp.flag||cityFlag(tp.dest)};var cc=normCountry(tripCountry(tp));if(cc)countries[cc]=1;});
   Object.keys(cities).forEach(function(dest){
-    var co=cities[dest],x=(co[1]+180)/360*W,y=BAND+(90-co[0])/180*MH;
-    ctx.beginPath();ctx.arc(x,y,12,0,7);ctx.fillStyle='rgba(232,51,74,.35)';ctx.fill();
-    ctx.beginPath();ctx.arc(x,y,6.5,0,7);ctx.fillStyle='#E8334A';ctx.fill();
-    ctx.lineWidth=2;ctx.strokeStyle='#fff';ctx.stroke();
+    var c=cities[dest],x=(c.co[1]+180)/360*W,y=BAND+(90-c.co[0])/180*MH; // tip at (x,y)
+    var hx=x,hy=y-24,r=13;
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-7,hy+5);ctx.lineTo(hx+7,hy+5);ctx.closePath();ctx.fillStyle='#E8334A';ctx.fill(); // pointer
+    ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#E8334A';ctx.stroke(); // head
+    ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='18px "Segoe UI Emoji","Apple Color Emoji",serif';ctx.fillStyle='#0a1a26';
+    try{ctx.fillText(c.flag||'📍',hx,hy+1);}catch(e){}
   });
+  ctx.textBaseline='alphabetic';
   // title centered on the top ocean band (white, clear)
   ctx.textAlign='center';
   ctx.fillStyle='#fff';
   ctx.font='600 44px Georgia, serif';
-  ctx.fillText('🌍 '+(userData.name?userData.name+'’s travels':'My travels'), W/2, 56);
-  // cities/countries near the south pole (over white Antarctica) in BLACK
-  ctx.font='700 30px monospace';ctx.fillStyle='#0a1a26';
+  ctx.fillText((userData.name?userData.name+'’s':'My')+' Trafolio Map', W/2, 56);
+  // cities/countries near the bottom in WHITE with a shadow so they read on any background
+  ctx.font='700 30px monospace';ctx.fillStyle='#fff';
+  ctx.shadowColor='rgba(0,0,0,.85)';ctx.shadowBlur=6;
   ctx.fillText(Object.keys(cities).length+' cities · '+Object.keys(countries).length+' countries', W/2, H-26);
+  ctx.shadowBlur=0;
   ctx.textAlign='left';
   ctx.font='500 20px monospace';ctx.fillStyle='rgba(255,255,255,.9)';
   ctx.fillText('trafolio.travel', W-220, 56);
@@ -4653,6 +4664,7 @@ const S={
     places:'places',
     photos:'photos',
     tabPlaces:'Places',
+    mapWord:"Map",
     photosPrivateLocked:"Private — hidden from this share",
     photosVisibility:"Who can see these photos",
     photosVisNote:"By default photos follow your trip’s sharing — change it here anytime.",
@@ -5379,6 +5391,7 @@ const S={
     places:'أماكن',
     photos:'صور',
     tabPlaces:'الأماكن',
+    mapWord:"خريطة",
     photosPrivateLocked:"خاص — مخفي من هذه المشاركة",
     photosVisibility:"من يمكنه رؤية هذه الصور",
     photosVisNote:"تتبع الصور إعداد مشاركة رحلتك افتراضياً — يمكنك تغييره هنا.",
@@ -6107,6 +6120,7 @@ const S={
     places:'lieux',
     photos:'photos',
     tabPlaces:'Lieux',
+    mapWord:"Carte",
     photosPrivateLocked:"Privé — masqué dans ce partage",
     photosVisibility:"Qui peut voir ces photos",
     photosVisNote:"Par défaut, les photos suivent le partage du voyage — modifiable ici.",
@@ -6835,6 +6849,7 @@ const S={
     places:'lugares',
     photos:'fotos',
     tabPlaces:'Lugares',
+    mapWord:"Mapa",
     photosPrivateLocked:"Privado — oculto en esta compartición",
     photosVisibility:"Quién puede ver estas fotos",
     photosVisNote:"Por defecto las fotos siguen el uso compartido del viaje — cámbialo aquí.",
@@ -7563,6 +7578,7 @@ const S={
     places:'yer',
     photos:'fotoğraf',
     tabPlaces:'Yerler',
+    mapWord:"Harita",
     photosPrivateLocked:"Gizli — bu paylaşımda gizli",
     photosVisibility:"Bu fotoğrafları kimler görebilir",
     photosVisNote:"Fotoğraflar varsayılan olarak gezi paylaşımını izler — buradan değiştir.",
@@ -8291,6 +8307,7 @@ const S={
     places:'luoghi',
     photos:'foto',
     tabPlaces:'Luoghi',
+    mapWord:"Mappa",
     photosPrivateLocked:"Privato — nascosto in questa condivisione",
     photosVisibility:"Chi può vedere queste foto",
     photosVisNote:"Per impostazione le foto seguono la condivisione del viaggio — modificabile qui.",
@@ -9019,6 +9036,7 @@ const S={
     places:'地方',
     photos:'照片',
     tabPlaces:'地点',
+    mapWord:"地图",
     photosPrivateLocked:"私密 — 不会出现在此分享中",
     photosVisibility:"谁可以看到这些照片",
     photosVisNote:"照片默认跟随行程的分享设置——可随时在此更改。",
@@ -9747,6 +9765,7 @@ const S={
     places:'Orte',
     photos:'Fotos',
     tabPlaces:'Orte',
+    mapWord:"Karte",
     photosPrivateLocked:"Privat — in dieser Freigabe ausgeblendet",
     photosVisibility:"Wer diese Fotos sehen kann",
     photosVisNote:"Fotos folgen standardmäßig der Reise-Freigabe — hier änderbar.",
@@ -10475,6 +10494,7 @@ const S={
     places:'lugares',
     photos:'fotos',
     tabPlaces:'Lugares',
+    mapWord:"Mapa",
     photosPrivateLocked:"Privado — oculto nesta partilha",
     photosVisibility:"Quem pode ver estas fotos",
     photosVisNote:"Por padrão as fotos seguem a partilha da viagem — altere aqui.",
@@ -11203,6 +11223,7 @@ const S={
     places:'スポット',
     photos:'写真',
     tabPlaces:'スポット',
+    mapWord:"マップ",
     photosPrivateLocked:"非公開 — この共有では表示されません",
     photosVisibility:"この写真を見られる人",
     photosVisNote:"写真は既定で旅行の共有設定に従います — ここで変更できます。",
