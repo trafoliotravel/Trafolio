@@ -1901,17 +1901,23 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
           // Restore saved profile data
           if(existing.bio) userData.bio = existing.bio;
           if(existing.avatar) userData.avatar = existing.avatar;
+          if(existing.cover) userData.cover = existing.cover;
+          if(existing.origin) userData.from = existing.origin;
+          if(existing.lives_in) userData.livesIn = existing.lives_in;
           if(existing.currency) userData.currency = existing.currency;
           if(existing.name) userData.name = existing.name;
           if(existing.username) userData.username = existing.username;
+          if(typeof existing.is_public!=='undefined') userData.isPublic = existing.is_public;
           if(existing.wishlist){ try{ userData.wishlist = JSON.parse(existing.wishlist); }catch(e){ userData.wishlist=[]; } }
           // Apply avatar to UI
           if(userData.avatar){
             ['prefs-av','dash-av','top-av','profile-av','ep-av-prev'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.backgroundImage='url('+userData.avatar+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}});
           }
+          if(userData.cover){var _pc=document.getElementById('profile-cover');if(_pc){_pc.src=userData.cover;_pc.style.opacity='.7';}}
           if(typeof renderProfile==='function') renderProfile();
           console.log('Profile restored from DB');
           dbLoadUserTrips();
+          dbLoadStories();
         } else {
           // No profile yet — create one
           sb.from('profiles').upsert({
@@ -2131,7 +2137,9 @@ function blogCmd(cmd,val){
   try{ document.execCommand(cmd,false,(val===undefined?null:val)); }catch(e){}
   saveBlog();
 }
-function saveBlog(){if(!currentTrip)return;var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');currentTrip.blogTitle=ti?ti.value:'';if(bi)currentTrip.blog=bi.innerHTML;if(typeof persistSoon==='function')persistSoon();}
+var _blogDbT=null;
+function saveBlog(){if(!currentTrip)return;var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');currentTrip.blogTitle=ti?ti.value:'';if(bi)currentTrip.blog=bi.innerHTML;if(typeof persistSoon==='function')persistSoon();
+  if(typeof dbUpdateTrip==='function'){var tr=currentTrip;if(_blogDbT)clearTimeout(_blogDbT);_blogDbT=setTimeout(function(){dbUpdateTrip(tr,{blog:tr.blog||'',blog_title:tr.blogTitle||''});},800);}}
 function blogHasContent(){ return !!(currentTrip && ((currentTrip.blogTitle||'').trim() || stripTags(currentTrip.blog||'').trim())); }
 function showBlogMode(mode){
   var ed=document.getElementById('blog-edit'),vw=document.getElementById('blog-view');
@@ -2232,6 +2240,8 @@ function setPhotoVis(v){
   var msgs={public:t('photosNowPublic'),followers:t('photosNowFollowers'),private:t('photosNowPrivate')};
   toast(msgs[v]||'');
   if(typeof renderShareTab==='function')renderShareTab();
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{photo_visibility:v});
 }
 function renderPhotosTab(){
   renderPhotoVisBar();
@@ -2255,7 +2265,9 @@ function renderPhotosTab(){
   });
 }
 function setPhotoCaption(i,val){if(currentTrip&&currentTrip.photos[i])currentTrip.photos[i].caption=(val||'').trim();if(typeof persistSoon==='function')persistSoon();}
-function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('trip-notes-input').value;if(typeof persistSoon==='function')persistSoon();}
+var _notesDbT=null;
+function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('trip-notes-input').value;if(typeof persistSoon==='function')persistSoon();
+  if(currentTrip&&typeof dbSaveTripNotes==='function'){var tr=currentTrip;if(_notesDbT)clearTimeout(_notesDbT);_notesDbT=setTimeout(function(){dbSaveTripNotes(tr);},800);}}
 function renderNotesTab(){var inp=document.getElementById('trip-notes-input');if(inp)inp.value=currentTrip?(currentTrip.notes||''):'';renderMissedList();}
 function addMissed(){var inp=document.getElementById('missed-inp');var val=(inp?inp.value:'').trim();if(!val||!currentTrip)return;if(!currentTrip.missed)currentTrip.missed=[];currentTrip.missed.push(val);inp.value='';renderMissedList();}
 function renderMissedList(){var list=document.getElementById('missed-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.missed||[]).map(function(m,i){return'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:13px;color:var(--ink-2);font-style:italic">'+m+'</div><button onclick="removeMissed('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:13px">×</button></div>';}).join('');}
@@ -3059,7 +3071,7 @@ function bbEditApply(){
     currentTrip.book[pend.idx].photos[pend.slot]=out;bbRefresh(pend.idx);closeModal();toast(t('bbApplied'));
   });
 }
-function bbRefresh(idx){var c=document.getElementById('bb-card-'+idx);if(c)c.innerHTML=bookCardInner(idx);bbUpdateThumbs();if(typeof persistSoon==='function')persistSoon();}
+function bbRefresh(idx){var c=document.getElementById('bb-card-'+idx);if(c)c.innerHTML=bookCardInner(idx);bbUpdateThumbs();if(typeof persistSoon==='function')persistSoon();if(typeof bbSaveBookSoon==='function')bbSaveBookSoon();}
 // Re-render only the thumbnail nodes (inline spreads + all-pages strip) in place so they keep
 // mirroring the live pages after edits, without disturbing the card being edited / its focus.
 function bbUpdateThumbs(){
@@ -3074,7 +3086,9 @@ function bbUpdateThumbs(){
   bbScaleMinis();
 }
 var _bbThumbT=null;
-function bbThumbsSoon(){if(_bbThumbT)clearTimeout(_bbThumbT);_bbThumbT=setTimeout(bbUpdateThumbs,300);}
+function bbThumbsSoon(){if(_bbThumbT)clearTimeout(_bbThumbT);_bbThumbT=setTimeout(bbUpdateThumbs,300);bbSaveBookSoon();}
+var _bbBookDbT=null;
+function bbSaveBookSoon(){ if(typeof dbSaveBook!=='function'||!currentTrip)return; var tr=currentTrip; if(_bbBookDbT)clearTimeout(_bbBookDbT); _bbBookDbT=setTimeout(function(){dbSaveBook(tr);},1500); }
 function bbSetLayout(idx,n){var pg=currentTrip.book[idx];pg.layout=n;pg.tpl=(bbDefaultTplFor(n)||{}).k||null;pg.photos=pg.photos.slice(0,n);if(pg.cells)pg.cells=pg.cells.slice(0,n);if(_bbActive&&_bbActive.idx===idx&&_bbActive.target!=='page'&&_bbActive.slot>=n)_bbActive=null;bbRefresh(idx);}
 function bbSetText(idx,val){currentTrip.book[idx].text=val;bbThumbsSoon();}
 function bbSetAboutTitle(idx,val){if(currentTrip&&currentTrip.book[idx])currentTrip.book[idx].aboutTitle=(val!=null?val:'');bbThumbsSoon();}
@@ -3609,8 +3623,10 @@ function saveProfile(){
   var init=name.charAt(0).toUpperCase();
   if(!userData.avatar)document.querySelectorAll('#profile-av,#dash-av,#top-av').forEach(function(a){if(!a.querySelector('img'))a.textContent=init;});
   closeModal();toast(t('profileUpdated'));renderProfile();
+  if(typeof dbSaveProfile==='function')dbSaveProfile();
+  if(typeof persistSoon==='function')persistSoon();
 }
-function toggleProfilePrivacy(){userData.isPublic=!userData.isPublic;renderProfile();toast(userData.isPublic?t('profilePublic'):t('profilePrivate'));}
+function toggleProfilePrivacy(){userData.isPublic=!userData.isPublic;renderProfile();toast(userData.isPublic?t('profilePublic'):t('profilePrivate'));if(typeof dbSaveProfile==='function')dbSaveProfile();if(typeof persistSoon==='function')persistSoon();}
 
 // ─── ADD TRIP ─────────────────────────────────────────────────────
 var _tripWith='solo',_selectedCover=null;
@@ -4035,7 +4051,7 @@ function showPaymentSuccess(results){
   }catch(e){}
   cart=[];updateCartBtn();
 }
-function setTripPrivacy(level){if(!currentTrip)return;currentTrip.privacy=level;['public','followers','private'].forEach(function(p){var opt=document.getElementById('tpriv-'+p);var rad=document.getElementById('tprad-'+p);if(opt)opt.classList.toggle('on',p===level);if(rad)rad.classList.toggle('on',p===level);});var msgs={public:t('tripPublic'),followers:t('tripFollowersOnly'),private:t('tripPrivate')};toast(msgs[level]);renderShareTab();}
+function setTripPrivacy(level){if(!currentTrip)return;currentTrip.privacy=level;['public','followers','private'].forEach(function(p){var opt=document.getElementById('tpriv-'+p);var rad=document.getElementById('tprad-'+p);if(opt)opt.classList.toggle('on',p===level);if(rad)rad.classList.toggle('on',p===level);});var msgs={public:t('tripPublic'),followers:t('tripFollowersOnly'),private:t('tripPrivate')};toast(msgs[level]);renderShareTab();if(typeof persistSoon==='function')persistSoon();if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{privacy:level});}
 
 // ─── SOCIAL ───────────────────────────────────────────────────────
 function userPhoto(id){var u=allUsers.find(function(x){return x.id===id;});return u&&u.photo?u.photo:'';}
@@ -4225,6 +4241,8 @@ function importFromLibrary(input){
     readExifFromFile(file,function(exifData){
       processed++;
       var photoObj={url:objUrl,caption:'',wide:false};
+      // Re-encode to a compressed data-URL so the photo survives reload (blob: URLs don't).
+      bbCompressImage(objUrl,{maxEdge:1400,quality:.8},function(d){ photoObj.url=d; if(typeof sbUploadImage==='function')sbUploadImage(d,'photo').then(function(u){ if(u)photoObj.url=u; }); });
       if(exifData&&exifData.dateTime)photoObj.dateTime=exifData.dateTime;
       if(exifData&&exifData.lat!=null)photoObj.gps={lat:exifData.lat,lng:exifData.lng};
       var matched=false;
@@ -4306,7 +4324,7 @@ function acceptDayProposed(btn){
   var buckets=window._dayBuckets||{};var arr=buckets[day]||[];
   if(!currentTrip||!arr.length)return;
   if(!currentTrip.photos)currentTrip.photos=[];
-  arr.forEach(function(p){currentTrip.photos.push({url:p.url,caption:p.caption||'',wide:false,day:day,dateTime:p.dateTime,gps:p.gps});});
+  arr.forEach(function(p){var po={url:p.url,caption:p.caption||'',wide:false,day:day,dateTime:p.dateTime,gps:p.gps};currentTrip.photos.push(po);if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);});
   delete buckets[day];
   btn.disabled=true;btn.style.opacity='.5';btn.textContent='✓';
   renderPhotosTab();renderDash();toast(t('photosAddedDay')+' '+day);
@@ -4317,7 +4335,8 @@ function addNoExifPhotos(){
   if(!_pendingNoExif.length||!currentTrip)return;
   if(!currentTrip.photos)currentTrip.photos=[];
   _pendingNoExif.forEach(function(x){
-    currentTrip.photos.push({url:x.photoObj.url,caption:x.photoObj.caption||'',wide:false,day:day,dateTime:x.photoObj.dateTime,gps:x.photoObj.gps});
+    var po={url:x.photoObj.url,caption:x.photoObj.caption||'',wide:false,day:day,dateTime:x.photoObj.dateTime,gps:x.photoObj.gps};
+    currentTrip.photos.push(po);if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
   });
   _pendingNoExif=[];
   var n=document.getElementById('photo-no-exif');
@@ -4402,8 +4421,31 @@ function sendWelcomeEmail(name,email){
 function dismissWelcomeEmail(){closeModal();showScreen('s-prefs');initPPills();}
 function initPPills(){document.querySelectorAll('.ppill').forEach(function(pill){if(pill._init)return;pill._init=true;pill.addEventListener('click',function(){var g=this.dataset.g;var multi=this.classList.contains('ppm');var on=this.classList.contains('on');function clr(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';var d=p.querySelector('.pdot');if(d)d.style.background=p.dataset.c||'var(--ember)';}function sel(p){var c=p.dataset.c||'var(--ember)';p.classList.add('on');p.style.background=c;p.style.borderColor=c;p.style.color='white';var d=p.querySelector('.pdot');if(d)d.style.background='rgba(255,255,255,.4)';}if(!multi){document.querySelectorAll('.ppill[data-g="'+g+'"]').forEach(function(x){clr(x);});if(!on)sel(this);}else{if(on)clr(this);else sel(this);}});});}
 function savePrefs(){var c=document.querySelector('.ppill[data-g="currency"].on');if(c)userData.currency=c.dataset.v;enterApp();}
-function setProfilePhoto(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){var url=e.target.result;userData.avatar=url;['prefs-av','dash-av','top-av','profile-av','ep-av-prev'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.backgroundImage='url('+url+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}});dbSaveProfile();};reader.readAsDataURL(file);}
-function setCoverPhoto(input){var file=input.files[0];if(!file)return;var url=URL.createObjectURL(file);userData.cover=url;var pc=document.getElementById('profile-cover');if(pc){pc.src=url;pc.style.opacity='.7';}var prev=document.getElementById('ep-cover-prev');if(prev)prev.src=url;}
+function setProfilePhoto(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){
+  // Compress to a small JPEG data-URL so it persists in localStorage (uncompressed blobs/data-URLs blow the quota).
+  bbCompressImage(e.target.result,{maxEdge:360,quality:.82},function(url){
+    function apply(u){ userData.avatar=u;
+      ['prefs-av','dash-av','top-av','profile-av','ep-av-prev'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.backgroundImage='url('+u+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}});
+      if(typeof dbSaveProfile==='function')dbSaveProfile();
+      if(typeof persistSoon==='function')persistSoon();
+    }
+    apply(url); // instant
+    if(typeof sbUploadImage==='function') sbUploadImage(url,'avatar').then(function(u){ if(u&&u!==url) apply(u); });
+  });
+};reader.readAsDataURL(file);}
+function setCoverPhoto(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){
+  // Use a compressed data-URL (NOT createObjectURL — blob: URLs become invalid after reload).
+  bbCompressImage(e.target.result,{maxEdge:1280,quality:.82},function(url){
+    function apply(u){ userData.cover=u;
+      var pc=document.getElementById('profile-cover');if(pc){pc.src=u;pc.style.opacity='.7';}
+      var prev=document.getElementById('ep-cover-prev');if(prev)prev.src=u;
+      if(typeof dbSaveProfile==='function')dbSaveProfile();
+      if(typeof persistSoon==='function')persistSoon();
+    }
+    apply(url);
+    if(typeof sbUploadImage==='function') sbUploadImage(url,'cover').then(function(u){ if(u&&u!==url) apply(u); });
+  });
+};reader.readAsDataURL(file);}
 
 // ─── LANGUAGE ─────────────────────────────────────────────────────
 // (LANGS_META defined below)
@@ -13044,6 +13086,7 @@ function publishStory() {
     visibility:(_storyVis||'public'), photo:_storyPhoto||null,
     author:{id:0, name:userData.name, initial:userData.name[0], color:'linear-gradient(135deg,var(--ember),var(--gold))'}
   });
+  if(typeof dbSaveStory==='function')dbSaveStory(userStories[userStories.length-1]);
   _storyPhoto=null;
   if(typeof persistSoon==='function')persistSoon();
   var sp=document.getElementById('story-photo-preview');if(sp)sp.style.display='none';
@@ -13392,7 +13435,11 @@ async function dbLoadUserTrips(){
           startDate: t.date_from||'', endDate: t.date_to||'',
           days: t.date_from&&t.date_to ? Math.max(1,Math.round((new Date(t.date_to)-new Date(t.date_from))/86400000)+1) : 5,
           starred: false, cover: t.cover_url||'', privacy: t.privacy||'public',
-          notes: t.notes||'', missed:[], places: tripPlaces, photos: tripPhotos, itin:[], actualItin:[], expenses:[]
+          photoVisibility: t.photo_visibility||null,
+          blog: t.blog||'', blogTitle: t.blog_title||'',
+          notes: t.notes||'', missed: (Array.isArray(t.missed)?t.missed:[]),
+          book: (Array.isArray(t.book)?t.book:null),
+          places: tripPlaces, photos: tripPhotos, itin:[], actualItin:[], expenses:[]
         };
       });
       trips = dbTrips;
@@ -13411,9 +13458,61 @@ async function dbSaveProfile(){
       bio: userData.bio||'',
       currency: userData.currency||'AED',
       is_public: userData.isPublic!==false,
-      avatar: userData.avatar||''
+      avatar: userData.avatar||'',
+      cover: userData.cover||'',
+      origin: userData.from||'',
+      lives_in: userData.livesIn||''
     });
   }catch(e){console.error('dbSaveProfile error:',e);}
+}
+// Upload a data-URL image to Supabase Storage ('media' bucket) → returns a public URL.
+// Falls back to the original string if there's no session / not a data URL / upload fails.
+async function sbUploadImage(dataUrl, prefix){
+  if(!sb||!userData.id||typeof dataUrl!=='string'||dataUrl.indexOf('data:')!==0) return dataUrl;
+  try{
+    var m=dataUrl.match(/^data:([^;]+);base64,(.*)$/); if(!m) return dataUrl;
+    var mime=m[1], bin=atob(m[2]), len=bin.length, bytes=new Uint8Array(len);
+    for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+    var ext=((mime.split('/')[1])||'jpg').replace('jpeg','jpg');
+    var path=userData.id+'/'+(prefix||'img')+'-'+Date.now()+'-'+Math.floor(Math.random()*1e9)+'.'+ext;
+    var up=await sb.storage.from('media').upload(path, bytes, {contentType:mime, upsert:true});
+    if(up.error){ console.error('sbUploadImage upload:',up.error); return dataUrl; }
+    var pub=sb.storage.from('media').getPublicUrl(path);
+    return (pub&&pub.data&&pub.data.publicUrl)||dataUrl;
+  }catch(e){ console.error('sbUploadImage:',e); return dataUrl; }
+}
+// Generic trip-field update by DB id.
+async function dbUpdateTrip(trip, fields){
+  if(!sb||!userData.id||!trip) return;
+  var id=trip.dbId||trip.id; if(!id) return;
+  try{ await sb.from('trips').update(fields).eq('id', id); }
+  catch(e){ console.error('dbUpdateTrip error:',e); }
+}
+function dbSaveBook(trip){ if(trip) dbUpdateTrip(trip, {book: trip.book||[]}); }
+async function dbSaveStory(story){
+  if(!sb||!userData.id||!story) return;
+  try{
+    var res=await sb.from('stories').insert({
+      user_id:userData.id, city:story.city, flag:story.flag||'', title:story.title,
+      body:story.body, visibility:story.visibility||'public', photo:story.photo||null, likes:story.likes||0
+    }).select();
+    if(res.error){ console.error('dbSaveStory error:',res.error); }
+    else if(res.data&&res.data[0]) story.dbId=res.data[0].id;
+  }catch(e){ console.error('dbSaveStory error:',e); }
+}
+async function dbLoadStories(){
+  if(!sb||!userData.id) return;
+  try{
+    var res=await sb.from('stories').select('*').eq('user_id',userData.id).order('created_at',{ascending:false});
+    if(res.data){
+      userStories=res.data.map(function(s){
+        return {dbId:s.id, city:s.city, flag:s.flag||cityFlag(s.city), title:s.title, body:s.body,
+          visibility:s.visibility||'public', photo:s.photo||null, likes:s.likes||0,
+          date:s.created_at?new Date(s.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'Just now',
+          author:{id:0,name:userData.name,initial:(userData.name||'?')[0],color:'linear-gradient(135deg,var(--ember),var(--gold))'}};
+      });
+    }
+  }catch(e){ console.error('dbLoadStories error:',e); }
 }
 
 
@@ -14318,35 +14417,41 @@ function openCityGuide(idx){
 // Keep the user's data (trips, photos, notes, places, blogs, stories, profile, cart)
 // across refresh / sign-out by saving to localStorage and restoring on load.
 var _LS_KEY='trafolio_state_v1';
-function _persistPayload(stripData){
+function _isData(u){ return typeof u==='string' && u.indexOf('data:')===0; }
+// level 0 = everything; 1 = drop trip/book data-URL photos; 2 = also drop avatar/cover/story data-URLs
+function _persistPayload(level){
   function clean(t){
-    if(!stripData) return t;
+    if(!level) return t;
     var c; try{ c=JSON.parse(JSON.stringify(t)); }catch(e){ return t; }
-    if(Array.isArray(c.photos)) c.photos=c.photos.filter(function(p){return p&&typeof p.url==='string'&&p.url.indexOf('data:')!==0;});
-    (c.book||[]).forEach(function(pg){ if(Array.isArray(pg.photos)) pg.photos=pg.photos.map(function(u){return (typeof u==='string'&&u.indexOf('data:')===0)?'':u;}); });
+    if(Array.isArray(c.photos)) c.photos=c.photos.filter(function(p){return p&&typeof p.url==='string'&&!_isData(p.url);});
+    (c.book||[]).forEach(function(pg){ if(Array.isArray(pg.photos)) pg.photos=pg.photos.map(function(u){return _isData(u)?'':u;}); });
     return c;
+  }
+  var avatar=userData.avatar, cover=userData.cover, stories=userStories||[];
+  if(level>=2){
+    if(_isData(avatar))avatar='';
+    if(_isData(cover))cover='';
+    stories=stories.map(function(s){var c=Object.assign({},s); if(_isData(c.photo))c.photo=null; return c;});
   }
   return {
     v:1,
     trips:(trips||[]).map(clean),
-    userStories:userStories||[],
+    userStories:stories,
     cart:cart||[],
     savedTrips:savedTrips||[],
     orders:orders||[],
     user:{
       name:userData.name,username:userData.username,bio:userData.bio,from:userData.from,livesIn:userData.livesIn,
-      avatar:userData.avatar,cover:userData.cover,currency:userData.currency,isPublic:userData.isPublic,
+      avatar:avatar,cover:cover,currency:userData.currency,isPublic:userData.isPublic,
       following:(userData.following||[]).map(function(f){return f&&f.id;}).filter(function(x){return x!=null;}),
       pendingFollows:userData.pendingFollows||[]
     }
   };
 }
 function persistState(){
-  try{
-    localStorage.setItem(_LS_KEY, JSON.stringify(_persistPayload(false)));
-  }catch(e){
-    // Quota exceeded (large data-URL photos) → retry without embedded data: images.
-    try{ localStorage.setItem(_LS_KEY, JSON.stringify(_persistPayload(true))); }catch(e2){}
+  for(var level=0; level<=2; level++){
+    try{ localStorage.setItem(_LS_KEY, JSON.stringify(_persistPayload(level))); return; }
+    catch(e){ /* quota — try a lighter payload */ }
   }
 }
 function restoreState(){
