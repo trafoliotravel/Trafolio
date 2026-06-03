@@ -383,7 +383,7 @@ body.show-lbar .lbar{display:none}
 .top-search-wrap{padding:8px 16px 4px;background:var(--white);border-bottom:1px solid var(--paper-3)}
 .top-search-inp{width:100%;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:24px;padding:9px 16px 9px 38px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:var(--ink);outline:none;box-sizing:border-box}
 .top-search-inp:focus{border-color:var(--ember);background:white}
-.top-search-icon{position:absolute;left:28px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4);pointer-events:none}
+.top-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4);pointer-events:none}
 
 .trip-grid-dash-responsive{grid-template-columns:1fr 1fr}
 @media(min-width:768px){.trip-grid-dash-responsive{grid-template-columns:1fr 1fr 1fr}}
@@ -750,6 +750,21 @@ body.show-lbar .lbar{display:none}
   <div class="ep-field"><label class="ep-label" data-i18n="confirmPassword">Confirm new password</label><input type="password" class="inp" id="cp-confirm" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;"></div>
   <div id="cp-err" style="color:var(--ember);font-size:13px;margin-bottom:10px;display:none"></div>
   <button class="btn btn-ember btn-full" onclick="saveNewPassword()" data-i18n="updatePassword">Update password</button>
+</div>
+
+<div class="modal-sheet" id="sheet-invite">
+  <div class="modal-handle"></div>
+  <div class="modal-title" data-i18n="inviteTitle">Invite friends</div>
+  <div style="font-size:13px;color:var(--ink-3);margin-bottom:16px;line-height:1.5" data-i18n="inviteSub">Share your link — when friends join, they’ll start as your trafollowers.</div>
+  <div style="display:flex;gap:8px;align-items:center;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:12px;padding:6px 6px 6px 12px;margin-bottom:14px">
+    <input id="invite-link-inp" readonly style="flex:1;min-width:0;border:none;background:none;font-family:'DM Mono',monospace;font-size:12px;color:var(--ink-2);outline:none">
+    <button class="btn btn-ember btn-sm" onclick="copyInviteLink()" data-i18n="copyLink">Copy link</button>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a id="invite-wa" target="_blank" rel="noopener" class="btn btn-ghost" style="flex:1;min-width:120px;text-decoration:none;text-align:center">💬 <span data-i18n="inviteWhatsApp">WhatsApp</span></a>
+    <a id="invite-email" class="btn btn-ghost" style="flex:1;min-width:120px;text-decoration:none;text-align:center">✉️ <span data-i18n="inviteEmail">Email</span></a>
+    <button id="invite-share" class="btn btn-ghost" style="flex:1;min-width:120px;display:none" onclick="inviteNativeShare()">🔗 <span data-i18n="inviteMore">More…</span></button>
+  </div>
 </div>
 
 <!-- INBOX (messages list) -->
@@ -1310,6 +1325,15 @@ body.show-lbar .lbar{display:none}
         <div style="flex:1"><div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:500;color:white;line-height:1.2" data-i18n="smartPhotoImport">Smart photo import</div><div style="font-size:12px;color:rgba(255,255,255,.45);margin-top:2px" data-i18n="smartPhotoSub">Reads date &amp; GPS — matches photos to trip days</div></div>
         <label style="flex-shrink:0;cursor:pointer"><span class="btn btn-ember btn-sm" style="pointer-events:none" data-i18n="importBtn">Import</span><input type="file" id="photo-library-inp" accept="image/*" multiple style="display:none" onchange="importFromLibrary(this)"></label>
       </div>
+      <div id="photo-vis-bar" style="margin:14px 16px 0">
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:7px" data-i18n="photosVisibility">Who can see these photos</div>
+        <div id="photo-vis-row" style="display:flex;gap:6px">
+          <button type="button" class="vis-seg" data-pvis="public" onclick="setPhotoVis('public')">&#127758; <span data-i18n="visPublic">Public</span></button>
+          <button type="button" class="vis-seg" data-pvis="followers" onclick="setPhotoVis('followers')">&#9992;&#65039; <span data-i18n="visFriends">Trafollowers</span></button>
+          <button type="button" class="vis-seg" data-pvis="private" onclick="setPhotoVis('private')">&#128274; <span data-i18n="visPrivate">Private</span></button>
+        </div>
+        <div style="font-size:11px;color:var(--ink-4);margin-top:6px;line-height:1.4" data-i18n="photosVisNote">By default photos follow your trip’s sharing — change it here anytime.</div>
+      </div>
       <div id="photo-proposals" style="display:none;margin:12px 16px 0;border:1px solid var(--paper-3);border-radius:var(--r-lg);overflow:hidden">
         <div style="padding:12px 16px;background:var(--paper-2);border-bottom:1px solid var(--paper-3);display:flex;align-items:center;justify-content:space-between">
           <div id="proposal-summary" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3)"></div>
@@ -1352,13 +1376,36 @@ body.show-lbar .lbar{display:none}
     </div>
 
     <!-- TAB: BLOG -->
+    <style>
+    .blog-tb{min-width:30px;height:30px;border:1px solid var(--paper-3);background:#fff;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink-2);display:inline-flex;align-items:center;justify-content:center;line-height:1;font-family:inherit}
+    .blog-tb:hover{background:var(--paper-2)}
+    #blog-body-input:empty:before{content:attr(data-ph);color:var(--ink-4)}
+    #blog-body-input:focus{border-color:var(--ink-4)}
+    </style>
     <div id="tab-blog" class="tab-content" style="display:none;padding:24px 20px">
+      <div id="blog-edit">
       <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:6px;letter-spacing:-0.01em" data-i18n="blogTitle">Trip blog</div>
       <div style="font-size:13px;color:var(--ink-4);margin-bottom:16px;line-height:1.55" data-i18n="blogSub">Write the story of this trip so you never forget it.</div>
       <input id="blog-title-input" class="inp" style="font-size:16px;font-weight:600;margin-bottom:10px" placeholder="Give your story a title…" data-i18n-ph="blogTitlePh" oninput="saveBlog()">
-      <textarea id="blog-body-input" class="inp" style="min-height:220px;resize:none;font-size:14px;line-height:1.75" placeholder="Tell the story of your trip — the moments, the meals, the people you met…" data-i18n-ph="blogBodyPh" oninput="saveBlog()"></textarea>
-      <button class="bb-ai-btn" style="margin-top:16px;width:100%" onclick="aiCaptionsFromBlog()">&#10024; <span data-i18n="blogAiCaptions">Suggest photo captions from my blog</span></button>
+      <div id="blog-toolbar" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center;border:1px solid var(--paper-3);border-bottom:none;border-radius:10px 10px 0 0;padding:6px 8px;background:var(--paper-2)">
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('bold')" title="Bold" style="font-weight:800">B</button>
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('italic')" title="Italic" style="font-style:italic">I</button>
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('underline')" title="Underline" style="text-decoration:underline">U</button>
+        <span style="width:1px;height:18px;background:var(--paper-3);margin:0 2px"></span>
+        <select class="blog-tb" onmousedown="event.stopPropagation()" onchange="blogCmd('fontSize',this.value);this.selectedIndex=0" title="Text size" style="width:auto;padding:0 6px"><option value="">A↕</option><option value="2">Small</option><option value="3">Normal</option><option value="5">Large</option><option value="6">Heading</option></select>
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('justifyLeft')" title="Align left">⯇</button>
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('justifyCenter')" title="Center">≡</button>
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('insertUnorderedList')" title="Bullet list">•</button>
+        <span style="width:1px;height:18px;background:var(--paper-3);margin:0 2px"></span>
+        <label class="blog-tb" title="Text colour" style="position:relative;overflow:hidden">🎨<input type="color" value="#001C30" onchange="blogCmd('foreColor',this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer"></label>
+        <button type="button" class="blog-tb" onmousedown="event.preventDefault()" onclick="blogCmd('removeFormat')" title="Clear formatting">⌫</button>
+      </div>
+      <div id="blog-body-input" contenteditable="true" data-ph="Tell the story of your trip — the moments, the meals, the people you met…" style="min-height:220px;border:1px solid var(--paper-3);border-radius:0 0 10px 10px;padding:12px 14px;font-size:14px;line-height:1.75;outline:none;overflow-y:auto" oninput="saveBlog()"></div>
+      <button class="btn btn-ember btn-full" style="margin-top:14px" onclick="blogSave()">&#10003; <span data-i18n="blogSaveBtn">Save blog</span></button>
+      <button class="bb-ai-btn" style="margin-top:10px;width:100%" onclick="aiCaptionsFromBlog()">&#10024; <span data-i18n="blogAiCaptions">Suggest photo captions from my blog</span></button>
       <div id="blog-ai-result" style="margin-top:14px"></div>
+      </div><!-- /blog-edit -->
+      <div id="blog-view" style="display:none"></div>
     </div>
 
     <!-- TAB: SHARE -->
@@ -1798,7 +1845,7 @@ body.show-lbar .lbar{display:none}
       <div id="profile-favorites" class="trip-grid-dash-responsive" style="display:grid;gap:8px;padding:6px 16px 24px"></div>
     </div><!-- /ptab-favorites -->
     <div style="padding:28px 20px 0;text-align:center">
-      <button onclick="exitApp()" style="font-size:13px;color:var(--ink-4);background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.06em" data-i18n="signOut">SIGN OUT</button><div class="lang-selector" id="lang-selector" style="display:flex;justify-content:center;margin:14px 20px 0;position:relative">
+      <div class="lang-selector" id="lang-selector" style="display:flex;justify-content:center;margin:0 20px 0;position:relative">
   <div class="lang-btn" id="lang-btn" onclick="toggleLangDropdown(event)" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;width:auto">
     <span id="lang-flag-disp" style="font-size:15px">🇬🇧</span>
     <span id="lang-code-disp" style="font-family:DM Mono,monospace;font-size:11px;font-weight:500;color:var(--ink-2)">EN</span>
@@ -2070,13 +2117,62 @@ function switchTab(btn){
   else if(tab==='book')bbScaleMinis();
 }
 var _blogCapSugg=null;
-function saveBlog(){if(!currentTrip)return;var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');currentTrip.blogTitle=ti?ti.value:'';currentTrip.blog=bi?bi.value:'';}
-function renderBlogTab(){var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');if(ti)ti.value=currentTrip?(currentTrip.blogTitle||''):'';if(bi)bi.value=currentTrip?(currentTrip.blog||''):'';var out=document.getElementById('blog-ai-result');if(out)out.innerHTML='';}
+function stripTags(s){return String(s||'').replace(/<[^>]*>/g,' ').replace(/&nbsp;/g,' ').replace(/\s+/g,' ').trim();}
+// Rich-text formatting command for the blog editor (contenteditable).
+function blogCmd(cmd,val){
+  var el=document.getElementById('blog-body-input'); if(!el)return;
+  el.focus();
+  try{ document.execCommand('styleWithCSS',false,true); }catch(e){}
+  try{ document.execCommand(cmd,false,(val===undefined?null:val)); }catch(e){}
+  saveBlog();
+}
+function saveBlog(){if(!currentTrip)return;var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');currentTrip.blogTitle=ti?ti.value:'';if(bi)currentTrip.blog=bi.innerHTML;}
+function blogHasContent(){ return !!(currentTrip && ((currentTrip.blogTitle||'').trim() || stripTags(currentTrip.blog||'').trim())); }
+function showBlogMode(mode){
+  var ed=document.getElementById('blog-edit'),vw=document.getElementById('blog-view');
+  if(ed)ed.style.display=(mode==='edit')?'':'none';
+  if(vw)vw.style.display=(mode==='view')?'':'none';
+}
+function renderBlogView(){
+  var v=document.getElementById('blog-view'); if(!v||!currentTrip)return;
+  var title=currentTrip.blogTitle||'', body=currentTrip.blog||'';
+  if(body && body.indexOf('<')<0) body=escHtml(body).replace(/\n/g,'<br>');
+  body=String(body).replace(/<script[\s\S]*?<\/script>/gi,'');
+  v.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px">'
+    +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)">'+t('blogTitle')+'</div>'
+    +'<button class="btn btn-ghost btn-sm" onclick="blogEdit()">&#9998; <span data-i18n="blogEditBtn">Edit</span></button></div>'
+    +(title?'<div style="font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500;line-height:1.2;color:var(--ink);margin-bottom:14px">'+escHtml(title)+'</div>':'')
+    +'<div style="font-size:15px;line-height:1.85;color:var(--ink-2)">'+body+'</div>';
+}
+function blogSave(){
+  saveBlog();
+  if(!blogHasContent()){ toast(t('blogEmptyToast')); return; }
+  renderBlogView(); showBlogMode('view');
+  toast(t('blogSavedToast'));
+}
+function blogEdit(){
+  showBlogMode('edit');
+  var bi=document.getElementById('blog-body-input'); if(bi)setTimeout(function(){bi.focus();},50);
+}
+function renderBlogTab(){
+  var ti=document.getElementById('blog-title-input');var bi=document.getElementById('blog-body-input');
+  if(ti)ti.value=currentTrip?(currentTrip.blogTitle||''):'';
+  if(bi){
+    var b=currentTrip?(currentTrip.blog||''):'';
+    if(b && b.indexOf('<')<0) b=escHtml(b).replace(/\n/g,'<br>'); // legacy plain-text → keep line breaks
+    bi.innerHTML=b;
+    bi.setAttribute('data-ph', t('blogBodyPh'));
+  }
+  var out=document.getElementById('blog-ai-result');if(out)out.innerHTML='';
+  // Existing blog → show the read view (with Edit); empty → open the editor.
+  if(blogHasContent()){ renderBlogView(); showBlogMode('view'); }
+  else { showBlogMode('edit'); }
+}
 function aiCaptionsFromBlog(){
   if(!currentTrip)return;
   var out=document.getElementById('blog-ai-result');
   var photos=currentTrip.photos||[];
-  var src=((currentTrip.blog||'')+' '+(currentTrip.notes||'')).replace(/\s+/g,' ').trim();
+  var src=(stripTags(currentTrip.blog||'')+' '+(currentTrip.notes||'')).replace(/\s+/g,' ').trim();
   if(!src){if(out)out.innerHTML='<div style="padding:14px;background:var(--ember-lt);border-radius:var(--r-md);font-size:13px;color:var(--ember-dk)">'+t('blogNeedText')+'</div>';return;}
   if(!photos.length){if(out)out.innerHTML='<div style="padding:14px;background:var(--ember-lt);border-radius:var(--r-md);font-size:13px;color:var(--ember-dk)">'+t('blogNeedPhotos')+'</div>';return;}
   var frags=src.split(/[.!?\n]+/).map(function(s){return s.trim();}).filter(function(s){return s.length>=8;});
@@ -2118,7 +2214,22 @@ function renderPlaces(filter){
   list.querySelectorAll('.place-edit-btn').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=this.closest('[data-pid]');if(item)openEditPlace(parseInt(item.dataset.pid));});});
 }
 function filterPlaces(el){currentFilter=el.dataset.f;document.querySelectorAll('#places-filter .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderPlaces(el.dataset.f);}
+// Photo visibility — defaults to following the trip's share level unless the user overrides it.
+function photoVisOf(){ if(!currentTrip)return 'public'; return currentTrip.photoVisibility || currentTrip.privacy || 'public'; }
+function renderPhotoVisBar(){
+  var v=photoVisOf();
+  document.querySelectorAll('#photo-vis-row .vis-seg').forEach(function(b){ b.classList.toggle('active', b.dataset.pvis===v); });
+}
+function setPhotoVis(v){
+  if(!currentTrip)return;
+  currentTrip.photoVisibility=v;
+  renderPhotoVisBar();
+  var msgs={public:t('photosNowPublic'),followers:t('photosNowFollowers'),private:t('photosNowPrivate')};
+  toast(msgs[v]||'');
+  if(typeof renderShareTab==='function')renderShareTab();
+}
 function renderPhotosTab(){
+  renderPhotoVisBar();
   var wrap=document.getElementById('photo-grid-wrap');
   if(!currentTrip||!currentTrip.photos.length){
     wrap.innerHTML='<div style="padding:40px 0;text-align:center"><div style="font-size:28px">📷</div><div style="font-size:14px;color:var(--ink-4)">'+t('noPhotosYet')+'</div></div>';
@@ -2160,8 +2271,11 @@ function renderShareTab(){
     var n=(currentTrip.places||[]).filter(function(p){return p.cat===c;}).length;
     return'<label onclick="toggleShareCat(\''+c+'\')" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:'+CAT_FLAGS[c]+';display:flex;align-items:center;justify-content:center;font-size:15px">'+CAT_ICONS[c]+'</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+CAT_NAMES[c]+'</div><div style="font-size:12px;color:var(--ink-4)">'+n+' '+t('places').toLowerCase()+'</div></div>'+shareCheck(on)+'</label>';
   }).join('');
-  var pon=sel.everything||sel.photos;
-  var photoRow='<label onclick="toggleSharePhotos()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ink-4)">'+((currentTrip.photos||[]).length)+' '+t('bbPhotos')+'</div></div>'+shareCheck(pon)+'</label>';
+  var photosPrivate=(photoVisOf()==='private');
+  var pon=!photosPrivate&&(sel.everything||sel.photos);
+  var photoRow= photosPrivate
+    ? '<label onclick="toggleSharePhotos()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3);opacity:.55"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ember-dk)">🔒 '+t('photosPrivateLocked')+'</div></div><div style="font-size:15px;color:var(--ink-4)">🔒</div></label>'
+    : '<label onclick="toggleSharePhotos()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ink-4)">'+((currentTrip.photos||[]).length)+' '+t('bbPhotos')+'</div></div>'+shareCheck(pon)+'</label>';
   var non=sel.everything||sel.notes;
   var notesRow='<label onclick="toggleShareNotes()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📝</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('shareNotes')+'</div><div style="font-size:12px;color:var(--ink-4)">'+t('shareNotesSub')+'</div></div>'+shareCheck(non)+'</label>';
   var mon=sel.everything||sel.missed;
@@ -2180,7 +2294,7 @@ function shareSelOf(trip){
 function _syncShareEverything(s){s.everything=s.photos&&s.notes&&s.missed&&['eat','stay','see','do','shop'].every(function(c){return s.cats[c];});}
 function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.notes=true;s.missed=true;['eat','stay','see','do','shop'].forEach(function(c){s.cats[c]=true;});}renderShareTab();}
 function toggleShareCat(c){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.cats[c]=!s.cats[c];_syncShareEverything(s);renderShareTab();}
-function toggleSharePhotos(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);renderShareTab();}
+function toggleSharePhotos(){if(!currentTrip)return;if(photoVisOf()==='private'){toast(t('photosPrivateLocked'));return;}var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);renderShareTab();}
 function toggleShareNotes(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.notes=!s.notes;_syncShareEverything(s);renderShareTab();}
 function toggleShareMissed(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.missed=!s.missed;_syncShareEverything(s);renderShareTab();}
 var BOOK_PAGES=15; // legacy / cart fallback
@@ -3024,21 +3138,29 @@ function cartItemFrom(trip,fmt){
   (trip.book||[]).forEach(function(pg){var cells=pg.cells||[];(pg.photos||[]).forEach(function(u,i){if(cells[i]&&cells[i].isText)return;if(typeof u==='string'&&/^https?:\/\//i.test(u))assets.push(u);});});
   return {dest:trip.dest,flag:trip.flag,cover:trip.cover,sku:fmt.sku,fmtName:fmt.name,coverFinish:fmt.cover,price:parsePrice(fmt.price),assets:assets};
 }
+// Return the book pages that are truly empty — no photo AND no text. (Was day-based before,
+// which wrongly warned about days even when every page had content.)
 function checkMissingPages(){
-  if(!currentTrip)return [];
-  var totalDays=currentTrip.days||1;
-  var daysWithPhotos={};
-  (currentTrip.photos||[]).forEach(function(p){if(p.day)daysWithPhotos[p.day]=true;});
-  var missing=[];
-  for(var d=1;d<=totalDays;d++){if(!daysWithPhotos[d])missing.push(d);}
-  return missing;
+  if(!currentTrip||!currentTrip.book)return [];
+  bbEnsure();
+  var empty=[];
+  currentTrip.book.forEach(function(pg,i){
+    if(pg.about) return; // the About page is a text page — never "empty"
+    var hasPhoto=(pg.photos||[]).some(function(u,idx){var c=pg.cells&&pg.cells[idx];return u && !(c&&c.isText);});
+    var hasText=((pg.text||'').trim())||((pg.cells||[]).some(function(c){return c&&c.isText&&(c.text||'').trim();}));
+    if(!hasPhoto && !hasText) empty.push(i);
+  });
+  return empty;
 }
 function bbAddToCart(){
-  var missing=checkMissingPages();
-  if(missing.length>0){
-    var msg=missing.length===1?'Day '+missing[0]+' has no photos yet. ':'Days '+missing.join(', ')+' have no photos yet. ';
-    if(!confirm(msg+'These pages will be empty in your book.\n\nAdd to cart anyway?')){
-      toast('Tip: add photos to Day '+missing[0]+' for a fuller book');
+  var empty=checkMissingPages();
+  if(empty.length>0){
+    var labels=empty.map(function(i){return (typeof bbPairToken==='function')?bbPairToken(i):('page '+i);});
+    var msg=empty.length===1
+      ? ('The '+labels[0]+' page has no photos yet. ')
+      : (empty.length+' pages are empty ('+labels.join(', ')+'). ');
+    if(!confirm(msg+'They’ll print blank in your book.\n\nAdd to cart anyway?')){
+      toast('Tip: add a photo (or text) to the empty pages first');
       return;
     }
   }
@@ -3163,7 +3285,7 @@ function bbBookDoc(){
   bbEnsure();
   var fmt=bbFormat();
   var ratio=bbAspect(fmt.sku);
-  var css='*{margin:0;padding:0;box-sizing:border-box}body{background:#9aa;font-family:Georgia,serif}'
+  var css='*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}html,body{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important}body{background:#9aa;font-family:Georgia,serif}'
     +'.page{aspect-ratio:'+ratio+';display:grid;gap:8px;padding:14px;position:relative;page-break-after:always;background:#fff}'
     +'.slot{position:relative;border-radius:5px;background:transparent}'
     +'.slot-img{position:absolute;inset:0;background-size:cover;background-position:center;border-radius:5px}'
@@ -3243,12 +3365,21 @@ function bbDoPrint(){
   bbPrintWindow();
 }
 // Fallback: open the book in a new window and trigger the browser print dialog.
+// Preloads every photo first so the print dialog opens with all pictures fully rendered.
 function bbPrintWindow(){
   var doc=bbBookDoc();if(!doc)return;
   var win=window.open('','_blank');if(!win){toast(t('bbPopupBlocked'));return;}
   win.document.write(doc);
   win.document.close();
-  setTimeout(function(){win.print();},700);
+  // Collect all photo URLs in the doc and preload them (shared browser cache → the print
+  // window renders them instantly), then print once they're ready (or after a safety timeout).
+  var urls=[]; doc.replace(/url\(['"]?([^'")]+)['"]?\)/g,function(m,u){ if(u&&u.indexOf('gradient')<0)urls.push(u); return m; });
+  var printed=false;
+  function fire(){ if(printed)return; printed=true; try{win.focus();}catch(e){} try{win.print();}catch(e){} }
+  if(!urls.length){ setTimeout(fire,400); return; }
+  var pending=urls.length;
+  urls.forEach(function(u){ var im=new Image(); im.onload=im.onerror=function(){ if(--pending<=0) setTimeout(fire,300); }; im.src=u; });
+  setTimeout(fire,6000); // safety: print even if an image hangs
 }
 function toggleStar(){if(!currentTrip)return;currentTrip.starred=!currentTrip.starred;document.getElementById('star-btn').textContent=currentTrip.starred?'★':'☆';toast(currentTrip.starred?t('starredToast'):t('unstarredToast'));}
 
@@ -3262,7 +3393,11 @@ function renderShPlaces(t,filter){
   });
   list.innerHTML=places.map(function(p){return'<div class="place-item"><div class="place-cat-dot cat-'+p.cat+'">'+CAT_ICONS[p.cat]+'</div><div><a class="place-name place-name-link" href="javascript:void(0)" data-map="'+gmapsUrl(p,t)+'" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.getAttribute(\'data-map\'),\'_blank\',\'noopener\');return false;">'+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'</div></div>';}).join('')||'<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+tt('nothingSharedYet')+'</div>';
 }
-function renderShPhotos(t){var grid=document.getElementById('share-photo-strip');if(!grid)return;var sel=shareSelOf(t);if(!(sel.everything||sel.photos)){grid.innerHTML='';return;}if(!t.photos.length)return;var html='';t.photos.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+ph.url+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+ph.caption+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=t.photos[idx]?t.photos[idx].url:'';var c=t.photos[idx]?t.photos[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
+function renderShPhotos(t){var grid=document.getElementById('share-photo-strip');if(!grid)return;var sel=shareSelOf(t);
+  // Honour the photos' own visibility: 'private' photos are never shown in a shared trip.
+  var pvis=(t.photoVisibility||t.privacy||'public');
+  if(pvis==='private'){grid.innerHTML='';return;}
+  if(!(sel.everything||sel.photos)){grid.innerHTML='';return;}if(!t.photos.length)return;var html='';t.photos.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+ph.url+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+ph.caption+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=t.photos[idx]?t.photos[idx].url:'';var c=t.photos[idx]?t.photos[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
 function shareFilter(el){document.querySelectorAll('#share-filter-strip .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderShPlaces(currentTrip||trips[0],el.dataset.f);}
 function renderSharePage(){
   var t=currentTrip||trips[0];if(!t)return;
@@ -4518,6 +4653,22 @@ const S={
     places:'places',
     photos:'photos',
     tabPlaces:'Places',
+    photosPrivateLocked:"Private — hidden from this share",
+    photosVisibility:"Who can see these photos",
+    photosVisNote:"By default photos follow your trip’s sharing — change it here anytime.",
+    photosNowPublic:"Photos are now public",
+    photosNowFollowers:"Photos visible to trafollowers",
+    photosNowPrivate:"Photos are now private",
+    inviteTitle:"Invite friends",
+    inviteSub:"Share your link — when friends join, they’ll start as your trafollowers.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"Email",
+    inviteMore:"More…",
+    inviteCopied:"Invite link copied",
+    blogSaveBtn:"Save blog",
+    blogEditBtn:"Edit",
+    blogSavedToast:"Blog saved",
+    blogEmptyToast:"Write something first",
     tabBlogs:"Blogs",
     feedFollowing:"Following",
     noBlogsYet:"No blogs yet",
@@ -5228,6 +5379,22 @@ const S={
     places:'أماكن',
     photos:'صور',
     tabPlaces:'الأماكن',
+    photosPrivateLocked:"خاص — مخفي من هذه المشاركة",
+    photosVisibility:"من يمكنه رؤية هذه الصور",
+    photosVisNote:"تتبع الصور إعداد مشاركة رحلتك افتراضياً — يمكنك تغييره هنا.",
+    photosNowPublic:"الصور عامة الآن",
+    photosNowFollowers:"الصور مرئية للمتابعين",
+    photosNowPrivate:"الصور خاصة الآن",
+    inviteTitle:"دعوة الأصدقاء",
+    inviteSub:"شارك رابطك — عند انضمام أصدقائك سيبدؤون كمتابعين لك.",
+    inviteWhatsApp:"واتساب",
+    inviteEmail:"بريد إلكتروني",
+    inviteMore:"المزيد…",
+    inviteCopied:"تم نسخ رابط الدعوة",
+    blogSaveBtn:"حفظ المدونة",
+    blogEditBtn:"تعديل",
+    blogSavedToast:"تم حفظ المدونة",
+    blogEmptyToast:"اكتب شيئاً أولاً",
     tabBlogs:"المدونات",
     feedFollowing:"أتابع",
     noBlogsYet:"لا مدونات بعد",
@@ -5940,6 +6107,22 @@ const S={
     places:'lieux',
     photos:'photos',
     tabPlaces:'Lieux',
+    photosPrivateLocked:"Privé — masqué dans ce partage",
+    photosVisibility:"Qui peut voir ces photos",
+    photosVisNote:"Par défaut, les photos suivent le partage du voyage — modifiable ici.",
+    photosNowPublic:"Photos désormais publiques",
+    photosNowFollowers:"Photos visibles par les trafollowers",
+    photosNowPrivate:"Photos désormais privées",
+    inviteTitle:"Inviter des amis",
+    inviteSub:"Partagez votre lien — vos amis vous suivront dès leur inscription.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"E-mail",
+    inviteMore:"Plus…",
+    inviteCopied:"Lien d’invitation copié",
+    blogSaveBtn:"Enregistrer",
+    blogEditBtn:"Modifier",
+    blogSavedToast:"Blog enregistré",
+    blogEmptyToast:"Écrivez d’abord quelque chose",
     tabBlogs:"Blogs",
     feedFollowing:"Abonnements",
     noBlogsYet:"Pas encore de blogs",
@@ -6652,6 +6835,22 @@ const S={
     places:'lugares',
     photos:'fotos',
     tabPlaces:'Lugares',
+    photosPrivateLocked:"Privado — oculto en esta compartición",
+    photosVisibility:"Quién puede ver estas fotos",
+    photosVisNote:"Por defecto las fotos siguen el uso compartido del viaje — cámbialo aquí.",
+    photosNowPublic:"Fotos ahora públicas",
+    photosNowFollowers:"Fotos visibles para trafollowers",
+    photosNowPrivate:"Fotos ahora privadas",
+    inviteTitle:"Invitar amigos",
+    inviteSub:"Comparte tu enlace — al unirse, te seguirán automáticamente.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"Correo",
+    inviteMore:"Más…",
+    inviteCopied:"Enlace de invitación copiado",
+    blogSaveBtn:"Guardar blog",
+    blogEditBtn:"Editar",
+    blogSavedToast:"Blog guardado",
+    blogEmptyToast:"Escribe algo primero",
     tabBlogs:"Blogs",
     feedFollowing:"Siguiendo",
     noBlogsYet:"Aún no hay blogs",
@@ -7364,6 +7563,22 @@ const S={
     places:'yer',
     photos:'fotoğraf',
     tabPlaces:'Yerler',
+    photosPrivateLocked:"Gizli — bu paylaşımda gizli",
+    photosVisibility:"Bu fotoğrafları kimler görebilir",
+    photosVisNote:"Fotoğraflar varsayılan olarak gezi paylaşımını izler — buradan değiştir.",
+    photosNowPublic:"Fotoğraflar artık herkese açık",
+    photosNowFollowers:"Fotoğraflar takipçilere görünür",
+    photosNowPrivate:"Fotoğraflar artık gizli",
+    inviteTitle:"Arkadaşları davet et",
+    inviteSub:"Bağlantını paylaş — katılan arkadaşların seni takip etmeye başlar.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"E-posta",
+    inviteMore:"Daha fazla…",
+    inviteCopied:"Davet bağlantısı kopyalandı",
+    blogSaveBtn:"Blogu kaydet",
+    blogEditBtn:"Düzenle",
+    blogSavedToast:"Blog kaydedildi",
+    blogEmptyToast:"Önce bir şeyler yazın",
     tabBlogs:"Bloglar",
     feedFollowing:"Takip",
     noBlogsYet:"Henüz blog yok",
@@ -8076,6 +8291,22 @@ const S={
     places:'luoghi',
     photos:'foto',
     tabPlaces:'Luoghi',
+    photosPrivateLocked:"Privato — nascosto in questa condivisione",
+    photosVisibility:"Chi può vedere queste foto",
+    photosVisNote:"Per impostazione le foto seguono la condivisione del viaggio — modificabile qui.",
+    photosNowPublic:"Foto ora pubbliche",
+    photosNowFollowers:"Foto visibili ai trafollower",
+    photosNowPrivate:"Foto ora private",
+    inviteTitle:"Invita amici",
+    inviteSub:"Condividi il link — gli amici ti seguiranno appena si iscrivono.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"Email",
+    inviteMore:"Altro…",
+    inviteCopied:"Link d’invito copiato",
+    blogSaveBtn:"Salva blog",
+    blogEditBtn:"Modifica",
+    blogSavedToast:"Blog salvato",
+    blogEmptyToast:"Scrivi prima qualcosa",
     tabBlogs:"Blog",
     feedFollowing:"Seguiti",
     noBlogsYet:"Ancora nessun blog",
@@ -8788,6 +9019,22 @@ const S={
     places:'地方',
     photos:'照片',
     tabPlaces:'地点',
+    photosPrivateLocked:"私密 — 不会出现在此分享中",
+    photosVisibility:"谁可以看到这些照片",
+    photosVisNote:"照片默认跟随行程的分享设置——可随时在此更改。",
+    photosNowPublic:"照片现已公开",
+    photosNowFollowers:"照片对关注者可见",
+    photosNowPrivate:"照片现已私密",
+    inviteTitle:"邀请好友",
+    inviteSub:"分享你的链接——好友加入后会自动关注你。",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"邮件",
+    inviteMore:"更多…",
+    inviteCopied:"邀请链接已复制",
+    blogSaveBtn:"保存博客",
+    blogEditBtn:"编辑",
+    blogSavedToast:"博客已保存",
+    blogEmptyToast:"请先写点内容",
     tabBlogs:"博客",
     feedFollowing:"关注",
     noBlogsYet:"暂无博客",
@@ -9500,6 +9747,22 @@ const S={
     places:'Orte',
     photos:'Fotos',
     tabPlaces:'Orte',
+    photosPrivateLocked:"Privat — in dieser Freigabe ausgeblendet",
+    photosVisibility:"Wer diese Fotos sehen kann",
+    photosVisNote:"Fotos folgen standardmäßig der Reise-Freigabe — hier änderbar.",
+    photosNowPublic:"Fotos jetzt öffentlich",
+    photosNowFollowers:"Fotos für Trafollower sichtbar",
+    photosNowPrivate:"Fotos jetzt privat",
+    inviteTitle:"Freunde einladen",
+    inviteSub:"Teile deinen Link — neue Freunde folgen dir automatisch.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"E-Mail",
+    inviteMore:"Mehr…",
+    inviteCopied:"Einladungslink kopiert",
+    blogSaveBtn:"Blog speichern",
+    blogEditBtn:"Bearbeiten",
+    blogSavedToast:"Blog gespeichert",
+    blogEmptyToast:"Schreibe zuerst etwas",
     tabBlogs:"Blogs",
     feedFollowing:"Folge ich",
     noBlogsYet:"Noch keine Blogs",
@@ -10212,6 +10475,22 @@ const S={
     places:'lugares',
     photos:'fotos',
     tabPlaces:'Lugares',
+    photosPrivateLocked:"Privado — oculto nesta partilha",
+    photosVisibility:"Quem pode ver estas fotos",
+    photosVisNote:"Por padrão as fotos seguem a partilha da viagem — altere aqui.",
+    photosNowPublic:"Fotos agora públicas",
+    photosNowFollowers:"Fotos visíveis para trafollowers",
+    photosNowPrivate:"Fotos agora privadas",
+    inviteTitle:"Convidar amigos",
+    inviteSub:"Partilhe o seu link — ao entrarem, começam a segui-lo.",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"E-mail",
+    inviteMore:"Mais…",
+    inviteCopied:"Link de convite copiado",
+    blogSaveBtn:"Guardar blog",
+    blogEditBtn:"Editar",
+    blogSavedToast:"Blog guardado",
+    blogEmptyToast:"Escreva algo primeiro",
     tabBlogs:"Blogs",
     feedFollowing:"A seguir",
     noBlogsYet:"Ainda sem blogs",
@@ -10924,6 +11203,22 @@ const S={
     places:'スポット',
     photos:'写真',
     tabPlaces:'スポット',
+    photosPrivateLocked:"非公開 — この共有では表示されません",
+    photosVisibility:"この写真を見られる人",
+    photosVisNote:"写真は既定で旅行の共有設定に従います — ここで変更できます。",
+    photosNowPublic:"写真を公開しました",
+    photosNowFollowers:"写真はフォロワーに表示されます",
+    photosNowPrivate:"写真を非公開にしました",
+    inviteTitle:"友達を招待",
+    inviteSub:"リンクを共有 — 友達が参加するとあなたのフォロワーになります。",
+    inviteWhatsApp:"WhatsApp",
+    inviteEmail:"メール",
+    inviteMore:"その他…",
+    inviteCopied:"招待リンクをコピーしました",
+    blogSaveBtn:"ブログを保存",
+    blogEditBtn:"編集",
+    blogSavedToast:"ブログを保存しました",
+    blogEmptyToast:"まず何か書いてください",
     tabBlogs:"ブログ",
     feedFollowing:"フォロー中",
     noBlogsYet:"まだブログがありません",
@@ -12618,7 +12913,7 @@ var cityBlogs=[
 function ownTripBlogs(){
   return (trips||[]).filter(function(tp){return (tp.blog||'').trim()||(tp.blogTitle||'').trim();}).map(function(tp){
     return {id:'t'+tp.id, city:tp.dest, tripId:tp.id, author:{id:0,name:userData.name,initial:(userData.name||'?')[0],color:'linear-gradient(135deg,var(--ember),var(--gold))'},
-      visibility:(tp.privacy==='private'?'private':'public'), date:tp.dates||'', title:tp.blogTitle||(tp.dest+' blog'), body:tp.blog||''};
+      visibility:(tp.privacy==='private'?'private':'public'), date:tp.dates||'', title:tp.blogTitle||(tp.dest+' blog'), body:tp.blog||'', html:true};
   });
 }
 function allBlogs(){ return ownTripBlogs().concat(cityBlogs); }
@@ -12651,7 +12946,7 @@ function buildBlogsHTML(cityFilter, opts){
           + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(b.author.name.toUpperCase())+' \xB7 '+cityFlag(b.city)+' '+escHtml(b.city.toUpperCase())+(b.date?' \xB7 '+escHtml(b.date):'')+'</div>'
           + '<span class="story-vis-badge" style="margin-left:auto">'+vis.icon+' '+escHtml(vis.label)+'</span></div>'
           + '<div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:5px">'+escHtml(b.title)+'</div>'
-          + '<div style="font-size:13px;color:var(--ink-3);line-height:1.6">'+escHtml((b.body||'').substring(0,150))+'…</div>'
+          + '<div style="font-size:13px;color:var(--ink-3);line-height:1.6">'+escHtml((b.html?stripTags(b.body):(b.body||'')).substring(0,150))+'…</div>'
           + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ember);font-weight:600;margin-top:8px">'+t('readBlog')+' →</div>'
           + '</div></div>';
       }).join('')
@@ -12683,7 +12978,8 @@ function openBlog(id){
   var title=document.createElement('div');title.style.cssText='font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500;line-height:1.2;color:var(--ink);margin-bottom:16px';title.textContent=b.title;
   var ph=blogPhotoFor(b),img=null;
   if(ph){img=document.createElement('img');img.src=ph;img.setAttribute('onerror',"imgFallback(this,'"+(b.city||'').replace(/'/g,'')+"')");img.style.cssText='display:block;width:auto;max-width:100%;max-height:300px;margin:0 auto 18px;border-radius:12px;object-fit:contain';}
-  var bodyText=document.createElement('div');bodyText.style.cssText='font-family:Cormorant Garamond,serif;font-size:18px;line-height:1.8;color:var(--ink-2);white-space:pre-line';bodyText.textContent=b.body;
+  var bodyText=document.createElement('div');bodyText.style.cssText='font-family:Cormorant Garamond,serif;font-size:18px;line-height:1.8;color:var(--ink-2);white-space:pre-line';
+  if(b.html){ bodyText.style.whiteSpace='normal'; bodyText.innerHTML=String(b.body||'').replace(/<script[\s\S]*?<\/script>/gi,''); } else { bodyText.textContent=b.body; }
   wrap.appendChild(authorRow);wrap.appendChild(meta);wrap.appendChild(title);if(img)wrap.appendChild(img);wrap.appendChild(bodyText);
   body.appendChild(wrap);
   openModal('sheet-story-reader');
@@ -13430,7 +13726,8 @@ function openProfileVisibility(){
   }
 }
 function openPasswordChange(){
-  toast('Password change — coming soon');
+  if(typeof openChangePassword==='function'){ openChangePassword(); }
+  else { openModal('sheet-change-password'); }
 }
 
 // ── COMMUNITY TOP PLACES (aggregate reviews) ──────────────────────────────
@@ -13512,18 +13809,29 @@ async function loadTopPlaces(city, containerId){
 }
 
 // ── INVITE FRIENDS ────────────────────────────────────────────────────────
+function inviteLink(){ return 'https://trafolio.travel/invite/'+(userData.username||'me'); }
+function inviteMsg(){ return 'Join me on Trafolio — save & share the best travel spots! '+inviteLink(); }
 function inviteFriends(){
-  var handle=userData.username||'me';
-  var link='https://trafolio.travel/invite/'+handle;
-  var msg='Join me on Trafolio — the app for saving and sharing the best travel spots! '+link;
-  if(navigator.share){
-    navigator.share({title:'Join me on Trafolio',text:'Join me on Trafolio — save & share the best travel spots!',url:link})
-      .catch(function(){});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(msg).then(function(){toast('✉️ Invite link copied — paste it anywhere');}).catch(function(){prompt('Copy your invite link:',link);});
-  } else {
-    prompt('Copy your invite link:',link);
-  }
+  var link=inviteLink(), msg=inviteMsg();
+  var inp=document.getElementById('invite-link-inp'); if(inp)inp.value=link;
+  var wa=document.getElementById('invite-wa'); if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(msg);
+  var em=document.getElementById('invite-email'); if(em)em.href='mailto:?subject='+encodeURIComponent('Join me on Trafolio')+'&body='+encodeURIComponent(msg);
+  var sh=document.getElementById('invite-share'); if(sh)sh.style.display=(navigator.share?'':'none');
+  openModal('sheet-invite');
+}
+function copyInviteLink(){
+  var link=inviteLink();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(link).then(function(){toast(t('inviteCopied'));}).catch(function(){_inviteFallbackCopy(link);});
+  } else { _inviteFallbackCopy(link); }
+}
+function _inviteFallbackCopy(link){
+  var inp=document.getElementById('invite-link-inp');
+  if(inp){ inp.focus(); inp.select(); try{document.execCommand('copy');toast(t('inviteCopied'));return;}catch(e){} }
+  prompt('Copy your invite link:',link);
+}
+function inviteNativeShare(){
+  if(navigator.share){ navigator.share({title:'Join me on Trafolio',text:'Join me on Trafolio — save & share the best travel spots!',url:inviteLink()}).catch(function(){}); }
 }
 
 // ── CONCIERGE CITY GUIDE ──────────────────────────────────────────────────
