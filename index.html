@@ -584,6 +584,55 @@ body.show-lbar .lbar{display:none}
   <button class="btn btn-ember btn-full" style="margin-top:8px" onclick="savePlace()" data-i18n="savePlace">Save place</button>
 </div>
 
+<!-- UPGRADE / PRO PAYWALL -->
+<div class="modal-sheet" id="sheet-upgrade">
+  <div class="modal-handle"></div>
+  <div style="text-align:center;padding:8px 0 2px">
+    <div style="font-size:34px;line-height:1">&#11088;</div>
+    <div class="modal-title" style="margin-top:4px">Trafolio <span style="color:var(--ember)">Pro</span></div>
+    <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--ink);line-height:1.1">$4.99<span style="font-size:14px;color:var(--ink-4)">/<span data-i18n="perMonth">month</span></span></div>
+    <div id="upgrade-reason" style="font-size:13px;color:var(--ink-3);margin:8px 18px 0"></div>
+  </div>
+  <div style="margin:18px 4px;display:flex;flex-direction:column;gap:11px">
+    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#9854;</span><span data-i18n="proFeatUnlimited">Unlimited trips</span></div>
+    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#129302;</span><span data-i18n="proFeatAI">AI story &amp; itinerary writing</span></div>
+    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#128229;</span><span data-i18n="proFeatOffline">Offline access on the road</span></div>
+    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#128279;</span><span data-i18n="proFeatShare">Share every trip publicly</span></div>
+  </div>
+  <button id="upgrade-subscribe" class="btn btn-ember btn-full" onclick="startCheckout()" data-i18n="subscribeBtn">Subscribe — $4.99/mo</button>
+  <button id="upgrade-manage" class="btn btn-ghost btn-full" style="display:none;margin-top:8px" onclick="manageSubscription()" data-i18n="manageSub">Manage subscription</button>
+  <div style="font-size:11px;color:var(--ink-4);text-align:center;margin-top:12px" data-i18n="cancelAnytime">Cancel anytime. Your past trips always stay yours to view.</div>
+</div>
+
+<!-- EDIT TRIP -->
+<div class="modal-sheet" id="sheet-edit-trip">
+  <div class="modal-handle"></div>
+  <div class="modal-title" data-i18n="editTrip">Edit trip</div>
+  <div class="add-form-field" style="margin-bottom:14px;margin-top:6px">
+    <div style="display:flex;gap:8px" id="et-type-toggle">
+      <button type="button" class="fpill active" data-tt="city" onclick="setEditTripType('city')" style="flex:1;justify-content:center">📍 <span data-i18n="tripTypeCity">One city</span></button>
+      <button type="button" class="fpill" data-tt="country" onclick="setEditTripType('country')" style="flex:1;justify-content:center">🗺️ <span data-i18n="tripTypeCountry">Multi-city</span></button>
+    </div>
+  </div>
+  <div class="add-form-field">
+    <label class="add-form-label" data-i18n="tripNameLabel">Trip name</label>
+    <input class="inp" id="et-dest" autocomplete="off">
+  </div>
+  <div class="add-form-field">
+    <label class="add-form-label" data-i18n="countryLabel">Country</label>
+    <input class="inp" id="et-country" autocomplete="off">
+  </div>
+  <div class="add-form-field">
+    <label class="add-form-label" data-i18n="datesLabel">Dates</label>
+    <div style="display:flex;gap:8px">
+      <input type="date" class="inp" id="et-from" style="flex:1">
+      <input type="date" class="inp" id="et-to" style="flex:1">
+    </div>
+  </div>
+  <div id="et-multicity-hint" style="display:none;font-size:12px;color:var(--ink-3);background:var(--ember-lt);border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px" data-i18n="multiCityHint">Multi-city trip — add the cities you visited from the Places tab.</div>
+  <button class="btn btn-ember btn-full" style="margin-top:6px" onclick="saveEditTrip()" data-i18n="saveChanges">Save changes</button>
+</div>
+
 <!-- ADD CITY (multi-city / country trips) -->
 <div class="modal-sheet" id="sheet-add-city">
   <div class="modal-handle"></div>
@@ -922,7 +971,8 @@ body.show-lbar .lbar{display:none}
 <!-- CHAT (1:1 conversation) -->
 <div class="modal-sheet" id="sheet-chat">
   <div class="modal-handle"></div>
-  <div id="chat-header" style="display:flex;align-items:center;gap:11px;margin-bottom:10px"></div>
+  <button type="button" onclick="backToInbox()" title="Back to messages" aria-label="Back" style="position:absolute;top:10px;left:14px;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink-2);font-size:17px;line-height:1;cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;padding:0">&#8592;</button>
+  <div id="chat-header" style="display:flex;align-items:center;gap:11px;margin-bottom:10px;padding-left:38px"></div>
   <div id="chat-messages" style="height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px;background:var(--paper-2);border-radius:var(--r-md);margin-bottom:10px"></div>
   <div style="display:flex;gap:8px;align-items:center;position:relative">
     <button type="button" id="emoji-btn" onclick="toggleEmojiPicker(event)" title="Emoji" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--paper-3);background:var(--paper-2);cursor:pointer;font-size:18px;line-height:1">😊</button>
@@ -1281,9 +1331,9 @@ body.show-lbar .lbar{display:none}
         </div>
       </div>
       <div class="stat-bar" style="border-radius:var(--r-md);overflow:hidden;border:1px solid var(--paper-3)">
-        <div class="stat-item"><div class="stat-num" id="stat-trips">3</div><div class="stat-lbl" data-i18n="trips">Trips</div></div>
-        <div class="stat-item"><div class="stat-num" id="stat-places">14</div><div class="stat-lbl" data-i18n="places">Places</div></div>
-        <div class="stat-item"><div class="stat-num" id="stat-photos">8</div><div class="stat-lbl" data-i18n="photos">Photos</div></div>
+        <div class="stat-item"><div class="stat-num" id="stat-trips">0</div><div class="stat-lbl" data-i18n="trips">Trips</div></div>
+        <div class="stat-item"><div class="stat-num" id="stat-places">0</div><div class="stat-lbl" data-i18n="places">Places</div></div>
+        <div class="stat-item"><div class="stat-num" id="stat-photos">0</div><div class="stat-lbl" data-i18n="photos">Photos</div></div>
       </div>
     </div>
     <div style="padding:0 20px 12px;display:flex;align-items:baseline;justify-content:space-between">
@@ -1308,6 +1358,7 @@ body.show-lbar .lbar{display:none}
       <div class="trip-hero-actions">
         <button class="btn-icon" onclick="showScreen('s-dash');setActiveNav('bnav-trips')">&#8592;</button>
         <div style="display:flex;gap:8px">
+          <button class="btn-icon" onclick="openEditTrip()" title="Edit trip" data-i18n-title="editTrip">&#9998;</button>
           <label class="btn-icon" title="Change cover photo" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&#128247;<input type="file" accept="image/*" style="display:none" onchange="editTripCover(this)"></label>
           <button class="btn-icon" onclick="openShareSheet()" title="Share">&#8599;</button>
           <button class="btn-icon" onclick="toggleStar()" id="star-btn" title="Star">&#9734;</button>
@@ -1485,6 +1536,13 @@ body.show-lbar .lbar{display:none}
     /* Vertical (portrait) orientation: flip page + thumbnail aspect ratios */
     .bb-orient-v .bb-page{aspect-ratio:3/4}
     .bb-orient-v .bb-mini-page{aspect-ratio:3/4}
+    /* "How your printed book looks" showcase banner */
+    .bb-showcase{padding:6px 16px 12px}
+    .bb-showcase-lab{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px;text-align:center}
+    .bb-showcase-row{display:flex;gap:14px;overflow-x:auto;padding:6px 4px 10px;justify-content:flex-start;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+    @media(min-width:680px){.bb-showcase-row{justify-content:center;flex-wrap:wrap}}
+    .bb-book-shot{flex:0 0 auto;height:160px;border-radius:10px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(0,28,48,.16);scroll-snap-align:center}
+    .bb-book-shot img{height:100%;width:auto;max-width:260px;object-fit:cover;display:block}
     /* Orientation toggle control */
     .bb-orient{display:flex;justify-content:center;gap:8px;padding:0 16px 4px}
     .bb-orient-btn{display:flex;align-items:center;gap:7px;border:1px solid var(--paper-3);background:#fff;color:var(--ink);border-radius:10px;padding:8px 14px;cursor:pointer;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;transition:all .15s}
@@ -1679,6 +1737,16 @@ body.show-lbar .lbar{display:none}
         <div class="bb-sub" data-i18n="bbSub">Design 24 to 40 beautiful pages from your photos and memories. Pick layouts, add text, choose colours — or let AI design it for you.</div>
         <button class="bb-ai-btn" onclick="bbAIDesign()">&#10024; <span data-i18n="bbAiDesign">Let AI design my book</span></button>
       </div>
+      <div class="bb-showcase">
+        <div class="bb-showcase-lab">&#128214; <span data-i18n="bbShowcase">See how your printed book looks</span></div>
+        <div class="bb-showcase-row" id="bb-showcase-row">
+          <div class="bb-book-shot"><img src="assets/memorybook-1.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-2.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-3.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-4.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-5.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+        </div>
+      </div>
       <div class="bb-orient">
         <button type="button" class="bb-orient-btn" id="bb-orient-h" onclick="bbSetOrient('h')"><span class="bb-orient-ico h"></span><span data-i18n="bbOrientH">Horizontal</span></button>
         <button type="button" class="bb-orient-btn" id="bb-orient-v" onclick="bbSetOrient('v')"><span class="bb-orient-ico v"></span><span data-i18n="bbOrientV">Vertical</span></button>
@@ -1800,7 +1868,12 @@ body.show-lbar .lbar{display:none}
       </div>
       <!-- Name + handle centered -->
       <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;letter-spacing:-0.01em" id="profile-name">John K</div>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin-bottom:14px" id="profile-username">@johnk</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin-bottom:8px" id="profile-username">@johnk</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <span id="profile-plan-badge" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:var(--paper-3);color:var(--ink-3)">Free</span>
+        <button id="profile-upgrade-btn" onclick="onProfileUpgradeClick()" style="background:var(--ember);color:#fff;border:none;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer" data-i18n="upgradeCta">Upgrade to Pro</button>
+        <span id="profile-trips-left" style="font-size:11px;color:var(--ink-4)"></span>
+      </div>
       <!-- Stats row: Following | Edit button | Followers (OOO style) -->
       <div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:14px;flex-wrap:wrap">
         <div style="cursor:pointer;text-align:center" onclick="openFollowing()">
@@ -1938,6 +2011,8 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
           if(existing.cover) userData.cover = existing.cover;
           if(existing.origin) userData.from = existing.origin;
           if(existing.lives_in) userData.livesIn = existing.lives_in;
+          if(existing.plan) userData.plan = existing.plan;
+          if(typeof existing.sub_status!=='undefined') userData.subStatus = existing.sub_status;
           if(existing.currency) userData.currency = existing.currency;
           if(existing.name) userData.name = existing.name;
           if(existing.username) userData.username = existing.username;
@@ -2039,10 +2114,10 @@ const allUsers=[
       fIds.filter(function(id){return igIds.includes(id);}).map(function(id){return allUsers.find(function(x){return x.id===id;});}).filter(Boolean):[];
   });
 })();
-const userData={name:'John K',username:'johnk',bio:'Dubai-based traveller. Always planning the next trip. Food-first explorer.',from:'Beirut',livesIn:'Dubai',isPublic:true,currency:'AED',followers:[1,2,3,4].map(function(id){return allUsers.find(function(u){return u.id===id;});}),following:[5,6,7].map(function(id){return allUsers.find(function(u){return u.id===id;});})};
+const userData={name:'John K',username:'johnk',bio:'Dubai-based traveller. Always planning the next trip. Food-first explorer.',from:'Beirut',livesIn:'Dubai',isPublic:true,currency:'AED',followers:[],following:[],plan:'free',subStatus:null};
 // Seed each sample traveller with an origin + current city (for near-me / from-here recos).
 (function(){var FL={1:['Beirut','Dubai'],2:['London','Berlin'],3:['Beirut','Barcelona'],4:['Amman','Dubai'],5:['Reykjavik','Tokyo'],6:['Beirut','Lisbon'],7:['Athens','Rome'],8:['Sydney','Dubai'],9:['Manchester','Zurich'],10:['Cairo','Dubai'],11:['Mexico City','Madrid'],12:['Osaka','Seoul'],13:['Beirut','Doha'],14:['Lisbon','Vienna'],15:['Cape Town','Sydney'],16:['Mumbai','Singapore'],17:['New York','Paris']};allUsers.forEach(function(u){var fl=FL[u.id];if(fl){u.from=fl[0];u.livesIn=fl[1];}});})();
-let trips=[
+var _SEED_TRIPS=[
   {id:1,dest:'Tokyo',country:'Japan',flag:'🇯🇵',dates:'Mar 2026',days:8,starred:false,privacy:'public',cover:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80',startDate:'2026-03-01',endDate:'2026-03-08',notes:"One of my favourite trips. The food culture here is unlike anywhere else — every meal felt like an event. Senso-ji at sunrise is worth setting an alarm for.",missed:['TeamLab Planets','Climbing Fuji-san'],itin:[],actualItin:[],expenses:[],
     places:[{id:1,cat:'eat',name:'Ichiran Ramen',note:'Solo booths, rich tonkotsu, ordering by machine. Perfect.',rating:5},{id:2,cat:'see',name:'Senso-ji Temple',note:'Get there at 6am. The lantern light with no crowds is worth losing sleep for.',rating:5},{id:3,cat:'do',name:'teamLab Borderless',note:'A full-body art experience. Book 2 weeks ahead.',rating:4},{id:4,cat:'eat',name:'Tsukiji Outer Market',note:'Tuna sashimi at 7am. The freshest thing I have ever eaten.',rating:5},{id:5,cat:'stay',name:'Trunk Hotel Shibuya',note:'Design-forward, neighbourhood feel. Rooftop bar excellent.',rating:4},{id:6,cat:'see',name:'Yanaka District',note:'Old Tokyo. Cats everywhere. No tourists. Go on foot.',rating:4}],
     photos:[{url:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=90',caption:'Tokyo at night — Shinjuku skyline',wide:true},{url:'https://images.unsplash.com/photo-1571401835393-8c5f35328320?w=600&q=90',caption:'Shibuya crossing — 7pm rush'},{url:'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=90',caption:'Senso-ji — 6am, no crowds'},{url:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=90',caption:'Shibuya streets at dusk'},{url:'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&q=90',caption:'Tokyo Tower reflected'},{url:'https://images.unsplash.com/photo-1549921296-bc643ead1e65?w=600&q=90',caption:'Ramen at Ichiran — solo booth'},{url:'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=600&q=90',caption:'Tsukiji market at dawn',wide:true}]},
@@ -2053,12 +2128,15 @@ let trips=[
     places:[{id:12,cat:'eat',name:'Trèsind Studio',note:'10-course Indian. Worth every dirham. Book a month ahead.',rating:5},{id:13,cat:'eat',name:'Al Fanar Restaurant',note:'Old Dubai vibes, proper Emirati food, rooftop terrace.',rating:4},{id:14,cat:'see',name:'Al Fahidi Fort',note:"The city's oldest building. Free. Totally underrated.",rating:5}],
     photos:[{url:'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=90',caption:'Dubai skyline at sunset',wide:true},{url:'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?w=600&q=90',caption:'Burj Khalifa at night'},{url:'https://images.unsplash.com/photo-1549488799-c2e04c44bbf7?w=600&q=90',caption:'Desert dunes aerial'},{url:'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=90',caption:'Marina walk at night'},{url:'https://images.unsplash.com/photo-1526495124232-a04e1849168c?w=600&q=90',caption:'Souk Madinat at dusk',wide:true},{url:'https://images.unsplash.com/photo-1596627116790-af6f46dddbfd?w=600&q=90',caption:'Nobu Dubai — black cod miso'},{url:'https://images.unsplash.com/photo-1563456812-4e1d3c38d094?w=600&q=90',caption:'Al Fahidi old quarter'}]}
 ];
+// New users start with an EMPTY account. The demo trips above are used only to build
+// the landing-page example guide (DEMO_GUIDE) — they are never loaded into a user's profile.
+let trips=[];
 
 // A fixed Tokyo example guide for the landing page "See an example" preview.
 // Deep-cloned from the seed Tokyo trip so it survives even after the user's own
 // trips are loaded/cleared. Includes a short personal blog.
 var DEMO_GUIDE=(function(){try{
-  var g=JSON.parse(JSON.stringify(trips[0]));
+  var g=JSON.parse(JSON.stringify(_SEED_TRIPS[0]));
   g.id='demo'; g.author={name:'John K'};
   g.blogTitle='Eight days in Tokyo';
   g.blog="<p>Tokyo is the rare city that rewards both planning and wandering. I came with a long list and threw half of it away by day three, because the best moments were the unplanned ones — a tiny yakitori counter in Yanaka, a 6am temple with no crowds, a coffee shop the size of a closet. Mornings belonged to the markets and shrines; nights belonged to neon and ramen. What surprised me most was how calm a city of 37 million can feel. I left already planning the next trip.</p>";
@@ -2090,6 +2168,7 @@ function enterApp(){
   document.getElementById('nav-right-app').style.display='flex';
   document.getElementById('bottom-nav').style.display='flex';
   applyIdentity();updateCartBtn();
+  if(typeof renderDash==='function')renderDash();
   renderProfile();
   // Pre-render all tabs so they're never empty
   if(typeof renderFeed==='function')renderFeed();
@@ -2113,7 +2192,13 @@ function exitApp(){
 // ─── DASHBOARD ────────────────────────────────────────────────────
 function renderDash(){
   var grid=document.getElementById('trip-grid-dash');grid.innerHTML='';
-  if(!trips.length){grid.style.display='none';document.getElementById('trip-empty').style.display='';return;}
+  if(!trips.length){
+    grid.style.display='none';document.getElementById('trip-empty').style.display='';
+    ['stat-trips','stat-places','stat-photos'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent='0';});
+    if(typeof renderProfileGrid==='function')renderProfileGrid();
+    if(typeof updateProfileStats==='function')updateProfileStats();
+    return;
+  }
   grid.style.display='grid';document.getElementById('trip-empty').style.display='none';
   trips.forEach(function(t,i){
     var card=document.createElement('div');card.className='trip-card';card.onclick=function(){openTrip(t.id);};
@@ -2158,6 +2243,7 @@ function openTrip(id){
   setTimeout(function(){renderShareTab();},100);
 }
 function openShareSheet(){
+  if(currentTrip && !canShareTrip(currentTrip)){ openPaywall(t('paywallShare')); return; }
   var btn=document.querySelector('#trip-tabs .tab-btn[data-tab="share"]');
   if(btn)switchTab(btn);
   renderShareTab();
@@ -2279,6 +2365,13 @@ function renderPlaces(filter){
   list.querySelectorAll('.place-edit-btn').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=this.closest('[data-pid]');if(item)openEditPlace(parseInt(item.dataset.pid));});});
 }
 function filterPlaces(el){currentFilter=el.dataset.f;document.querySelectorAll('#places-filter .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderPlaces(el.dataset.f);}
+// Memory-book showcase banner: hide a missing image, and hide the whole banner if none load.
+function bbShotFail(img){
+  var sh=img.closest&&img.closest('.bb-book-shot'); if(sh)sh.style.display='none';
+  var row=document.getElementById('bb-showcase-row'); if(!row)return;
+  var any=[].some.call(row.querySelectorAll('.bb-book-shot'),function(s){return s.style.display!=='none';});
+  if(!any){ var sc=row.closest('.bb-showcase'); if(sc)sc.style.display='none'; }
+}
 // ─── MULTI-CITY (country) trips ──────────────────────────────────
 function refreshTripHeroMeta(){
   if(!currentTrip)return;var el=document.getElementById('trip-hero-meta');if(!el)return;
@@ -3590,6 +3683,7 @@ function renderProfile(){
   renderProfileGrid();
   renderTravelMap();
   renderProfileStories();
+  if(typeof applyPlanUI==='function')applyPlanUI();
 }
 function renderProfileStories(){
   var wrap=document.getElementById('profile-stories');if(!wrap)return;
@@ -3772,6 +3866,62 @@ function toggleProfilePrivacy(){userData.isPublic=!userData.isPublic;renderProfi
 
 // ─── ADD TRIP ─────────────────────────────────────────────────────
 var _tripWith='solo',_selectedCover=null,_tripType='city',_cityFilter='all',_placeCity='';
+// ─── MONETIZATION / ENTITLEMENTS ──────────────────────────────────
+// Free plan = up to 3 active trips. Pro ($4.99/mo) = unlimited trips + AI + offline.
+var FREE_TRIP_LIMIT=3;
+function isPro(){ return userData && userData.plan==='pro'; }
+function activeTripCount(){ return (trips||[]).length; }
+function canAddTrip(){ return isPro() || activeTripCount() < FREE_TRIP_LIMIT; }
+// A trip created beyond the free quota is a "Pro-era" trip: visible to others & shareable
+// only while the author is Pro. When Pro lapses, the owner can still view it.
+function tripRequiresPro(t){ return !!(t && t.requiresPro); }
+function canShareTrip(t){ return isPro() || !tripRequiresPro(t); }
+function openPaywall(reason){
+  var sub=document.getElementById('upgrade-reason');
+  if(sub)sub.textContent = reason || t('paywallDefault');
+  // reflect current plan in the sheet
+  var mng=document.getElementById('upgrade-manage'); if(mng)mng.style.display=isPro()?'block':'none';
+  var go=document.getElementById('upgrade-subscribe'); if(go)go.style.display=isPro()?'none':'block';
+  openModal('sheet-upgrade');
+}
+// Stripe Checkout — the server (server.js) holds the secret key and creates the session.
+async function startCheckout(){
+  if(!sb||!userData.id){ toast(t('signInToSubscribe')); return; }
+  var btn=document.getElementById('upgrade-subscribe');
+  try{
+    if(btn){btn.disabled=true;btn.textContent='…';}
+    var r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,email:userData.email||''})});
+    var d=await r.json();
+    if(d&&d.url){ location.href=d.url; return; }
+    toast((d&&d.error)||t('checkoutUnavailable'));
+  }catch(e){ toast(t('checkoutUnavailable')); }
+  if(btn){btn.disabled=false;btn.textContent=t('subscribeBtn');}
+}
+async function manageSubscription(){
+  if(!sb||!userData.id){ toast(t('signInToSubscribe')); return; }
+  try{
+    var r=await fetch('/api/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id})});
+    var d=await r.json();
+    if(d&&d.url){ location.href=d.url; return; }
+    toast((d&&d.error)||t('checkoutUnavailable'));
+  }catch(e){ toast(t('checkoutUnavailable')); }
+}
+// Pull the latest plan from the DB (e.g. after returning from Stripe Checkout).
+async function refreshSubStatus(){
+  if(!sb||!userData.id) return;
+  try{
+    var r=await sb.from('profiles').select('plan,sub_status').eq('id',userData.id).maybeSingle();
+    if(r&&r.data){ userData.plan=r.data.plan||'free'; userData.subStatus=r.data.sub_status||null; applyPlanUI(); }
+  }catch(e){}
+}
+function applyPlanUI(){
+  var badge=document.getElementById('profile-plan-badge');
+  if(badge){ badge.textContent=isPro()?t('planPro'):t('planFree'); badge.style.background=isPro()?'var(--ember)':'var(--paper-3)'; badge.style.color=isPro()?'#fff':'var(--ink-3)'; }
+  var up=document.getElementById('profile-upgrade-btn'); if(up)up.textContent=isPro()?t('manageSub'):t('upgradeCta');
+  var hint=document.getElementById('profile-trips-left');
+  if(hint){ if(isPro()){ hint.style.display='none'; } else { hint.style.display=''; hint.textContent=Math.max(0,FREE_TRIP_LIMIT-activeTripCount())+' '+t('freeTripsLeft'); } }
+}
+function onProfileUpgradeClick(){ if(isPro())manageSubscription(); else openPaywall(); }
 // City vs Country (multi-city) toggle in the Add Trip flow.
 function setTripType(tt){
   _tripType=(tt==='country')?'country':'city';
@@ -3785,7 +3935,9 @@ function setTripType(tt){
     if(inp)inp.placeholder=t('destExamplePh');
   }
 }
-function openAddTrip(){setTimeout(function(){if(typeof renderRangeCal==="function"){resetRangeCal();}},50);
+function openAddTrip(){
+  if(!canAddTrip()){ openPaywall(t('paywallTripLimit')); return; }
+  setTimeout(function(){if(typeof renderRangeCal==="function"){resetRangeCal();}},50);
   ['at-loc-search','at-cover-url','at-from','at-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['at-dest','at-country','at-flag','at-lat','at-lng'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var chosen=document.getElementById('at-chosen');if(chosen)chosen.style.display='none';
@@ -3798,6 +3950,7 @@ function openAddTrip(){setTimeout(function(){if(typeof renderRangeCal==="functio
   openModal('sheet-add-trip');
 }
 function createTrip(){
+  if(!canAddTrip()){ closeModal(); openPaywall(t('paywallTripLimit')); return; }
   var ls=document.getElementById('at-loc-search');
   var dh=document.getElementById('at-dest');
   var dest=(dh&&dh.value?dh.value:(ls?ls.value:'')).trim();
@@ -3825,7 +3978,9 @@ function createTrip(){
       seedCities=[{name:chosenCity,flag:flag,lat:lat0,lng:lng0}];
     }
   }
-  var newTrip={id:Date.now(),dest:tripDest,country:tripCountry,flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public',tripType:_tripType,cities:seedCities};
+  // Trips created beyond the free quota are "Pro-era" — visible to others & shareable only while Pro.
+  var _requiresPro = activeTripCount() >= FREE_TRIP_LIMIT;
+  var newTrip={id:Date.now(),dest:tripDest,country:tripCountry,flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public',tripType:_tripType,cities:seedCities,requiresPro:_requiresPro};
   trips.unshift(newTrip);closeModal();renderDash();toast(flag+' '+newTrip.dest+' '+t('addedToast'));
   dbSaveTrip(newTrip);
   setTimeout(function(){openTrip(newTrip.id);},300);
@@ -3898,7 +4053,31 @@ function savePlace(){
   if(typeof persistSoon==='function')persistSoon();
 }
 // ─── MODALS ───────────────────────────────────────────────────────
-function openModal(sheetId){document.getElementById('modal-bg').classList.add('on');document.getElementById(sheetId).classList.add('on');}
+function openModal(sheetId){document.getElementById('modal-bg').classList.add('on');var sheet=document.getElementById(sheetId);sheet.classList.add('on');ensureModalClose(sheet);}
+// Give every modal sheet a visible close (×) so users can always back out.
+function ensureModalClose(sheet){
+  if(!sheet||sheet.querySelector(':scope > .modal-close-x'))return;
+  var x=document.createElement('button');x.type='button';x.className='modal-close-x';x.setAttribute('aria-label','Close');x.title='Close';
+  x.innerHTML='&times;';
+  x.style.cssText='position:absolute;top:10px;right:14px;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink-2);font-size:19px;line-height:1;cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 1px 4px rgba(0,28,48,.12)';
+  x.onclick=function(e){e.preventDefault();e.stopPropagation();closeModal();};
+  sheet.appendChild(x);
+}
+function backToInbox(){closeModal();openModal('sheet-inbox');}
+// Add a clear (×) button to a search input so users can wipe what they typed in one tap.
+function attachSearchClear(id){
+  var inp=document.getElementById(id); if(!inp||inp._clearAttached)return; inp._clearAttached=true;
+  var wrap=inp.parentElement; if(!wrap)return;
+  try{ if(getComputedStyle(wrap).position==='static') wrap.style.position='relative'; }catch(e){}
+  var btn=document.createElement('button'); btn.type='button'; btn.className='search-clear-x'; btn.setAttribute('aria-label','Clear'); btn.innerHTML='&times;';
+  btn.style.cssText='position:absolute;right:10px;top:50%;transform:translateY(-50%);width:20px;height:20px;border:none;border-radius:50%;background:var(--paper-3);color:var(--ink-2);font-size:13px;line-height:1;cursor:pointer;display:none;align-items:center;justify-content:center;padding:0;z-index:6';
+  btn.addEventListener('click',function(e){ e.preventDefault();e.stopPropagation(); inp.value=''; btn.style.display='none'; inp.focus(); inp.dispatchEvent(new Event('input',{bubbles:true})); });
+  wrap.appendChild(btn);
+  inp.style.paddingRight='34px';
+  var sync=function(){ btn.style.display=inp.value?'flex':'none'; };
+  inp.addEventListener('input',sync); sync();
+}
+function initSearchClears(){ ['at-loc-search','pl-name','ac-search','profile-search-inp','exp-search','story-city-inp'].forEach(attachSearchClear); }
 function closeModal(){document.getElementById('modal-bg').classList.remove('on');document.querySelectorAll('.modal-sheet.on').forEach(function(s){s.classList.remove('on');});}
 function copyLink(){if(currentTrip){var slug=currentTrip.dest.toLowerCase().replace(/\s+/g,'-');navigator.clipboard?.writeText('https://trafolio.travel/'+userData.username+'/'+slug);toast(t('linkCopied'));}}
 function openLB(url,caption){
@@ -4347,32 +4526,37 @@ async function fetchCoverOptions(city,country){
   if(!ids){for(var k in unsplashMap){if(cityKey.includes(k)||k.includes(cityKey)){ids=unsplashMap[k];break;}}}
   if(ids){ids.forEach(function(id){add('https://images.unsplash.com/'+id+'?w=1200&q=90&auto=format&fit=crop','Photo');});}
 
-  // SECONDARY: Wikipedia high-res image (1200px)
+  // SECONDARY: Wikipedia high-res image for the exact place (1200px)
   try{
     var wr=await fetch('https://en.wikipedia.org/w/api.php?action=query&titles='+encodeURIComponent(city+(country?' '+country:''))+'&prop=pageimages&format=json&pithumbsize=1200&origin=*');
     var wd=await wr.json();var pg=Object.values(wd.query.pages)[0];
     if(pg&&pg.thumbnail&&pg.thumbnail.source)add(pg.thumbnail.source,'Wikipedia');
   }catch(e){}
 
-  // TERTIARY: Source Unsplash dynamic (always high-res, matches any city)
-  add('https://source.unsplash.com/1200x800/?'+encodeURIComponent(city)+',cityscape','Unsplash');
-  add('https://source.unsplash.com/1200x800/?'+encodeURIComponent(city)+',travel','Unsplash');
-  add('https://source.unsplash.com/1200x800/?'+encodeURIComponent((country||city))+',landmark','Unsplash');
+  // TERTIARY: Wikipedia/Wikimedia SEARCH — returns real image URLs for any city (replaces the
+  // dead source.unsplash.com endpoint that used to "flash then vanish" to the default).
+  try{
+    var sr=await fetch('https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(city+(country?', '+country:'')+' city')+'&gsrlimit=5&prop=pageimages&piprop=thumbnail&pithumbsize=1200&format=json&origin=*');
+    var sd=await sr.json();var spages=sd&&sd.query&&sd.query.pages;
+    if(spages)Object.keys(spages).map(function(k){return spages[k];}).sort(function(a,b){return (a.index||0)-(b.index||0);}).forEach(function(pg){ if(pg.thumbnail&&pg.thumbnail.source)add(pg.thumbnail.source,'Photo'); });
+  }catch(e){}
 
-  if(!sources.length)add(FALLBACK_COVER,'Default');
+  // GUARANTEED: a working default so there is always at least one valid option.
+  add(FALLBACK_COVER,'Default');
 
   box.innerHTML=sources.slice(0,6).map(function(s,i){return'<div class="covopt'+(i===0?' selected':'')+'" data-url="'+s.url+'" onclick="pickCover(this)" style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;cursor:pointer;border:2.5px solid '+(i===0?'var(--ember)':'var(--paper-3)')+';"><img src="'+s.url+'" loading="lazy" onerror="coverImgFailed(this)" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,28,48,.55);padding:3px 7px;font-size:9px;font-family:DM Mono,monospace;color:rgba(255,255,255,.8)">'+s.label+'</div>'+(i===0?'<div style="position:absolute;top:5px;right:5px;background:var(--ember);color:white;width:18px;height:18px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center">✓</div>':'')+'</div>';}).join('');
   _selectedCover=sources[0]?sources[0].url:FALLBACK_COVER;
 }
 
 function coverImgFailed(img){
+  // Don't yank the tile out (that's the jarring "photo disappears"); swap to the default image
+  // so the option stays put and selectable. Only the very first failure re-points the selection.
   var opt=img.parentElement;var failed=opt?opt.dataset.url:null;
-  if(opt)opt.remove();
-  if(failed&&failed===_selectedCover){
-    var opts=document.querySelectorAll('#at-cover-options .covopt');
-    _selectedCover=opts.length?opts[0].dataset.url:FALLBACK_COVER;
-    opts.forEach(function(c,i){c.style.borderColor=i===0?'var(--ember)':'var(--paper-3)';});
+  if(img.src.indexOf(FALLBACK_COVER)===-1){
+    img.onerror=null; img.src=FALLBACK_COVER;
+    if(opt){ opt.dataset.url=FALLBACK_COVER; var lbl=opt.querySelector('div[style*="DM Mono"]'); if(lbl)lbl.textContent='Default'; }
   }
+  if(failed&&failed===_selectedCover) _selectedCover=FALLBACK_COVER;
 }
 function pickCover(el){document.querySelectorAll('.covopt').forEach(function(c){c.style.borderColor='var(--paper-3)';var t=c.querySelector('[data-tick]');if(t)t.remove();});el.style.borderColor='var(--ember)';var tick=document.createElement('div');tick.setAttribute('data-tick','1');tick.style.cssText='position:absolute;top:5px;right:5px;background:var(--ember);color:white;width:18px;height:18px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:none';tick.innerHTML='✓';el.appendChild(tick);_selectedCover=el.dataset.url;var u=document.getElementById('at-cover-url');if(u)u.value='';}
 function selectCustomCover(){_selectedCover=(document.getElementById('at-cover-url')||{value:''}).value.trim()||null;}
@@ -4397,6 +4581,56 @@ function editTripCover(input){
   };
   reader.readAsDataURL(file);
   input.value='';
+}
+// ─── EDIT TRIP (name / country / type / dates) ────────────────────
+var _editTripType='city';
+function setEditTripType(tt){
+  _editTripType=(tt==='country')?'country':'city';
+  document.querySelectorAll('#et-type-toggle .fpill').forEach(function(b){b.classList.toggle('active',b.dataset.tt===_editTripType);});
+  var hint=document.getElementById('et-multicity-hint'); if(hint)hint.style.display=(_editTripType==='country')?'block':'none';
+}
+function openEditTrip(){
+  if(!currentTrip)return;
+  setEditTripType(currentTrip.tripType==='country'?'country':'city');
+  var d=document.getElementById('et-dest'); if(d)d.value=currentTrip.dest||'';
+  var c=document.getElementById('et-country'); if(c)c.value=currentTrip.country||'';
+  var f=document.getElementById('et-from'); if(f)f.value=currentTrip.startDate||'';
+  var tdt=document.getElementById('et-to'); if(tdt)tdt.value=currentTrip.endDate||'';
+  openModal('sheet-edit-trip');
+}
+function saveEditTrip(){
+  if(!currentTrip)return;
+  var dest=(document.getElementById('et-dest')||{value:''}).value.trim();
+  var country=(document.getElementById('et-country')||{value:''}).value.trim();
+  if(!dest){toast(t('pleaseEnterDest'));return;}
+  var from=(document.getElementById('et-from')||{value:''}).value;
+  var to=(document.getElementById('et-to')||{value:''}).value;
+  currentTrip.dest=dest;
+  currentTrip.country=country||dest;
+  if(from){currentTrip.startDate=from;currentTrip.dates=new Date(from).toLocaleDateString('en-GB',{month:'short',year:'numeric'});}
+  if(to)currentTrip.endDate=to;
+  if(from&&to)currentTrip.days=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
+  var wasType=currentTrip.tripType||'city';
+  currentTrip.tripType=_editTripType;
+  if(_editTripType==='country'){
+    if(!Array.isArray(currentTrip.cities))currentTrip.cities=[];
+    // Seed the first city from the trip's own city name when switching from a one-city trip.
+    if(wasType!=='country' && !currentTrip.cities.length && dest){
+      currentTrip.cities=[{name:dest,flag:currentTrip.flag||'📍',lat:'',lng:''}];
+    }
+  }
+  closeModal();
+  // refresh everything that shows trip identity
+  document.getElementById('trip-hero-dest').textContent=currentTrip.dest;
+  document.getElementById('trip-hero-flag').textContent=currentTrip.flag||'';
+  if(typeof refreshTripHeroMeta==='function')refreshTripHeroMeta();
+  if(typeof renderCitiesBar==='function')renderCitiesBar();
+  if(typeof renderPlaces==='function')renderPlaces(currentFilter||'all');
+  if(typeof renderDash==='function')renderDash();
+  if(typeof renderProfileGrid==='function')renderProfileGrid();
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{dest:currentTrip.dest,country:currentTrip.country,date_from:currentTrip.startDate||null,date_to:currentTrip.endDate||null,trip_type:currentTrip.tripType,cities:currentTrip.cities||[]});
+  toast(t('tripUpdated')||'Trip updated');
 }
 function uploadTripCover(input){var file=input.files[0];if(!file)return;var url=URL.createObjectURL(file);_selectedCover=url;var box=document.getElementById('at-cover-options');if(box)box.insertAdjacentHTML('afterbegin','<div class="covopt selected" data-url="'+url+'" onclick="pickCover(this)" style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;cursor:pointer;border:2.5px solid var(--ember);"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,28,48,.55);padding:3px 7px;font-size:9px;font-family:DM Mono,monospace;color:rgba(255,255,255,.8)">'+t('uploadedLabel')+'</div></div>');toast(t('coverReady'));}
 
@@ -4963,6 +5197,30 @@ const S={
     cityAddedToast:"added to the trip",
     cityAlready:"That city is already on this trip",
     cityWord:"city",
+    paywallDefault:"Unlock everything with Trafolio Pro.",
+    paywallTripLimit:"You've used all 3 free trips. Go Pro for unlimited trips.",
+    paywallShare:"Sharing this trip is a Pro feature.",
+    perMonth:"month",
+    proFeatUnlimited:"Unlimited trips",
+    proFeatAI:"AI story & itinerary writing",
+    proFeatOffline:"Offline access on the road",
+    proFeatShare:"Share every trip publicly",
+    subscribeBtn:"Subscribe — $4.99/mo",
+    manageSub:"Manage subscription",
+    cancelAnytime:"Cancel anytime. Your past trips always stay yours to view.",
+    signInToSubscribe:"Sign in to subscribe.",
+    checkoutUnavailable:"Checkout is unavailable right now.",
+    planFree:"Free",
+    planPro:"Pro",
+    upgradeCta:"Upgrade to Pro",
+    freeTripsLeft:"free trips left",
+    proWelcome:"Welcome to Trafolio Pro! 🎉",
+    editTrip:"Edit trip",
+    tripNameLabel:"Trip name",
+    countryLabel:"Country",
+    datesLabel:"Dates",
+    multiCityHint:"Multi-city trip — add the cities you visited from the Places tab.",
+    tripUpdated:"Trip updated",
     storyShortHint:"Keep it short — for longer writing, use a trip Blog.",
     suggestedFromGoogle:"Suggested from Google — tap to use",
     countriesWord:"countries",
@@ -5420,6 +5678,7 @@ const S={
     bbPagesLabel:'YOUR {n} PAGES',
     bbPagesHint:'Tap a photo slot to change · 1–8 photos per page',
     bbOrientH:"Horizontal",
+    bbShowcase:"See how your printed book looks",
     bbOrientV:"Vertical",
     bbCoverPage:'COVER',
     bbBackPage:'BACK COVER',
@@ -5705,6 +5964,30 @@ const S={
     cityAddedToast:"أُضيفت إلى الرحلة",
     cityAlready:"هذه المدينة موجودة بالفعل في الرحلة",
     cityWord:"مدينة",
+    paywallDefault:"افتح كل المزايا مع Trafolio Pro.",
+    paywallTripLimit:"لقد استخدمت الرحلات الثلاث المجانية. اشترك في Pro لرحلات غير محدودة.",
+    paywallShare:"مشاركة هذه الرحلة ميزة Pro.",
+    perMonth:"شهر",
+    proFeatUnlimited:"رحلات غير محدودة",
+    proFeatAI:"كتابة القصص والمسارات بالذكاء الاصطناعي",
+    proFeatOffline:"الوصول دون اتصال أثناء السفر",
+    proFeatShare:"مشاركة كل رحلة علنًا",
+    subscribeBtn:"اشترك — 4.99$ شهريًا",
+    manageSub:"إدارة الاشتراك",
+    cancelAnytime:"ألغِ في أي وقت. تبقى رحلاتك السابقة متاحة للعرض دائمًا.",
+    signInToSubscribe:"سجّل الدخول للاشتراك.",
+    checkoutUnavailable:"الدفع غير متاح حاليًا.",
+    planFree:"مجاني",
+    planPro:"Pro",
+    upgradeCta:"الترقية إلى Pro",
+    freeTripsLeft:"رحلات مجانية متبقية",
+    proWelcome:"مرحبًا بك في Trafolio Pro! 🎉",
+    editTrip:"تعديل الرحلة",
+    tripNameLabel:"اسم الرحلة",
+    countryLabel:"الدولة",
+    datesLabel:"التواريخ",
+    multiCityHint:"رحلة متعددة المدن — أضف المدن التي زرتها من تبويب الأماكن.",
+    tripUpdated:"تم تحديث الرحلة",
     storyShortHint:"اجعلها قصيرة — للكتابة الأطول استخدم مدونة الرحلة.",
     suggestedFromGoogle:"مقترحة من Google — اضغط للاستخدام",
     countriesWord:"دول",
@@ -6164,6 +6447,7 @@ const S={
     bbPagesLabel:'صفحاتك الـ{n}',
     bbPagesHint:'اضغط على خانة الصورة لتغييرها · 1–8 صور لكل صفحة',
     bbOrientH:"أفقي",
+    bbShowcase:"شاهد كيف يبدو كتابك المطبوع",
     bbOrientV:"عمودي",
     bbCoverPage:'الغلاف',
     bbBackPage:'الغلاف الخلفي',
@@ -6449,6 +6733,30 @@ const S={
     cityAddedToast:"ajoutée au voyage",
     cityAlready:"Cette ville est déjà dans ce voyage",
     cityWord:"ville",
+    paywallDefault:"Débloquez tout avec Trafolio Pro.",
+    paywallTripLimit:"Vous avez utilisé vos 3 voyages gratuits. Passez à Pro pour des voyages illimités.",
+    paywallShare:"Partager ce voyage est une fonctionnalité Pro.",
+    perMonth:"mois",
+    proFeatUnlimited:"Voyages illimités",
+    proFeatAI:"Rédaction IA de récits et itinéraires",
+    proFeatOffline:"Accès hors ligne en déplacement",
+    proFeatShare:"Partagez chaque voyage publiquement",
+    subscribeBtn:"S'abonner — 4,99 $/mois",
+    manageSub:"Gérer l'abonnement",
+    cancelAnytime:"Annulez à tout moment. Vos anciens voyages restent toujours consultables.",
+    signInToSubscribe:"Connectez-vous pour vous abonner.",
+    checkoutUnavailable:"Le paiement est indisponible pour le moment.",
+    planFree:"Gratuit",
+    planPro:"Pro",
+    upgradeCta:"Passer à Pro",
+    freeTripsLeft:"voyages gratuits restants",
+    proWelcome:"Bienvenue dans Trafolio Pro ! 🎉",
+    editTrip:"Modifier le voyage",
+    tripNameLabel:"Nom du voyage",
+    countryLabel:"Pays",
+    datesLabel:"Dates",
+    multiCityHint:"Voyage multi-villes — ajoutez les villes visitées depuis l onglet Lieux.",
+    tripUpdated:"Voyage mis à jour",
     storyShortHint:"Restez bref — pour un texte plus long, utilisez le Blog du voyage.",
     suggestedFromGoogle:"Suggéré par Google — appuyez pour utiliser",
     countriesWord:"pays",
@@ -6908,6 +7216,7 @@ const S={
     bbPagesLabel:'VOS {n} PAGES',
     bbPagesHint:'Touchez un emplacement photo pour le changer · 1 à 4 photos par page',
     bbOrientH:"Horizontal",
+    bbShowcase:"Découvrez le rendu de votre livre imprimé",
     bbOrientV:"Vertical",
     bbCoverPage:'COUVERTURE',
     bbBackPage:'4E DE COUVERTURE',
@@ -7193,6 +7502,30 @@ const S={
     cityAddedToast:"añadida al viaje",
     cityAlready:"Esa ciudad ya está en este viaje",
     cityWord:"ciudad",
+    paywallDefault:"Desbloquea todo con Trafolio Pro.",
+    paywallTripLimit:"Has usado tus 3 viajes gratis. Hazte Pro para viajes ilimitados.",
+    paywallShare:"Compartir este viaje es una función Pro.",
+    perMonth:"mes",
+    proFeatUnlimited:"Viajes ilimitados",
+    proFeatAI:"Redacción con IA de historias e itinerarios",
+    proFeatOffline:"Acceso sin conexión en el viaje",
+    proFeatShare:"Comparte cada viaje públicamente",
+    subscribeBtn:"Suscribirse — $4.99/mes",
+    manageSub:"Gestionar suscripción",
+    cancelAnytime:"Cancela cuando quieras. Tus viajes anteriores siempre podrás verlos.",
+    signInToSubscribe:"Inicia sesión para suscribirte.",
+    checkoutUnavailable:"El pago no está disponible ahora.",
+    planFree:"Gratis",
+    planPro:"Pro",
+    upgradeCta:"Hazte Pro",
+    freeTripsLeft:"viajes gratis restantes",
+    proWelcome:"¡Bienvenido a Trafolio Pro! 🎉",
+    editTrip:"Editar viaje",
+    tripNameLabel:"Nombre del viaje",
+    countryLabel:"País",
+    datesLabel:"Fechas",
+    multiCityHint:"Viaje de varias ciudades — añade las ciudades visitadas desde la pestaña Lugares.",
+    tripUpdated:"Viaje actualizado",
     storyShortHint:"Hazlo breve — para textos largos usa el Blog del viaje.",
     suggestedFromGoogle:"Sugerido por Google — toca para usar",
     countriesWord:"países",
@@ -7652,6 +7985,7 @@ const S={
     bbPagesLabel:'TUS {n} PÁGINAS',
     bbPagesHint:'Toca un hueco de foto para cambiarla · 1–8 fotos por página',
     bbOrientH:"Horizontal",
+    bbShowcase:"Mira cómo queda tu libro impreso",
     bbOrientV:"Vertical",
     bbCoverPage:'PORTADA',
     bbBackPage:'CONTRAPORTADA',
@@ -7937,6 +8271,30 @@ const S={
     cityAddedToast:"geziye eklendi",
     cityAlready:"Bu şehir gezide zaten var",
     cityWord:"şehir",
+    paywallDefault:"Trafolio Pro ile her şeyi aç.",
+    paywallTripLimit:"3 ücretsiz gezini kullandın. Sınırsız gezi için Pro'ya geç.",
+    paywallShare:"Bu geziyi paylaşmak bir Pro özelliğidir.",
+    perMonth:"ay",
+    proFeatUnlimited:"Sınırsız gezi",
+    proFeatAI:"Yapay zeka ile hikaye ve gezi planı yazımı",
+    proFeatOffline:"Yolda çevrimdışı erişim",
+    proFeatShare:"Her geziyi herkese açık paylaş",
+    subscribeBtn:"Abone ol — $4.99/ay",
+    manageSub:"Aboneliği yönet",
+    cancelAnytime:"İstediğin zaman iptal et. Eski gezilerini her zaman görebilirsin.",
+    signInToSubscribe:"Abone olmak için giriş yap.",
+    checkoutUnavailable:"Ödeme şu anda kullanılamıyor.",
+    planFree:"Ücretsiz",
+    planPro:"Pro",
+    upgradeCta:"Pro'ya geç",
+    freeTripsLeft:"ücretsiz gezi kaldı",
+    proWelcome:"Trafolio Pro'ya hoş geldin! 🎉",
+    editTrip:"Geziyi düzenle",
+    tripNameLabel:"Gezi adı",
+    countryLabel:"Ülke",
+    datesLabel:"Tarihler",
+    multiCityHint:"Çok şehirli gezi — gezdiğin şehirleri Yerler sekmesinden ekle.",
+    tripUpdated:"Gezi güncellendi",
     storyShortHint:"Kısa tut — daha uzun yazılar için gezi Blog'unu kullan.",
     suggestedFromGoogle:"Google önerisi — kullanmak için dokun",
     countriesWord:"ülke",
@@ -8396,6 +8754,7 @@ const S={
     bbPagesLabel:'{n} SAYFANIZ',
     bbPagesHint:'Değiştirmek için bir fotoğraf alanına dokunun · Sayfa başına 1–8 fotoğraf',
     bbOrientH:"Yatay",
+    bbShowcase:"Basılı kitabınızın nasıl göründüğünü görün",
     bbOrientV:"Dikey",
     bbCoverPage:'KAPAK',
     bbBackPage:'ARKA KAPAK',
@@ -8681,6 +9040,30 @@ const S={
     cityAddedToast:"aggiunta al viaggio",
     cityAlready:"Quella città è già in questo viaggio",
     cityWord:"città",
+    paywallDefault:"Sblocca tutto con Trafolio Pro.",
+    paywallTripLimit:"Hai usato i tuoi 3 viaggi gratuiti. Passa a Pro per viaggi illimitati.",
+    paywallShare:"Condividere questo viaggio è una funzione Pro.",
+    perMonth:"mese",
+    proFeatUnlimited:"Viaggi illimitati",
+    proFeatAI:"Scrittura AI di racconti e itinerari",
+    proFeatOffline:"Accesso offline in viaggio",
+    proFeatShare:"Condividi ogni viaggio pubblicamente",
+    subscribeBtn:"Abbonati — $4.99/mese",
+    manageSub:"Gestisci abbonamento",
+    cancelAnytime:"Annulla quando vuoi. I tuoi viaggi passati restano sempre visibili.",
+    signInToSubscribe:"Accedi per abbonarti.",
+    checkoutUnavailable:"Il pagamento non è disponibile al momento.",
+    planFree:"Gratis",
+    planPro:"Pro",
+    upgradeCta:"Passa a Pro",
+    freeTripsLeft:"viaggi gratuiti rimasti",
+    proWelcome:"Benvenuto in Trafolio Pro! 🎉",
+    editTrip:"Modifica viaggio",
+    tripNameLabel:"Nome del viaggio",
+    countryLabel:"Paese",
+    datesLabel:"Date",
+    multiCityHint:"Viaggio multi-città — aggiungi le città visitate dalla scheda Luoghi.",
+    tripUpdated:"Viaggio aggiornato",
     storyShortHint:"Tienilo breve — per testi più lunghi usa il Blog del viaggio.",
     suggestedFromGoogle:"Suggerito da Google — tocca per usare",
     countriesWord:"paesi",
@@ -9140,6 +9523,7 @@ const S={
     bbPagesLabel:'LE TUE {n} PAGINE',
     bbPagesHint:'Tocca uno spazio foto per cambiarlo · 1–8 foto per pagina',
     bbOrientH:"Orizzontale",
+    bbShowcase:"Guarda come appare il tuo libro stampato",
     bbOrientV:"Verticale",
     bbCoverPage:'COPERTINA',
     bbBackPage:'RETRO COPERTINA',
@@ -9425,6 +9809,30 @@ const S={
     cityAddedToast:"已添加到旅行",
     cityAlready:"该城市已在此旅行中",
     cityWord:"城市",
+    paywallDefault:"用 Trafolio Pro 解锁全部功能。",
+    paywallTripLimit:"你已用完 3 次免费行程。升级 Pro 享受无限行程。",
+    paywallShare:"分享此行程是 Pro 功能。",
+    perMonth:"月",
+    proFeatUnlimited:"无限行程",
+    proFeatAI:"AI 撰写游记与行程",
+    proFeatOffline:"旅途中离线访问",
+    proFeatShare:"公开分享每段行程",
+    subscribeBtn:"订阅 — $4.99/月",
+    manageSub:"管理订阅",
+    cancelAnytime:"随时取消。你过去的行程始终可查看。",
+    signInToSubscribe:"登录后订阅。",
+    checkoutUnavailable:"目前无法结账。",
+    planFree:"免费",
+    planPro:"Pro",
+    upgradeCta:"升级到 Pro",
+    freeTripsLeft:"次免费行程剩余",
+    proWelcome:"欢迎使用 Trafolio Pro！🎉",
+    editTrip:"编辑行程",
+    tripNameLabel:"行程名称",
+    countryLabel:"国家",
+    datesLabel:"日期",
+    multiCityHint:"多城市行程 — 在“地点”标签中添加你去过的城市。",
+    tripUpdated:"行程已更新",
     storyShortHint:"保持简短 — 更长的内容请使用旅行博客。",
     suggestedFromGoogle:"来自 Google 的建议 — 点按使用",
     countriesWord:"国家",
@@ -9884,6 +10292,7 @@ const S={
     bbPagesLabel:'你的 {n} 个页面',
     bbPagesHint:'点击照片框可更换 · 每页 1–8 张照片',
     bbOrientH:"横向",
+    bbShowcase:"看看你的实体相册长什么样",
     bbOrientV:"纵向",
     bbCoverPage:'封面',
     bbBackPage:'封底',
@@ -10169,6 +10578,30 @@ const S={
     cityAddedToast:"zur Reise hinzugefügt",
     cityAlready:"Diese Stadt ist bereits auf dieser Reise",
     cityWord:"Stadt",
+    paywallDefault:"Schalte mit Trafolio Pro alles frei.",
+    paywallTripLimit:"Du hast deine 3 kostenlosen Reisen genutzt. Hol dir Pro für unbegrenzte Reisen.",
+    paywallShare:"Diese Reise zu teilen ist eine Pro-Funktion.",
+    perMonth:"Monat",
+    proFeatUnlimited:"Unbegrenzte Reisen",
+    proFeatAI:"KI-Texte für Geschichten & Reisepläne",
+    proFeatOffline:"Offline-Zugriff unterwegs",
+    proFeatShare:"Teile jede Reise öffentlich",
+    subscribeBtn:"Abonnieren — $4.99/Monat",
+    manageSub:"Abo verwalten",
+    cancelAnytime:"Jederzeit kündbar. Deine bisherigen Reisen bleiben immer sichtbar.",
+    signInToSubscribe:"Zum Abonnieren anmelden.",
+    checkoutUnavailable:"Bezahlung derzeit nicht verfügbar.",
+    planFree:"Gratis",
+    planPro:"Pro",
+    upgradeCta:"Auf Pro upgraden",
+    freeTripsLeft:"kostenlose Reisen übrig",
+    proWelcome:"Willkommen bei Trafolio Pro! 🎉",
+    editTrip:"Reise bearbeiten",
+    tripNameLabel:"Reisename",
+    countryLabel:"Land",
+    datesLabel:"Daten",
+    multiCityHint:"Reise mit mehreren Städten — füge besuchte Städte im Tab Orte hinzu.",
+    tripUpdated:"Reise aktualisiert",
     storyShortHint:"Halte es kurz — für längere Texte nutze das Reise-Blog.",
     suggestedFromGoogle:"Von Google vorgeschlagen — zum Verwenden tippen",
     countriesWord:"Länder",
@@ -10628,6 +11061,7 @@ const S={
     bbPagesLabel:'DEINE {n} SEITEN',
     bbPagesHint:'Tippe auf einen Foto-Slot zum Ändern · 1–8 Fotos pro Seite',
     bbOrientH:"Horizontal",
+    bbShowcase:"So sieht dein gedrucktes Buch aus",
     bbOrientV:"Vertikal",
     bbCoverPage:'TITEL',
     bbBackPage:'RÜCKSEITE',
@@ -10913,6 +11347,30 @@ const S={
     cityAddedToast:"adicionada à viagem",
     cityAlready:"Essa cidade já está nesta viagem",
     cityWord:"cidade",
+    paywallDefault:"Desbloqueie tudo com o Trafolio Pro.",
+    paywallTripLimit:"Você usou suas 3 viagens grátis. Assine o Pro para viagens ilimitadas.",
+    paywallShare:"Compartilhar esta viagem é um recurso Pro.",
+    perMonth:"mês",
+    proFeatUnlimited:"Viagens ilimitadas",
+    proFeatAI:"Escrita com IA de histórias e roteiros",
+    proFeatOffline:"Acesso offline na estrada",
+    proFeatShare:"Compartilhe todas as viagens publicamente",
+    subscribeBtn:"Assinar — $4.99/mês",
+    manageSub:"Gerenciar assinatura",
+    cancelAnytime:"Cancele quando quiser. Suas viagens antigas sempre ficam visíveis.",
+    signInToSubscribe:"Entre para assinar.",
+    checkoutUnavailable:"Pagamento indisponível no momento.",
+    planFree:"Grátis",
+    planPro:"Pro",
+    upgradeCta:"Assinar o Pro",
+    freeTripsLeft:"viagens grátis restantes",
+    proWelcome:"Bem-vindo ao Trafolio Pro! 🎉",
+    editTrip:"Editar viagem",
+    tripNameLabel:"Nome da viagem",
+    countryLabel:"País",
+    datesLabel:"Datas",
+    multiCityHint:"Viagem com várias cidades — adicione as cidades visitadas na aba Lugares.",
+    tripUpdated:"Viagem atualizada",
     storyShortHint:"Seja breve — para textos longos use o Blog da viagem.",
     suggestedFromGoogle:"Sugerido pelo Google — toque para usar",
     countriesWord:"países",
@@ -11372,6 +11830,7 @@ const S={
     bbPagesLabel:'SUAS {n} PÁGINAS',
     bbPagesHint:'Toque em um espaço de foto para mudar · 1–8 fotos por página',
     bbOrientH:"Horizontal",
+    bbShowcase:"Veja como fica o seu livro impresso",
     bbOrientV:"Vertical",
     bbCoverPage:'CAPA',
     bbBackPage:'CONTRACAPA',
@@ -11657,6 +12116,30 @@ const S={
     cityAddedToast:"を旅行に追加しました",
     cityAlready:"その都市はすでに旅行にあります",
     cityWord:"都市",
+    paywallDefault:"Trafolio Pro ですべてを解放。",
+    paywallTripLimit:"無料の3旅行を使い切りました。Pro で無制限の旅行を。",
+    paywallShare:"この旅行の共有は Pro 機能です。",
+    perMonth:"月",
+    proFeatUnlimited:"無制限の旅行",
+    proFeatAI:"AI による物語・旅程作成",
+    proFeatOffline:"外出先でのオフライン利用",
+    proFeatShare:"すべての旅行を公開で共有",
+    subscribeBtn:"登録 — $4.99/月",
+    manageSub:"サブスクリプション管理",
+    cancelAnytime:"いつでも解約可能。過去の旅行はいつでも閲覧できます。",
+    signInToSubscribe:"登録するにはサインインしてください。",
+    checkoutUnavailable:"現在チェックアウトを利用できません。",
+    planFree:"無料",
+    planPro:"Pro",
+    upgradeCta:"Pro にアップグレード",
+    freeTripsLeft:"無料旅行が残り",
+    proWelcome:"Trafolio Pro へようこそ！🎉",
+    editTrip:"旅行を編集",
+    tripNameLabel:"旅行名",
+    countryLabel:"国",
+    datesLabel:"日付",
+    multiCityHint:"複数都市の旅行 — 訪れた都市は「場所」タブから追加してください。",
+    tripUpdated:"旅行を更新しました",
     storyShortHint:"短めに — 長い文章は旅行ブログを使いましょう。",
     suggestedFromGoogle:"Google の候補 — タップして使用",
     countriesWord:"カ国",
@@ -12116,6 +12599,7 @@ const S={
     bbPagesLabel:'あなたの{n}ページ',
     bbPagesHint:'写真枠をタップして変更 · 1ページに1〜4枚',
     bbOrientH:"横向き",
+    bbShowcase:"印刷した本の仕上がりを見る",
     bbOrientV:"縦向き",
     bbCoverPage:'表紙',
     bbBackPage:'裏表紙',
@@ -13734,11 +14218,11 @@ async function dbSaveTrip(trip){
     privacy: trip.privacy||'public'
   };
   // Optional newer columns — if the migration hasn't run, retry without them so trip-saving never breaks.
-  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[]});
+  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[], requires_pro: !!trip.requiresPro});
   try{
     var res=await sb.from('trips').insert(row).select();
-    if(res.error && /trip_type|cities|column|schema cache/i.test(res.error.message||'')){
-      console.warn('dbSaveTrip: trip_type/cities columns missing — saving without them. Run the migration to enable multi-city sync.');
+    if(res.error && /trip_type|cities|requires_pro|column|schema cache/i.test(res.error.message||'')){
+      console.warn('dbSaveTrip: trip_type/cities/requires_pro columns missing — saving without them. Run the migration to enable these.');
       res=await sb.from('trips').insert(base).select();
     }
     if(res.error){console.error('dbSaveTrip DB error:',res.error);}
@@ -13815,6 +14299,7 @@ async function dbLoadUserTrips(){
           days: t.date_from&&t.date_to ? Math.max(1,Math.round((new Date(t.date_to)-new Date(t.date_from))/86400000)+1) : 5,
           starred: false, cover: t.cover_url||'', privacy: t.privacy||'public',
           tripType: t.trip_type||'city', cities: (Array.isArray(t.cities)?t.cities:[]),
+          requiresPro: !!t.requires_pro,
           photoVisibility: t.photo_visibility||null,
           blog: t.blog||'', blogTitle: t.blog_title||'',
           notes: t.notes||'', missed: (Array.isArray(t.missed)?t.missed:[]),
@@ -14868,6 +15353,16 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
     if(typeof t.starred==='undefined')t.starred=false;
   });
   if(typeof applyIdentity==='function')applyIdentity();
+  if(typeof initSearchClears==='function')initSearchClears();
+  // Returning from Stripe Checkout — confirm the new plan and clean the URL.
+  try{
+    if(/[?&]checkout=success/.test(location.search)){
+      setTimeout(function(){ if(typeof refreshSubStatus==='function')refreshSubStatus(); toast(t('proWelcome')); },1200);
+      if(history&&history.replaceState)history.replaceState({},'',location.pathname);
+    } else if(/[?&]checkout=cancel/.test(location.search)){
+      if(history&&history.replaceState)history.replaceState({},'',location.pathname);
+    }
+  }catch(e){}
   initGoogleAuth();
 })();
 </script>
