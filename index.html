@@ -5210,6 +5210,7 @@ function openUserProfile(id){
   var fallbackImg='https://images.unsplash.com/photo-1488085061387-422e29b40080?w=300&q=80';
 
   var theirStories=cityStories.filter(function(s){return s.author&&s.author.id===id;});
+  var canView=canViewUserContent(u); // private profiles hide cities/stories from non-followers
 
   body.innerHTML='<div style="text-align:center;padding:28px 20px 16px">'
     +'<div style="width:80px;height:80px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 12px">'+(u.photo?'':u.initial)+'</div>'
@@ -5233,7 +5234,10 @@ function openUserProfile(id){
     +'<button class="btn btn-ghost" onclick="openChat('+id+')" style="flex:1">'+t('messageBtn')+'</button>'
     +'</div>'
     +'</div>'
-    +(destList.length?
+    +(!canView?
+      '<div style="border-top:8px solid var(--paper-2);padding:28px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔒</div><div style="font-size:13px;line-height:1.5;padding:0 16px">'+t('privateLockMsg')+'</div></div>'
+    :'')
+    +((canView&&destList.length)?
       '<div style="border-top:8px solid var(--paper-2);padding:16px 20px 8px">'
       +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px">'+t('publicTrips')+'</div>'
       +'<div style="display:flex;flex-direction:column;gap:10px">'
@@ -5250,7 +5254,7 @@ function openUserProfile(id){
       }).join('')
       +'</div></div>'
     :'')
-    +(theirStories.length?
+    +((canView&&theirStories.length)?
       '<div style="border-top:8px solid var(--paper-2);padding:16px 20px 12px">'
       +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('tabStories')+'</div>'
       +theirStories.map(function(s){
@@ -5295,6 +5299,7 @@ var CITY_PLACES={
 };
 function openUserCity(id,city){
   var u=allUsers.find(function(x){return x.id===id;});
+  if(u && !canViewUserContent(u)){ toast(t('privateLockMsg')); return; }
   var body=document.getElementById('upm-body');
   if(!body)return;
   var places=CITY_PLACES[city];
@@ -5486,6 +5491,7 @@ const S={
     cityAddedToast:"added to the trip",
     cityAlready:"That city is already on this trip",
     cityWord:"city",
+    privateLockMsg:"This profile is private. Follow to see their trips, cities and stories.",
     conciergeMoreHint:"Searching for somewhere else? Search 100+ cities above.",
     bbDownloadPdf:"Download PDF",
     copyLinkBtn:"Copy link",
@@ -6281,6 +6287,7 @@ const S={
     cityAddedToast:"أُضيفت إلى الرحلة",
     cityAlready:"هذه المدينة موجودة بالفعل في الرحلة",
     cityWord:"مدينة",
+    privateLockMsg:"هذا الملف خاص. تابِع لرؤية رحلاته ومدنه وقصصه.",
     conciergeMoreHint:"تبحث عن مكان آخر؟ ابحث في أكثر من 100 مدينة بالأعلى.",
     bbDownloadPdf:"تنزيل PDF",
     copyLinkBtn:"نسخ الرابط",
@@ -7078,6 +7085,7 @@ const S={
     cityAddedToast:"ajoutée au voyage",
     cityAlready:"Cette ville est déjà dans ce voyage",
     cityWord:"ville",
+    privateLockMsg:"Ce profil est privé. Abonnez-vous pour voir ses voyages, villes et récits.",
     conciergeMoreHint:"Vous cherchez ailleurs ? Recherchez parmi 100+ villes ci-dessus.",
     bbDownloadPdf:"Télécharger le PDF",
     copyLinkBtn:"Copier le lien",
@@ -7875,6 +7883,7 @@ const S={
     cityAddedToast:"añadida al viaje",
     cityAlready:"Esa ciudad ya está en este viaje",
     cityWord:"ciudad",
+    privateLockMsg:"Este perfil es privado. Sigue para ver sus viajes, ciudades e historias.",
     conciergeMoreHint:"¿Buscas otro lugar? Busca entre más de 100 ciudades arriba.",
     bbDownloadPdf:"Descargar PDF",
     copyLinkBtn:"Copiar enlace",
@@ -8672,6 +8681,7 @@ const S={
     cityAddedToast:"geziye eklendi",
     cityAlready:"Bu şehir gezide zaten var",
     cityWord:"şehir",
+    privateLockMsg:"Bu profil gizli. Gezilerini, şehirlerini ve hikâyelerini görmek için takip et.",
     conciergeMoreHint:"Başka bir yer mi arıyorsun? Yukarıdan 100+ şehirde ara.",
     bbDownloadPdf:"PDF indir",
     copyLinkBtn:"Bağlantıyı kopyala",
@@ -9469,6 +9479,7 @@ const S={
     cityAddedToast:"aggiunta al viaggio",
     cityAlready:"Quella città è già in questo viaggio",
     cityWord:"città",
+    privateLockMsg:"Questo profilo è privato. Segui per vedere viaggi, città e racconti.",
     conciergeMoreHint:"Cerchi un altro posto? Cerca tra 100+ città qui sopra.",
     bbDownloadPdf:"Scarica PDF",
     copyLinkBtn:"Copia link",
@@ -10266,6 +10277,7 @@ const S={
     cityAddedToast:"已添加到旅行",
     cityAlready:"该城市已在此旅行中",
     cityWord:"城市",
+    privateLockMsg:"该主页为私密。关注后可查看其行程、城市和故事。",
     conciergeMoreHint:"想找别的地方？在上方搜索 100+ 座城市。",
     bbDownloadPdf:"下载 PDF",
     copyLinkBtn:"复制链接",
@@ -11063,6 +11075,7 @@ const S={
     cityAddedToast:"zur Reise hinzugefügt",
     cityAlready:"Diese Stadt ist bereits auf dieser Reise",
     cityWord:"Stadt",
+    privateLockMsg:"Dieses Profil ist privat. Folge, um Reisen, Städte und Geschichten zu sehen.",
     conciergeMoreHint:"Woanders hin? Suche oben aus 100+ Städten.",
     bbDownloadPdf:"PDF herunterladen",
     copyLinkBtn:"Link kopieren",
@@ -11860,6 +11873,7 @@ const S={
     cityAddedToast:"adicionada à viagem",
     cityAlready:"Essa cidade já está nesta viagem",
     cityWord:"cidade",
+    privateLockMsg:"Este perfil é privado. Siga para ver viagens, cidades e histórias.",
     conciergeMoreHint:"Procurando outro lugar? Pesquise 100+ cidades acima.",
     bbDownloadPdf:"Baixar PDF",
     copyLinkBtn:"Copiar link",
@@ -12657,6 +12671,7 @@ const S={
     cityAddedToast:"を旅行に追加しました",
     cityAlready:"その都市はすでに旅行にあります",
     cityWord:"都市",
+    privateLockMsg:"このプロフィールは非公開です。フォローすると旅行・都市・ストーリーを見られます。",
     conciergeMoreHint:"別の場所をお探し？上で100以上の都市を検索。",
     bbDownloadPdf:"PDFをダウンロード",
     copyLinkBtn:"リンクをコピー",
@@ -14203,6 +14218,13 @@ function hydratePlaceThumbs(scope){
 }
 // Follow state honouring profile privacy. Public → follow instantly; private → send a request.
 function userIsPrivate(u){ return !!(u&&u.priv); }
+// Whether the current user may see another user's cities/trips/stories.
+// Public profiles: yes. Private (followers-only): only accepted trafollowers.
+function canViewUserContent(u){
+  if(!u) return false;
+  if(!userIsPrivate(u)) return true;
+  return followStatusOf(u.id)==='following';
+}
 function followStatusOf(id){
   if((userData.following||[]).some(function(f){return f.id===id;}))return 'following';
   if((userData.pendingFollows||[]).indexOf(id)>=0)return 'requested';
