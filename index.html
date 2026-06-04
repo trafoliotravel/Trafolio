@@ -589,7 +589,7 @@ body.show-lbar .lbar{display:none}
   <div class="modal-handle"></div>
   <div style="text-align:center;padding:8px 0 2px">
     <div style="font-size:34px;line-height:1">&#11088;</div>
-    <div class="modal-title" style="margin-top:4px">Trafolio <span style="color:var(--ember)">Pro</span></div>
+    <div class="modal-title" style="margin-top:4px">Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io <span style="color:var(--ember)">Pro</span></div>
     <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--ink);line-height:1.1">$4.99<span style="font-size:14px;color:var(--ink-4)">/<span data-i18n="perMonth">month</span></span></div>
     <div id="upgrade-reason" style="font-size:13px;color:var(--ink-3);margin:8px 18px 0"></div>
   </div>
@@ -601,6 +601,13 @@ body.show-lbar .lbar{display:none}
   </div>
   <button id="upgrade-subscribe" class="btn btn-ember btn-full" onclick="startCheckout()" data-i18n="subscribeBtn">Subscribe — $4.99/mo</button>
   <button id="upgrade-manage" class="btn btn-ghost btn-full" style="display:none;margin-top:8px" onclick="manageSubscription()" data-i18n="manageSub">Manage subscription</button>
+  <div id="upgrade-promo" style="margin-top:14px">
+    <div style="display:flex;gap:8px">
+      <input class="inp" id="promo-input" data-i18n-ph="promoPlaceholder" placeholder="Promo code" autocomplete="off" style="flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter'){event.preventDefault();redeemPromo();}">
+      <button type="button" class="btn btn-ghost" style="flex-shrink:0" onclick="redeemPromo()" data-i18n="applyCode">Apply</button>
+    </div>
+    <div id="promo-msg" style="font-size:12px;margin-top:7px;text-align:center;min-height:14px"></div>
+  </div>
   <div style="font-size:11px;color:var(--ink-4);text-align:center;margin-top:12px" data-i18n="cancelAnytime">Cancel anytime. Your past trips always stay yours to view.</div>
 </div>
 
@@ -1920,15 +1927,15 @@ body.show-lbar .lbar{display:none}
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="myTravelMap">My travel map</div>
           <button onclick="shareTravelMap()" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ember);font-weight:600">&#11157; <span data-i18n="shareMap">SHARE MAP</span></button>
         </div>
-        <div id="travel-map-card" style="position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--paper-3);background:#0e3450">
-          <!-- ocean band on top so the name reads clearly above the north pole -->
-          <div id="tm-titleband" style="text-align:center;padding:9px 12px 8px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:600;line-height:1;background:#0e3450"><span id="tm-name">My</span> Trafo<em style="font-style:italic;color:var(--ember)">l</em>io <span data-i18n="mapWord">Map</span></div>
-          <div id="travel-map" style="position:relative;width:100%;aspect-ratio:2 / 1;background:#0e3450">
-            <img id="travel-map-img" crossorigin="anonymous" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Equirectangular-projection.jpg/1280px-Equirectangular-projection.jpg" style="width:100%;height:100%;display:block;object-fit:cover;opacity:.95">
-            <!-- stats in white with a shadow so they read on any part of the map -->
-            <div id="tm-stats" style="position:absolute;bottom:6px;left:0;right:0;text-align:center;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.85),0 0 2px rgba(0,0,0,.7);font-family:'DM Mono',monospace;font-size:11px;font-weight:700;letter-spacing:.04em"><span id="tm-cities">0</span> <span data-i18n="citiesWord">cities</span> &middot; <span id="tm-countries">0</span> <span data-i18n="countriesWord">countries</span></div>
+        <!-- Name ABOVE the map, with breathing room -->
+        <div id="tm-titleband" style="text-align:center;padding:6px 12px 14px;font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:600;line-height:1.1;color:var(--ink)"><span id="tm-name">My</span> Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io <span data-i18n="mapWord">Map</span></div>
+        <div id="travel-map-card" style="position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--paper-3);background:#FBF3EC">
+          <div id="travel-map" style="position:relative;width:100%;aspect-ratio:2 / 1;background:#FBF3EC">
+            <img id="travel-map-img" crossorigin="anonymous" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1280px-World_map_-_low_resolution.svg.png" style="width:100%;height:100%;display:block;object-fit:fill;filter:grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4);opacity:.55">
           </div>
         </div>
+        <!-- Cities / countries BELOW the map -->
+        <div id="tm-stats" style="text-align:center;padding:14px 12px 2px;color:var(--ink);font-family:'DM Mono',monospace;font-size:12px;font-weight:700;letter-spacing:.05em"><span id="tm-cities">0</span> <span data-i18n="citiesWord">cities</span> &middot; <span id="tm-countries">0</span> <span data-i18n="countriesWord">countries</span></div>
       </div>
       <div style="padding:14px 20px 4px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="allTrips">All trips</div>
       <div id="profile-trip-grid" class="trip-grid-dash-responsive" style="display:grid;gap:8px;padding:0 16px;margin-bottom:24px"></div>
@@ -3773,8 +3780,8 @@ function renderTravelMap(){
     var pin=document.createElement('div');
     pin.className='tm-pin'; pin.title=dest;
     pin.style.cssText='position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-100%);transform-origin:bottom center;cursor:pointer;z-index:2';
-    pin.innerHTML='<div style="width:20px;height:20px;border-radius:50%;border:2px solid #E8334A;background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.45)">'+(c.flag||'📍')+'</div>'
-      +'<div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:7px solid #E8334A;margin:-1px auto 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.4))"></div>';
+    pin.innerHTML='<div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--ember);background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+(c.flag||'📍')+'</div>'
+      +'<div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:7px solid var(--ember);margin:-1px auto 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))"></div>';
     map.appendChild(pin);
   });
   var nc=Object.keys(cities).length, ncc=Object.keys(countries).length;
@@ -3786,36 +3793,32 @@ function renderTravelMap(){
 function shareTravelMap(){
   var img=document.getElementById('travel-map-img');
   if(!img||!img.complete||!img.naturalWidth){ toast(t('mapLoading')); return; }
-  var W=1280,MH=640,BAND=84,H=MH+BAND; // extra ocean band on top for the title
+  // Layout: name on a top band, the duotone map in the middle, stats on a bottom band — all light.
+  var W=1280,MH=600,TOP=96,BOT=84,H=TOP+MH+BOT;
   var cv=document.createElement('canvas');cv.width=W;cv.height=H;
   var ctx=cv.getContext('2d');
-  // ocean band (extends the sea above the north pole) then the map below it
-  ctx.fillStyle='#0e3450';ctx.fillRect(0,0,W,H);
-  try{ ctx.drawImage(img,0,BAND,W,MH); }catch(e){ toast(t('mapShareFail')); return; }
+  ctx.fillStyle='#FBF3EC';ctx.fillRect(0,0,W,H); // warm paper background
+  // draw the map with the same ember duotone as on screen
+  try{ ctx.filter='grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4)'; ctx.globalAlpha=.55; ctx.drawImage(img,0,TOP,W,MH); ctx.filter='none'; ctx.globalAlpha=1; }catch(e){ ctx.filter='none'; ctx.globalAlpha=1; toast(t('mapShareFail')); return; }
   var cities={},countries={};
   (trips||[]).forEach(function(tp){var co=tripCoords(tp);if(!co)return;cities[tp.dest]={co:co,flag:tp.flag||cityFlag(tp.dest)};var cc=normCountry(tripCountry(tp));if(cc)countries[cc]=1;});
   Object.keys(cities).forEach(function(dest){
-    var c=cities[dest],x=(c.co[1]+180)/360*W,y=BAND+(90-c.co[0])/180*MH; // tip at (x,y)
+    var c=cities[dest],x=(c.co[1]+180)/360*W,y=TOP+(90-c.co[0])/180*MH; // tip at (x,y)
     var hx=x,hy=y-24,r=13;
-    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-7,hy+5);ctx.lineTo(hx+7,hy+5);ctx.closePath();ctx.fillStyle='#E8334A';ctx.fill(); // pointer
-    ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#E8334A';ctx.stroke(); // head
+    ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-7,hy+5);ctx.lineTo(hx+7,hy+5);ctx.closePath();ctx.fillStyle='#E0633A';ctx.fill(); // ember pointer
+    ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#E0633A';ctx.stroke(); // head
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='18px "Segoe UI Emoji","Apple Color Emoji",serif';ctx.fillStyle='#0a1a26';
     try{ctx.fillText(c.flag||'📍',hx,hy+1);}catch(e){}
   });
   ctx.textBaseline='alphabetic';
-  // title centered on the top ocean band (white, clear)
-  ctx.textAlign='center';
-  ctx.fillStyle='#fff';
-  ctx.font='600 44px Georgia, serif';
-  ctx.fillText((userData.name?userData.name+'’s':'My')+' Trafolio Map', W/2, 56);
-  // cities/countries near the bottom in WHITE with a shadow so they read on any background
-  ctx.font='700 30px monospace';ctx.fillStyle='#fff';
-  ctx.shadowColor='rgba(0,0,0,.85)';ctx.shadowBlur=6;
-  ctx.fillText(Object.keys(cities).length+' cities · '+Object.keys(countries).length+' countries', W/2, H-26);
-  ctx.shadowBlur=0;
-  ctx.textAlign='left';
-  ctx.font='500 20px monospace';ctx.fillStyle='rgba(255,255,255,.9)';
-  ctx.fillText('trafolio.travel', W-220, 56);
+  // name on the top band (dark ink)
+  ctx.textAlign='center';ctx.fillStyle='#001C30';ctx.font='600 46px Georgia, serif';
+  ctx.fillText((userData.name?userData.name+'’s':'My')+' Trafolio Map', W/2, 60);
+  // cities/countries on the bottom band (dark ink)
+  ctx.font='700 30px monospace';ctx.fillStyle='#001C30';
+  ctx.fillText(Object.keys(cities).length+' cities · '+Object.keys(countries).length+' countries', W/2, TOP+MH+54);
+  ctx.textAlign='right';ctx.font='500 20px monospace';ctx.fillStyle='#9a5a3a';
+  ctx.fillText('trafolio.travel', W-26, 60);
   cv.toBlob(function(blob){
     if(!blob){ toast(t('mapShareFail')); return; }
     var file=new File([blob],'trafolio-travel-map.png',{type:'image/png'});
@@ -3882,7 +3885,28 @@ function openPaywall(reason){
   // reflect current plan in the sheet
   var mng=document.getElementById('upgrade-manage'); if(mng)mng.style.display=isPro()?'block':'none';
   var go=document.getElementById('upgrade-subscribe'); if(go)go.style.display=isPro()?'none':'block';
+  var promo=document.getElementById('upgrade-promo'); if(promo)promo.style.display=isPro()?'none':'block';
+  var pm=document.getElementById('promo-msg'); if(pm)pm.textContent='';
+  var pi=document.getElementById('promo-input'); if(pi)pi.value='';
   openModal('sheet-upgrade');
+}
+// Redeem a promo code — validated SERVER-SIDE against the Supabase promo_codes table.
+async function redeemPromo(){
+  var inp=document.getElementById('promo-input'), msg=document.getElementById('promo-msg');
+  var code=(inp&&inp.value||'').trim();
+  if(!code){ if(msg){msg.textContent=t('enterPromo');msg.style.color='var(--ink-4)';} return; }
+  if(!sb||!userData.id){ toast(t('signInToSubscribe')); return; }
+  if(msg){msg.textContent='…';msg.style.color='var(--ink-4)';}
+  try{
+    var r=await fetch('/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code})});
+    var d=await r.json();
+    if(d&&d.ok){
+      userData.plan='pro'; userData.subStatus='promo'; applyPlanUI();
+      if(msg){msg.textContent=t('promoApplied');msg.style.color='#1a9d5a';}
+      toast(t('proWelcome'));
+      setTimeout(function(){ closeModal(); if(typeof renderProfile==='function')renderProfile(); },1000);
+    } else { if(msg){msg.textContent=(d&&d.error)||t('promoInvalid');msg.style.color='#E8334A';} }
+  }catch(e){ if(msg){msg.textContent=t('checkoutUnavailable');msg.style.color='#E8334A';} }
 }
 // Stripe Checkout — the server (server.js) holds the secret key and creates the session.
 async function startCheckout(){
@@ -5204,6 +5228,11 @@ const S={
     cityAddedToast:"added to the trip",
     cityAlready:"That city is already on this trip",
     cityWord:"city",
+    promoPlaceholder:"Promo code",
+    applyCode:"Apply",
+    promoApplied:"Code applied — you are Pro! 🎉",
+    promoInvalid:"Invalid or expired code",
+    enterPromo:"Enter a code",
     paywallDefault:"Unlock everything with Trafolio Pro.",
     paywallTripLimit:"You've used all 3 free trips. Go Pro for unlimited trips.",
     paywallShare:"Sharing this trip is a Pro feature.",
@@ -5971,6 +6000,11 @@ const S={
     cityAddedToast:"أُضيفت إلى الرحلة",
     cityAlready:"هذه المدينة موجودة بالفعل في الرحلة",
     cityWord:"مدينة",
+    promoPlaceholder:"رمز ترويجي",
+    applyCode:"تطبيق",
+    promoApplied:"تم تطبيق الرمز — أصبحت Pro! 🎉",
+    promoInvalid:"رمز غير صالح أو منتهٍ",
+    enterPromo:"أدخل رمزًا",
     paywallDefault:"افتح كل المزايا مع Trafolio Pro.",
     paywallTripLimit:"لقد استخدمت الرحلات الثلاث المجانية. اشترك في Pro لرحلات غير محدودة.",
     paywallShare:"مشاركة هذه الرحلة ميزة Pro.",
@@ -6740,6 +6774,11 @@ const S={
     cityAddedToast:"ajoutée au voyage",
     cityAlready:"Cette ville est déjà dans ce voyage",
     cityWord:"ville",
+    promoPlaceholder:"Code promo",
+    applyCode:"Appliquer",
+    promoApplied:"Code appliqué — vous êtes Pro ! 🎉",
+    promoInvalid:"Code invalide ou expiré",
+    enterPromo:"Saisissez un code",
     paywallDefault:"Débloquez tout avec Trafolio Pro.",
     paywallTripLimit:"Vous avez utilisé vos 3 voyages gratuits. Passez à Pro pour des voyages illimités.",
     paywallShare:"Partager ce voyage est une fonctionnalité Pro.",
@@ -7509,6 +7548,11 @@ const S={
     cityAddedToast:"añadida al viaje",
     cityAlready:"Esa ciudad ya está en este viaje",
     cityWord:"ciudad",
+    promoPlaceholder:"Código promocional",
+    applyCode:"Aplicar",
+    promoApplied:"Código aplicado — ¡ya eres Pro! 🎉",
+    promoInvalid:"Código no válido o caducado",
+    enterPromo:"Introduce un código",
     paywallDefault:"Desbloquea todo con Trafolio Pro.",
     paywallTripLimit:"Has usado tus 3 viajes gratis. Hazte Pro para viajes ilimitados.",
     paywallShare:"Compartir este viaje es una función Pro.",
@@ -8278,6 +8322,11 @@ const S={
     cityAddedToast:"geziye eklendi",
     cityAlready:"Bu şehir gezide zaten var",
     cityWord:"şehir",
+    promoPlaceholder:"Promosyon kodu",
+    applyCode:"Uygula",
+    promoApplied:"Kod uygulandı — artık Pro oldun! 🎉",
+    promoInvalid:"Geçersiz veya süresi dolmuş kod",
+    enterPromo:"Bir kod gir",
     paywallDefault:"Trafolio Pro ile her şeyi aç.",
     paywallTripLimit:"3 ücretsiz gezini kullandın. Sınırsız gezi için Pro'ya geç.",
     paywallShare:"Bu geziyi paylaşmak bir Pro özelliğidir.",
@@ -9047,6 +9096,11 @@ const S={
     cityAddedToast:"aggiunta al viaggio",
     cityAlready:"Quella città è già in questo viaggio",
     cityWord:"città",
+    promoPlaceholder:"Codice promo",
+    applyCode:"Applica",
+    promoApplied:"Codice applicato — ora sei Pro! 🎉",
+    promoInvalid:"Codice non valido o scaduto",
+    enterPromo:"Inserisci un codice",
     paywallDefault:"Sblocca tutto con Trafolio Pro.",
     paywallTripLimit:"Hai usato i tuoi 3 viaggi gratuiti. Passa a Pro per viaggi illimitati.",
     paywallShare:"Condividere questo viaggio è una funzione Pro.",
@@ -9816,6 +9870,11 @@ const S={
     cityAddedToast:"已添加到旅行",
     cityAlready:"该城市已在此旅行中",
     cityWord:"城市",
+    promoPlaceholder:"促销代码",
+    applyCode:"应用",
+    promoApplied:"代码已应用 — 你已是 Pro！🎉",
+    promoInvalid:"代码无效或已过期",
+    enterPromo:"请输入代码",
     paywallDefault:"用 Trafolio Pro 解锁全部功能。",
     paywallTripLimit:"你已用完 3 次免费行程。升级 Pro 享受无限行程。",
     paywallShare:"分享此行程是 Pro 功能。",
@@ -10585,6 +10644,11 @@ const S={
     cityAddedToast:"zur Reise hinzugefügt",
     cityAlready:"Diese Stadt ist bereits auf dieser Reise",
     cityWord:"Stadt",
+    promoPlaceholder:"Promo-Code",
+    applyCode:"Anwenden",
+    promoApplied:"Code angewendet — du bist Pro! 🎉",
+    promoInvalid:"Ungültiger oder abgelaufener Code",
+    enterPromo:"Code eingeben",
     paywallDefault:"Schalte mit Trafolio Pro alles frei.",
     paywallTripLimit:"Du hast deine 3 kostenlosen Reisen genutzt. Hol dir Pro für unbegrenzte Reisen.",
     paywallShare:"Diese Reise zu teilen ist eine Pro-Funktion.",
@@ -11354,6 +11418,11 @@ const S={
     cityAddedToast:"adicionada à viagem",
     cityAlready:"Essa cidade já está nesta viagem",
     cityWord:"cidade",
+    promoPlaceholder:"Código promocional",
+    applyCode:"Aplicar",
+    promoApplied:"Código aplicado — você é Pro! 🎉",
+    promoInvalid:"Código inválido ou expirado",
+    enterPromo:"Insira um código",
     paywallDefault:"Desbloqueie tudo com o Trafolio Pro.",
     paywallTripLimit:"Você usou suas 3 viagens grátis. Assine o Pro para viagens ilimitadas.",
     paywallShare:"Compartilhar esta viagem é um recurso Pro.",
@@ -12123,6 +12192,11 @@ const S={
     cityAddedToast:"を旅行に追加しました",
     cityAlready:"その都市はすでに旅行にあります",
     cityWord:"都市",
+    promoPlaceholder:"プロモコード",
+    applyCode:"適用",
+    promoApplied:"コードを適用 — Pro になりました！🎉",
+    promoInvalid:"無効または期限切れのコード",
+    enterPromo:"コードを入力",
     paywallDefault:"Trafolio Pro ですべてを解放。",
     paywallTripLimit:"無料の3旅行を使い切りました。Pro で無制限の旅行を。",
     paywallShare:"この旅行の共有は Pro 機能です。",
