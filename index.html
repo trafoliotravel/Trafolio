@@ -1866,6 +1866,10 @@ body.show-lbar .lbar{display:none}
       <button class="btn btn-ghost btn-sm" onclick="shareGuidePrint()">&#11015;&#65039; <span data-i18n="bbDownloadPdf">Download PDF</span></button>
       <button class="btn btn-ghost btn-sm" onclick="shareCopyLink()">&#128279; <span data-i18n="copyLinkBtn">Copy link</span></button>
     </div>
+    <div style="display:flex;align-items:flex-start;gap:7px;padding:11px 22px;background:var(--paper-2);border-bottom:1px solid var(--paper-3);font-size:11.5px;line-height:1.45;color:var(--ink-4)">
+      <span style="flex-shrink:0">&#128274;</span>
+      <span data-i18n="shareCurationNote">Before sharing, Trafolio lets you choose exactly what to include — select or deselect notes, blog, places, photos and more.</span>
+    </div>
     <div id="share-note-block" style="padding:22px 22px 18px;border-bottom:1px solid var(--paper-3)">
       <div id="share-take-name" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">John K's take</div>
       <p style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;line-height:1.55;color:var(--ink-2);font-style:italic" id="share-curator-note">"One of my favourite trips. The food culture here is unlike anywhere else."</p>
@@ -2197,7 +2201,7 @@ let trips=[];
 // trips are loaded/cleared. Includes a short personal blog.
 var DEMO_GUIDE=(function(){try{
   var g=JSON.parse(JSON.stringify(_SEED_TRIPS[0]));
-  g.id='demo'; g.author={name:'John K'};
+  g.id='demo'; g.author={name:'John K',username:'johnk'};
   g.blogTitle='Eight days in Tokyo';
   g.blog="<p>Tokyo is the rare city that rewards both planning and wandering. I came with a long list and threw half of it away by day three, because the best moments were the unplanned ones — a tiny yakitori counter in Yanaka, a 6am temple with no crowds, a coffee shop the size of a closet. Mornings belonged to the markets and shrines; nights belonged to neon and ramen. What surprised me most was how calm a city of 37 million can feel. I left already planning the next trip.</p>";
   return g;
@@ -3734,7 +3738,8 @@ function shareGuidePrint(){
 }
 function shareCopyLink(){
   var tr=shareTripData(); var slug=tr?String(tr.dest||'').toLowerCase().replace(/\s+/g,'-'):'';
-  var url='https://trafolio.travel/'+(userData.username||'me')+(slug?'/'+slug:'');
+  var uname=(tr&&tr.author&&tr.author.username)?tr.author.username:(userData.username||'me');
+  var url='https://trafolio.travel/'+uname+(slug?'/'+slug:'');
   if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){toast(t('profileLinkCopied'));}).catch(function(){toast(url);}); }
   else toast(url);
 }
@@ -5197,9 +5202,14 @@ function setLang(lang){
   if(sel)sel.classList.remove('open');
 }
 var USER_CITY_IMG={Tokyo:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=400&q=80',Paris:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=400&q=80',Dubai:'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=400&q=80',Barcelona:'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=400&q=80',Bali:'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&q=80',Istanbul:'https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=400&q=80',Marrakech:'https://images.unsplash.com/photo-1539020140153-e479b8c22e70?w=400&q=80',Seoul:'https://images.unsplash.com/photo-1538485399081-7191377e8241?w=400&q=80',Lisbon:'https://images.unsplash.com/photo-1555881400-74d7acaacd8b?w=400&q=80',Maldives:'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=400&q=80',Rome:'https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=400&q=80',London:'https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=400&q=80',NYC:'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80','New York':'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=400&q=80',Beirut:'https://images.unsplash.com/photo-1591019479261-1a103585c559?w=400&q=80',Lebanon:'https://images.unsplash.com/photo-1591019479261-1a103585c559?w=400&q=80'};
+// Open a user's profile and remember how to go BACK (e.g. to the story/blog you came from).
+var _profileReturn=null,_profileReturnActive=null;
+function openUserProfileWithBack(id,fn){ _profileReturn=fn; openUserProfile(id); }
+function profileBack(){ var f=_profileReturnActive; _profileReturnActive=null; closeModal(); if(f)setTimeout(f,260); }
 function openUserProfile(id){
   var u=allUsers.find(function(x){return x.id===id;});
   if(!u)return;
+  _profileReturnActive=_profileReturn; _profileReturn=null; // back target, if any
   var isFollowing=(userData.following||[]).some(function(f){return f.id===id;});
   var muts=u.mutuals||[];
   var body=document.getElementById('upm-body');
@@ -5211,11 +5221,14 @@ function openUserProfile(id){
 
   var theirStories=cityStories.filter(function(s){return s.author&&s.author.id===id;});
   var canView=canViewUserContent(u); // private profiles hide cities/stories from non-followers
+  var gtier=(typeof TIER_GLOBAL!=='undefined')?TIER_GLOBAL[globalTierIdx(destList.length)]:null; // traveller tier from country count
 
-  body.innerHTML='<div style="text-align:center;padding:28px 20px 16px">'
+  body.innerHTML='<button onclick="profileBack()" title="Back" aria-label="Back" style="position:absolute;top:10px;left:12px;z-index:40;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">&#8592;</button>'
+    +'<div style="text-align:center;padding:28px 20px 16px">'
     +'<div style="width:80px;height:80px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 12px">'+(u.photo?'':u.initial)+'</div>'
     +'<div style="font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500;letter-spacing:-.01em">'+u.name+'</div>'
-    +'<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin:4px 0 10px">@'+u.handle+'</div>'
+    +'<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin:4px 0 8px">@'+u.handle+'</div>'
+    +(gtier?'<div style="margin:0 0 10px"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border-radius:30px;padding:5px 12px;font-size:11px;font-weight:600">'+gtier.emoji+' '+gtier.label+'</span></div>':'')
     +(u.bio?'<div style="font-size:13px;color:var(--ink-3);line-height:1.55;margin-bottom:14px;padding:0 10px">'+u.bio+'</div>':'')
     +'<div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px">'
     +'<div style="text-align:center;padding:10px 20px;background:var(--paper-2);border-radius:var(--r-md)"><div style="font-family:Cormorant Garamond,serif;font-size:22px">'+u.trips+'</div><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);letter-spacing:.1em">'+t('trips').toUpperCase()+'</div></div>'
@@ -5495,6 +5508,7 @@ const S={
     conciergeMoreHint:"Searching for somewhere else? Search 100+ cities above.",
     bbDownloadPdf:"Download PDF",
     copyLinkBtn:"Copy link",
+    shareCurationNote:"Before sharing, Trafolio lets you choose exactly what to include — select or deselect notes, blog, places, photos and more.",
     shareBlogSub:"Your written trip blog",
     openEditBook:"Open & edit",
     pagesWord:"pages",
@@ -6291,6 +6305,7 @@ const S={
     conciergeMoreHint:"تبحث عن مكان آخر؟ ابحث في أكثر من 100 مدينة بالأعلى.",
     bbDownloadPdf:"تنزيل PDF",
     copyLinkBtn:"نسخ الرابط",
+    shareCurationNote:"قبل المشاركة، يتيح لك Trafolio اختيار ما تريد تضمينه بالضبط — حدّد أو ألغِ تحديد الملاحظات والمدوّنة والأماكن والصور والمزيد.",
     shareBlogSub:"مدونة رحلتك المكتوبة",
     openEditBook:"فتح وتعديل",
     pagesWord:"صفحات",
@@ -7089,6 +7104,7 @@ const S={
     conciergeMoreHint:"Vous cherchez ailleurs ? Recherchez parmi 100+ villes ci-dessus.",
     bbDownloadPdf:"Télécharger le PDF",
     copyLinkBtn:"Copier le lien",
+    shareCurationNote:"Avant de partager, Trafolio vous laisse choisir exactement ce qu'il faut inclure — sélectionnez ou désélectionnez notes, blog, lieux, photos et plus.",
     shareBlogSub:"Le blog rédigé de votre voyage",
     openEditBook:"Ouvrir et modifier",
     pagesWord:"pages",
@@ -7887,6 +7903,7 @@ const S={
     conciergeMoreHint:"¿Buscas otro lugar? Busca entre más de 100 ciudades arriba.",
     bbDownloadPdf:"Descargar PDF",
     copyLinkBtn:"Copiar enlace",
+    shareCurationNote:"Antes de compartir, Trafolio te permite elegir exactamente qué incluir: selecciona o anula notas, blog, lugares, fotos y más.",
     shareBlogSub:"El blog escrito de tu viaje",
     openEditBook:"Abrir y editar",
     pagesWord:"páginas",
@@ -8685,6 +8702,7 @@ const S={
     conciergeMoreHint:"Başka bir yer mi arıyorsun? Yukarıdan 100+ şehirde ara.",
     bbDownloadPdf:"PDF indir",
     copyLinkBtn:"Bağlantıyı kopyala",
+    shareCurationNote:"Paylaşmadan önce Trafolio neyi dahil edeceğinizi tam olarak seçmenize izin verir — notları, blogu, yerleri, fotoğrafları ve daha fazlasını seçin veya kaldırın.",
     shareBlogSub:"Yazdığın gezi blogu",
     openEditBook:"Aç ve düzenle",
     pagesWord:"sayfa",
@@ -9483,6 +9501,7 @@ const S={
     conciergeMoreHint:"Cerchi un altro posto? Cerca tra 100+ città qui sopra.",
     bbDownloadPdf:"Scarica PDF",
     copyLinkBtn:"Copia link",
+    shareCurationNote:"Prima di condividere, Trafolio ti permette di scegliere esattamente cosa includere: seleziona o deseleziona note, blog, luoghi, foto e altro.",
     shareBlogSub:"Il blog scritto del tuo viaggio",
     openEditBook:"Apri e modifica",
     pagesWord:"pagine",
@@ -10281,6 +10300,7 @@ const S={
     conciergeMoreHint:"想找别的地方？在上方搜索 100+ 座城市。",
     bbDownloadPdf:"下载 PDF",
     copyLinkBtn:"复制链接",
+    shareCurationNote:"分享前，Trafolio 让你精确选择要包含的内容——可勾选或取消笔记、博客、地点、照片等。",
     shareBlogSub:"你撰写的旅行博客",
     openEditBook:"打开并编辑",
     pagesWord:"页",
@@ -11079,6 +11099,7 @@ const S={
     conciergeMoreHint:"Woanders hin? Suche oben aus 100+ Städten.",
     bbDownloadPdf:"PDF herunterladen",
     copyLinkBtn:"Link kopieren",
+    shareCurationNote:"Vor dem Teilen kannst du bei Trafolio genau auswählen, was enthalten sein soll — Notizen, Blog, Orte, Fotos und mehr an- oder abwählen.",
     shareBlogSub:"Dein geschriebenes Reise-Blog",
     openEditBook:"Öffnen & bearbeiten",
     pagesWord:"Seiten",
@@ -11877,6 +11898,7 @@ const S={
     conciergeMoreHint:"Procurando outro lugar? Pesquise 100+ cidades acima.",
     bbDownloadPdf:"Baixar PDF",
     copyLinkBtn:"Copiar link",
+    shareCurationNote:"Antes de compartilhar, o Trafolio permite escolher exatamente o que incluir — selecione ou desmarque notas, blog, lugares, fotos e mais.",
     shareBlogSub:"O blog escrito da sua viagem",
     openEditBook:"Abrir e editar",
     pagesWord:"páginas",
@@ -12675,6 +12697,7 @@ const S={
     conciergeMoreHint:"別の場所をお探し？上で100以上の都市を検索。",
     bbDownloadPdf:"PDFをダウンロード",
     copyLinkBtn:"リンクをコピー",
+    shareCurationNote:"共有する前に、Trafolio では含める内容を正確に選べます——メモ、ブログ、スポット、写真などを選択／解除できます。",
     shareBlogSub:"あなたが書いた旅行ブログ",
     openEditBook:"開いて編集",
     pagesWord:"ページ",
@@ -14347,13 +14370,13 @@ function openCityStory(id, city, focusComments) {
   var authorRow = document.createElement('div');
   authorRow.style.cssText = 'display:flex;align-items:center;gap:10px;margin-bottom:16px';
   var av = makeAv(auth.initial, auth.color, 38, userPhoto(aId));
-  if(aId){ av.style.cursor='pointer'; av.addEventListener('click', function(){ closeModal(); setTimeout(function(){ openUserProfile(aId); }, 280); }); }
+  if(aId){ av.style.cursor='pointer'; av.addEventListener('click', function(){ closeModal(); setTimeout(function(){ openUserProfileWithBack(aId, function(){ openCityStory(id, story.city); }); }, 280); }); }
   var aname = document.createElement('div');
   aname.style.cssText='line-height:1.25;'+(aId?'cursor:pointer':'');
   var handle=(allUsers.find(function(u){return u.id===aId;})||{}).handle||(auth.name||'').split(' ')[0].toLowerCase()+'_travels';
   aname.innerHTML = '<div style="font-size:14px;font-weight:600;color:var(--ink)">'+escHtml(auth.name||'')+'</div>'
     + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+escHtml(handle)+' \xB7 '+cityFlag(story.city)+' '+escHtml(story.city)+'</div>';
-  if(aId){ aname.addEventListener('click', function(){ closeModal(); setTimeout(function(){ openUserProfile(aId); }, 280); }); }
+  if(aId){ aname.addEventListener('click', function(){ closeModal(); setTimeout(function(){ openUserProfileWithBack(aId, function(){ openCityStory(id, story.city); }); }, 280); }); }
   authorRow.appendChild(av); authorRow.appendChild(aname);
   if(aId){
     var followBtn = document.createElement('button');
@@ -14597,11 +14620,11 @@ function openBlog(id){
   var authorRow=document.createElement('div');
   authorRow.style.cssText='display:flex;align-items:center;gap:10px;margin-bottom:14px';
   var av=makeAv(auth.initial,auth.color,38,userPhoto(aId));
-  if(aId){av.style.cursor='pointer';av.addEventListener('click',function(){closeModal();setTimeout(function(){openUserProfile(aId);},280);});}
+  if(aId){av.style.cursor='pointer';av.addEventListener('click',function(){closeModal();setTimeout(function(){openUserProfileWithBack(aId,function(){openBlog(id);});},280);});}
   var handle=(allUsers.find(function(u){return u.id===aId;})||{}).handle||(auth.name||'').split(' ')[0].toLowerCase();
   var aname=document.createElement('div');aname.style.cssText='line-height:1.25;'+(aId?'cursor:pointer':'');
   aname.innerHTML='<div style="font-size:14px;font-weight:600;color:var(--ink)">'+escHtml(auth.name||'')+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+escHtml(handle)+' \xB7 '+cityFlag(b.city)+' '+escHtml(b.city)+'</div>';
-  if(aId){aname.addEventListener('click',function(){closeModal();setTimeout(function(){openUserProfile(aId);},280);});}
+  if(aId){aname.addEventListener('click',function(){closeModal();setTimeout(function(){openUserProfileWithBack(aId,function(){openBlog(id);});},280);});}
   authorRow.appendChild(av);authorRow.appendChild(aname);
   if(aId){var fb=document.createElement('button');fb.style.marginLeft='auto';function pf(){var st=followStatusOf(aId);fb.className='follow-btn '+(st==='none'?'follow':'following');fb.textContent=followLabel(aId);}pf();fb.addEventListener('click',function(){actFollow(aId);pf();});authorRow.appendChild(fb);}
   var meta=document.createElement('div');meta.style.cssText='font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin:6px 0 10px';
