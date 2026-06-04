@@ -1783,10 +1783,10 @@ body.show-lbar .lbar{display:none}
         <div class="bb-showcase-lab">&#128214; <span data-i18n="bbShowcase">See how your printed book looks</span></div>
         <div class="bb-showcase-row" id="bb-showcase-row">
           <div class="bb-book-shot"><img src="assets/memorybook-1.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
-          <div class="bb-book-shot"><img src="assets/memorybook-2.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
-          <div class="bb-book-shot"><img src="assets/memorybook-3.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
-          <div class="bb-book-shot"><img src="assets/memorybook-4.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
-          <div class="bb-book-shot"><img src="assets/memorybook-5.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-2-jpg.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-3-jpg.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-4-jpg.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
+          <div class="bb-book-shot"><img src="assets/memorybook-5-jpg.jpg" loading="lazy" alt="Memory book" onerror="bbShotFail(this)"></div>
         </div>
       </div>
       <div class="bb-orient">
@@ -3427,7 +3427,21 @@ function bbAIDesign(){
   renderBookPages();
   toast('✨ '+t('bbAiDone'));
 }
-function bbBuy(){if(!currentTrip)return;bbEnsure();bbFormat();_orderItems=[cartItemFrom(currentTrip,bbFormat())];openPrintOrder();}
+function bbBuy(){
+  if(!currentTrip)return;bbEnsure();bbFormat();
+  var empty=checkMissingPages();
+  if(empty.length>0){
+    var labels=empty.map(function(i){return (typeof bbPairToken==='function')?bbPairToken(i):('page '+i);});
+    var msg=empty.length===1
+      ? ('The '+labels[0]+' page has no photos yet. ')
+      : (empty.length+' pages are empty ('+labels.join(', ')+'). ');
+    if(!confirm(msg+'They’ll print blank in your book.\n\nBuy now anyway?')){
+      toast('Tip: add a photo (or text) to the empty pages first');
+      return;
+    }
+  }
+  _orderItems=[cartItemFrom(currentTrip,bbFormat())];openPrintOrder();
+}
 // ─── CART ─────────────────────────────────────────────────────────
 var orders=[];        // completed print orders (most recent first)
 var savedTrips=[];    // bookmarked trafollower trips: {key,uid,userName,userHandle,city,cover}
