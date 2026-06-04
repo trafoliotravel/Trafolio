@@ -454,7 +454,7 @@ body.show-lbar .lbar{display:none}
     <div class="bnav-label" style="color:var(--ember)" data-i18n="navAddTrip">Add Trip</div>
   </div>
   <div class="bnav-item" id="bnav-concierge" onclick="showScreen('s-concierge');setActiveNav('bnav-concierge');renderConcierge()">
-    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="bnav-label">Concierge</div>
+    <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="bnav-label" data-i18n="navCityGuide">City Guide</div>
   </div>
   <div class="bnav-item" id="bnav-profile" onclick="showScreen('s-profile');setActiveNav('bnav-profile')">
     <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></div><div class="bnav-label" data-i18n="profile">Profile</div>
@@ -609,6 +609,29 @@ body.show-lbar .lbar{display:none}
     <div id="promo-msg" style="font-size:12px;margin-top:7px;text-align:center;min-height:14px"></div>
   </div>
   <div style="font-size:11px;color:var(--ink-4);text-align:center;margin-top:12px" data-i18n="cancelAnytime">Cancel anytime. Your past trips always stay yours to view.</div>
+</div>
+
+<!-- TRAVELLER TIER (Global + Local standing) -->
+<div class="modal-sheet" id="sheet-tier">
+  <div class="modal-handle"></div>
+  <div style="text-align:center;padding:6px 0 2px">
+    <div id="tier-emoji" style="font-size:36px;line-height:1">🌍</div>
+    <div class="modal-title" style="margin-top:6px"><span id="tier-count">0</span> <span data-i18n="countriesWordCap">Countries</span></div>
+  </div>
+  <div style="background:var(--paper-2);border-radius:14px;padding:14px 16px;margin:14px 0">
+    <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">🌍 <span data-i18n="tierGlobal">Global</span></div>
+    <div id="tier-global-label" style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink);line-height:1.15"></div>
+    <div id="tier-global-word" style="font-size:13.5px;color:var(--ink-2);line-height:1.5;margin-top:4px"></div>
+  </div>
+  <div id="tier-local-block" style="background:var(--paper-2);border-radius:14px;padding:14px 16px;margin:0 0 6px;display:none">
+    <div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">📍 <span id="tier-local-region"></span></div>
+    <div id="tier-local-word" style="font-size:13.5px;color:var(--ink-2);line-height:1.5"></div>
+  </div>
+  <div id="tier-local-prompt" style="display:none;text-align:center;padding:6px 8px 2px">
+    <div style="font-size:13px;color:var(--ink-3);margin-bottom:10px" data-i18n="tierSetCountry">Set your home country to see your local ranking.</div>
+    <button class="btn btn-ghost btn-sm" onclick="closeModal();editProfile()" data-i18n="editProfile">Edit profile</button>
+  </div>
+  <div style="font-size:10.5px;color:var(--ink-4);text-align:center;margin-top:12px;line-height:1.5" data-i18n="tierHow">Based on unique countries visited · approximate, survey-based bands (Pew 2023, Agoda, UNWTO).</div>
 </div>
 
 <!-- EDIT TRIP -->
@@ -815,8 +838,18 @@ body.show-lbar .lbar{display:none}
   <div class="ep-field"><label class="ep-label" data-i18n="name">Name</label><input class="inp" id="ep-name" data-i18n-ph="yourNamePh" placeholder="Your name"></div>
   <div class="ep-field"><label class="ep-label" data-i18n="username">Username</label><input class="inp" id="ep-username" readonly aria-readonly="true" placeholder="yourname" style="opacity:.6;background:var(--paper-2);cursor:not-allowed"><div style="font-size:11px;color:var(--ink-4);margin-top:5px" data-i18n="usernameLocked">Your username is permanent and can't be changed.</div></div>
   <div class="ep-field"><label class="ep-label" data-i18n="bio">Bio</label><textarea class="inp" id="ep-bio" rows="3" data-i18n-ph="bioPh" placeholder="Tell travellers about yourself..." style="resize:none"></textarea></div>
-  <div class="ep-field"><label class="ep-label" data-i18n="fromLabel">From</label><input class="inp" id="ep-from" data-i18n-ph="fromPh" placeholder="Where you're from (city)"></div>
-  <div class="ep-field"><label class="ep-label" data-i18n="livesLabel">Lives in</label><input class="inp" id="ep-lives" data-i18n-ph="livesPh" placeholder="Where you live now (city)"></div>
+  <div class="ep-field"><label class="ep-label" data-i18n="fromLabel">From</label>
+    <div style="position:relative">
+      <input class="inp" id="ep-from" data-i18n-ph="fromPh" placeholder="Where you're from (city)" autocomplete="off" oninput="epPlaceSearch('from',this.value)">
+      <div id="ep-from-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:210px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30"></div>
+    </div>
+  </div>
+  <div class="ep-field"><label class="ep-label" data-i18n="livesLabel">Lives in</label>
+    <div style="position:relative">
+      <input class="inp" id="ep-lives" data-i18n-ph="livesPh" placeholder="Where you live now (city)" autocomplete="off" oninput="epPlaceSearch('lives',this.value)">
+      <div id="ep-lives-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:210px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30"></div>
+    </div>
+  </div>
   <div class="ep-field"><label class="ep-label" data-i18n="homeCurrency">Home currency</label>
     <select class="inp" id="ep-currency" style="padding:12px 28px 12px 12px;appearance:none;-webkit-appearance:none">
       <option value="AED">AED</option><option value="USD">USD</option><option value="EUR">EUR</option>
@@ -1363,7 +1396,7 @@ body.show-lbar .lbar{display:none}
       <img id="trip-hero-photo" src="" alt="">
       <div class="trip-hero-overlay"></div>
       <div class="trip-hero-actions">
-        <button class="btn-icon" onclick="showScreen('s-dash');setActiveNav('bnav-trips')">&#8592;</button>
+        <button class="btn-icon" onclick="showScreen('s-dash');setActiveNav('bnav-profile')">&#8592;</button>
         <div style="display:flex;gap:8px">
           <button class="btn-icon" onclick="openEditTrip()" title="Edit trip" data-i18n-title="editTrip">&#9998;</button>
           <label class="btn-icon" title="Change cover photo" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&#128247;<input type="file" accept="image/*" style="display:none" onchange="editTripCover(this)"></label>
@@ -1654,6 +1687,8 @@ body.show-lbar .lbar{display:none}
     .bb-mini-stage .bb-slot.empty::after{display:none}
     .bb-mini-stage .bb-cap-cover-box{pointer-events:none}
     .bb-spread-cap{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--ink-4);text-transform:uppercase}
+    .pbook-grid{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;padding:6px 0}
+    .pbook-mini{cursor:pointer}
     .bb-allthumbs{border-top:1px solid var(--paper-3);margin-top:10px;padding:16px 0 6px}
     .bb-allthumbs-head{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);text-align:center;padding:0 16px 12px}
     .bb-allthumbs-vp{position:relative}
@@ -1875,7 +1910,11 @@ body.show-lbar .lbar{display:none}
       </div>
       <!-- Name + handle centered -->
       <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;letter-spacing:-0.01em" id="profile-name">John K</div>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin-bottom:8px" id="profile-username">@johnk</div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin-bottom:10px" id="profile-username">@johnk</div>
+      <!-- Traveller-tier badge (under @name, above Free/Upgrade) -->
+      <div style="text-align:center;margin-bottom:12px">
+        <button id="tier-badge" type="button" onclick="openTierCard()" title="Your traveller tier" style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border:none;border-radius:30px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer"><span id="tier-badge-emoji">🌍</span> <span id="tier-chip-label">Explorer</span> <span style="opacity:.55">›</span></button>
+      </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
         <span id="profile-plan-badge" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:var(--paper-3);color:var(--ink-3)">Free</span>
         <button id="profile-upgrade-btn" onclick="onProfileUpgradeClick()" style="background:var(--ember);color:#fff;border:none;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer" data-i18n="upgradeCta">Upgrade to Pro</button>
@@ -1895,7 +1934,7 @@ body.show-lbar .lbar{display:none}
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink)" id="p-stat-places2">0</div>
           <div style="font-size:11px;color:var(--ink-4)">Places</div>
         </div>
-        <div style="text-align:center">
+        <div style="text-align:center;cursor:pointer" onclick="openTierCard()" title="Your traveller tier">
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink)" id="p-stat-countries">0</div>
           <div style="font-size:11px;color:var(--ink-4)">Countries</div>
         </div>
@@ -1919,6 +1958,7 @@ body.show-lbar .lbar{display:none}
         <button class="prof-tab" data-ptab="stories" onclick="switchProfileTab('stories')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">✍️ <span data-i18n="tabStories">Stories</span></button>
         <button class="prof-tab" data-ptab="wishlist" onclick="switchProfileTab('wishlist')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">🔖 <span>Wishlist</span></button>
         <button class="prof-tab" data-ptab="favorites" onclick="switchProfileTab('favorites')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">⭐ <span>Favorites</span></button>
+        <button class="prof-tab" data-ptab="book" onclick="switchProfileTab('book')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">📖 <span data-i18n="tabBook">Memory Book</span></button>
       </div>
     <div id="ptab-trips">
       <!-- Travel map: world map with visited cities marked in red -->
@@ -1932,6 +1972,10 @@ body.show-lbar .lbar{display:none}
         <div id="travel-map-card" style="position:relative;border-radius:14px;overflow:hidden;border:1px solid var(--paper-3);background:#FBF3EC">
           <div id="travel-map" style="position:relative;width:100%;aspect-ratio:2 / 1;background:#FBF3EC">
             <img id="travel-map-img" crossorigin="anonymous" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1280px-World_map_-_low_resolution.svg.png" style="width:100%;height:100%;display:block;object-fit:fill;filter:grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4);opacity:.55">
+            <!-- Trafolio watermark, centered behind the pins -->
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1">
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(30px,12vw,96px);line-height:1;letter-spacing:-0.02em;color:var(--ink);opacity:.2;white-space:nowrap">Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io</div>
+            </div>
           </div>
         </div>
         <!-- Cities / countries BELOW the map -->
@@ -1959,6 +2003,10 @@ body.show-lbar .lbar{display:none}
       </div>
       <div id="profile-favorites" class="trip-grid-dash-responsive" style="display:grid;gap:8px;padding:6px 16px 24px"></div>
     </div><!-- /ptab-favorites -->
+    <div id="ptab-book" style="display:none">
+      <div id="pbook-cities" style="display:flex;gap:8px;overflow-x:auto;padding:14px 16px 6px;-webkit-overflow-scrolling:touch"></div>
+      <div id="pbook-preview" style="padding:4px 16px 28px"></div>
+    </div><!-- /ptab-book -->
     <div style="padding:28px 20px 0;text-align:center">
       <div class="lang-selector" id="lang-selector" style="display:flex;justify-content:center;margin:0 20px 0;position:relative">
   <div class="lang-btn" id="lang-btn" onclick="toggleLangDropdown(event)" style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:20px;font-size:12px;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;width:auto">
@@ -2154,6 +2202,8 @@ var _shareDemo=null;
 // ─── ROUTING ──────────────────────────────────────────────────────
 function openExampleGuide(){ _shareDemo=DEMO_GUIDE; showScreen('s-share'); }
 function showScreen(id){
+  // The old "Your trips" dashboard duplicated the Profile → send any of its routes to Profile (Trips tab).
+  if(id==='s-dash'){ id='s-profile'; setTimeout(function(){ if(typeof switchProfileTab==='function')switchProfileTab('trips'); },0); }
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el=document.getElementById(id);if(el){el.classList.add('active');window.scrollTo(0,0);}
   // Always (re)render content for the screen being shown
@@ -2168,13 +2218,14 @@ function showScreen(id){
     else{nav.classList.remove('lp-topnav-transparent');if(window._lpScrollHandler)window.removeEventListener('scroll',window._lpScrollHandler);}
   }
 }
-function goHome(){if(appMode)showScreen('s-dash');else showScreen('s-home');}
+function goHome(){if(appMode){showScreen('s-feed');setActiveNav('bnav-feed');if(typeof renderFeed==='function')renderFeed();}else showScreen('s-home');}
 function enterApp(){
   appMode=true;
   document.getElementById('nav-right-auth').style.display='none';
   document.getElementById('nav-right-app').style.display='flex';
   document.getElementById('bottom-nav').style.display='flex';
   applyIdentity();updateCartBtn();
+  if(typeof initSearchClears==='function')initSearchClears(); // wire clear-X on every search box
   if(typeof renderDash==='function')renderDash();
   renderProfile();
   // Pre-render all tabs so they're never empty
@@ -2211,7 +2262,7 @@ function renderDash(){
     var card=document.createElement('div');card.className='trip-card';card.onclick=function(){openTrip(t.id);};
     card.innerHTML='<img src="'+t.cover+'" alt="'+t.dest+'" loading="'+( i<2?'eager':'lazy')+'" onerror="this.onerror=null;this.src=FALLBACK_COVER">'+
       '<div class="trip-card-overlay"></div>'+
-      '<div class="trip-card-content"><div class="trip-card-flag">'+t.flag+'</div><div class="trip-card-dest">'+t.dest+'</div><div class="trip-card-meta">'+t.dates.toUpperCase()+' · '+t.days+' DAYS · '+t.places.length+' PLACES</div></div>'+
+      '<div class="trip-card-content"><div class="trip-card-flag">'+(t.flag||'')+'</div><div class="trip-card-dest">'+(t.dest||'')+'</div><div class="trip-card-meta">'+String(t.dates||'').toUpperCase()+' · '+(t.days||0)+' DAYS · '+((t.places||[]).length)+' PLACES</div></div>'+
       '<div class="trip-card-star" onclick="event.stopPropagation();starTrip('+t.id+')">'+(t.starred?'★':'☆')+'</div>';
     grid.appendChild(card);
   });
@@ -2246,7 +2297,7 @@ function openTrip(id){
   renderPlaces('all');renderPhotosTab();renderNotesTab();renderBlogTab();renderShareTab();renderMemoryBook();
   var urlEl=document.getElementById('share-url-display');
   if(urlEl){var slug=currentTrip.dest.toLowerCase().replace(/\s+/g,'-');urlEl.innerHTML='trafolio.travel/<strong>'+userData.username+'</strong>/'+slug;}
-  showScreen('s-trip');setActiveNav('bnav-trips');
+  showScreen('s-trip');setActiveNav('bnav-profile');
   setTimeout(function(){renderShareTab();},100);
 }
 function openShareSheet(){
@@ -3691,6 +3742,7 @@ function renderProfile(){
   renderTravelMap();
   renderProfileStories();
   if(typeof applyPlanUI==='function')applyPlanUI();
+  if(typeof updateTierChip==='function')updateTierChip();
 }
 function renderProfileStories(){
   var wrap=document.getElementById('profile-stories');if(!wrap)return;
@@ -3763,6 +3815,75 @@ function countUSStates(list){
   });
   return Object.keys(set).length;
 }
+// ─── TRAVELLER PERCENTILE TIERS (per Trafolio-Traveler-Tiers.md) ──────────────
+// Positive, hedged, motivational. Wording is taken verbatim from the spec — do not
+// convert the "~" bands into precise percentages. Uses the same unique-country count
+// as the profile stat (countCountries). All tunable data lives in this one block.
+var TIER_GLOBAL=[
+  {min:0,max:0,  emoji:'🧭', label:'Just getting started', word:'Add your first trip to see where you rank.',           more:null},
+  {min:1,max:2,  emoji:'🧭', label:'Getting going',         word:"You're on your way — most journeys start here.",        more:25},
+  {min:3,max:4,  emoji:'✈️', label:'Explorer',              word:'Around the global average — keep going!',               more:50},
+  {min:5,max:9,  emoji:'✈️', label:'Seasoned Traveller',    word:'More travelled than ~half the world.',                 more:50},
+  {min:10,max:15,emoji:'🌍', label:'Globetrotter',          word:"Top ~30% — you've out-travelled two-thirds of people.", more:70},
+  {min:16,max:30,emoji:'🌍', label:'World Wanderer',        word:'Top ~15% of travellers worldwide.',                    more:85},
+  {min:31,max:49,emoji:'🏆', label:'Elite Traveller',       word:'Top ~8% — genuinely well-travelled.',                  more:92},
+  {min:50,max:99,emoji:'🏆', label:'Globe Master',          word:'Top ~1% of travellers on earth.',                      more:99},
+  {min:100,max:192,emoji:'👑',label:'Century Club',         word:'Among a few thousand people alive.',                   more:99},
+  {min:193,max:9999,emoji:'🌐',label:'Every Country',       word:'One of only ~500 people ever. 🌍',                      more:99}
+];
+function globalTierIdx(n){ for(var i=0;i<TIER_GLOBAL.length;i++){ if(n>=TIER_GLOBAL[i].min && n<=TIER_GLOBAL[i].max) return i; } return TIER_GLOBAL.length-1; }
+// LOCAL data (Pew 2023 % who've visited 10+ countries) — only published figures.
+var LOCAL_NUM={'france':26,'italy':25,'australia':31,'greece':19}; // "top ~P% in [country]" at 10+
+var LOCAL_VERYHIGH=['netherlands','united arab emirates','saudi arabia','qatar','kuwait','bahrain','oman']; // Agoda/Pew very-high bar
+var LOCAL_LOW=['canada','germany','spain','poland','hungary','israel','japan','south korea','argentina','brazil','mexico','south africa','kenya','nigeria','india','indonesia'];
+function tierCountryKey(raw){
+  var s=normCountry(raw);
+  var m={'us':'united states','usa':'united states','u.s.':'united states','u.s.a':'united states','u.s.a.':'united states','america':'united states','united states of america':'united states','uk':'united kingdom','britain':'united kingdom','great britain':'united kingdom','uae':'united arab emirates','holland':'netherlands','korea':'south korea'};
+  return m[s]||s;
+}
+function tierCountryDisplay(raw){
+  var k=tierCountryKey(raw);
+  var pretty={'united states':'the US','united kingdom':'the UK','united arab emirates':'the UAE','netherlands':'the Netherlands','south korea':'South Korea'};
+  if(pretty[k])return pretty[k];
+  return String(raw||'').trim().replace(/\b\w/g,function(c){return c.toUpperCase();});
+}
+function homeCountryRaw(){ var f=(userData.from||'').trim(); if(!f)return ''; var p=f.split(','); return p[p.length-1].trim(); }
+function _usaBand(n){ if(n<=0)return 'Add your first trip to see your local ranking.'; if(n<=4)return 'About average for US travellers.'; if(n<=9)return 'Top ~26% of US travellers — a globe-trotter by US standards.'; if(n<=19)return 'Top ~11% in the US.'; return 'Among the most-travelled Americans.'; }
+function _swedenBand(n){ if(n<=0)return 'Add your first trip to see your local ranking.'; if(n<=9)return 'Below the Swedish average — Swedes travel a lot!'; if(n<=19)return 'About average for Sweden.'; if(n<=34)return 'Above average among Swedish travellers.'; return 'Among the most-travelled in Sweden.'; }
+function _numberedBand(n,P,disp){ if(n<=0)return 'Add your first trip to see your local ranking.'; if(n<=4)return 'About average for '+disp+' travellers.'; if(n<=9)return 'A real globe-trotter by '+disp+' standards.'; if(n<=19)return 'Top ~'+P+'% in '+disp+'.'; return 'Among the most-travelled in '+disp+'.'; }
+function _veryHighBand(n,disp){ if(n<=0)return 'Add your first trip to see your local ranking.'; if(n<=9)return 'Below the '+disp+' average — locals travel a lot!'; if(n<=19)return 'About average for '+disp+'.'; if(n<=34)return 'Above average among '+disp+' travellers.'; return 'Among the most-travelled in '+disp+'.'; }
+function _lowBand(n,disp){ if(n<=0)return 'Add your first trip to see your local ranking.'; if(n<=2)return "You're ahead of most travellers in "+disp+' — keep exploring!'; if(n<=4)return 'More travelled than most in '+disp+'.'; if(n<=9)return 'Far more travelled than most in '+disp+'.'; return 'Among the most-travelled in '+disp+'.'; }
+function localStanding(n, raw){
+  var k=tierCountryKey(raw), disp=tierCountryDisplay(raw);
+  if(k==='united states') return {region:disp, word:_usaBand(n)};
+  if(k==='sweden') return {region:disp, word:_swedenBand(n)};
+  if(LOCAL_NUM[k]!=null) return {region:disp, word:_numberedBand(n, LOCAL_NUM[k], disp)};
+  if(LOCAL_VERYHIGH.indexOf(k)>=0) return {region:disp, word:_veryHighBand(n, disp)};
+  if(LOCAL_LOW.indexOf(k)>=0) return {region:disp, word:_lowBand(n, disp)};
+  // No published data → global benchmark relabelled with the country name (honest fallback).
+  var g=TIER_GLOBAL[globalTierIdx(n)];
+  if(g.more==null) return {region:disp, word:'Add your first trip to see your local ranking.'};
+  return {region:disp, word:'More travelled than ~'+g.more+'% of travellers in '+disp+'.'};
+}
+function openTierCard(){
+  var n=countCountries(trips), g=TIER_GLOBAL[globalTierIdx(n)];
+  var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+  set('tier-count',n); set('tier-emoji',g.emoji); set('tier-global-label',g.label); set('tier-global-word',g.word);
+  var raw=homeCountryRaw();
+  var lb=document.getElementById('tier-local-block'), lp=document.getElementById('tier-local-prompt');
+  if(raw){ var ls=localStanding(n, raw); set('tier-local-region',ls.region); set('tier-local-word',ls.word); if(lb)lb.style.display='block'; if(lp)lp.style.display='none'; }
+  else { if(lb)lb.style.display='none'; if(lp)lp.style.display='block'; }
+  openModal('sheet-tier');
+}
+// Update the chip label + fire a one-time milestone toast when crossing into a higher tier.
+function updateTierChip(){
+  var n=countCountries(trips), gi=globalTierIdx(n), g=TIER_GLOBAL[gi];
+  var lab=document.getElementById('tier-chip-label'); if(lab)lab.textContent=g.label;
+  var bem=document.getElementById('tier-badge-emoji'); if(bem)bem.textContent=g.emoji;
+  if(typeof userData.tierIdx==='undefined' || userData.tierIdx===null){ userData.tierIdx=gi; return; } // baseline, no toast
+  if(gi>userData.tierIdx){ userData.tierIdx=gi; toast('🎉 '+t('reachedTier')+' '+g.label+' — '+g.word); if(typeof persistSoon==='function')persistSoon(); }
+  else if(gi<userData.tierIdx){ userData.tierIdx=gi; }
+}
 function mapXY(lat,lng){ return { x:(lng+180)/360*100, y:(90-lat)/180*100 }; }
 function renderTravelMap(){
   var map=document.getElementById('travel-map'); if(!map)return;
@@ -3800,6 +3921,8 @@ function shareTravelMap(){
   ctx.fillStyle='#FBF3EC';ctx.fillRect(0,0,W,H); // warm paper background
   // draw the map with the same ember duotone as on screen
   try{ ctx.filter='grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4)'; ctx.globalAlpha=.55; ctx.drawImage(img,0,TOP,W,MH); ctx.filter='none'; ctx.globalAlpha=1; }catch(e){ ctx.filter='none'; ctx.globalAlpha=1; toast(t('mapShareFail')); return; }
+  // Trafolio watermark behind the pins (≈20% visible, centered)
+  ctx.save(); ctx.globalAlpha=.2; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='600 110px Georgia, serif'; ctx.fillStyle='#001C30'; ctx.fillText('Trafolio', W/2, TOP+MH/2); ctx.restore();
   var cities={},countries={};
   (trips||[]).forEach(function(tp){var co=tripCoords(tp);if(!co)return;cities[tp.dest]={co:co,flag:tp.flag||cityFlag(tp.dest)};var cc=normCountry(tripCountry(tp));if(cc)countries[cc]=1;});
   Object.keys(cities).forEach(function(dest){
@@ -3833,6 +3956,57 @@ function shareTravelMap(){
   },'image/png');
 }
 function updateProfileStats(){renderProfile();}
+// ── From / Lives-in city autocomplete (Google Places → Nominatim fallback) ──
+// Real, normalized "City, Region, Country" values so US detection (States stat) is reliable.
+var _epLocT=null;
+function epPlaceSearch(which,val){
+  clearTimeout(_epLocT);
+  var dd=document.getElementById('ep-'+which+'-dd'); var q=(val||'').trim();
+  if(q.length<2){ if(dd){dd.style.display='none';dd.innerHTML='';} return; }
+  _epLocT=setTimeout(function(){ epDoLoc(which,q); },320);
+}
+function epDoLoc(which,q){
+  if(window._googleMapsReady && !window._googlePlacesBroken && window.google && google.maps && google.maps.places){
+    try{
+      var svc=new google.maps.places.AutocompleteService();
+      svc.getPlacePredictions({input:q, types:['(cities)']}, function(preds,status){
+        if(status!==google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length){ epNominatim(which,q); return; }
+        epRenderLoc(which, preds.map(function(p){return p.description;}));
+      });
+      return;
+    }catch(e){ window._googlePlacesBroken=true; }
+  }
+  epNominatim(which,q);
+}
+function epNominatim(which,q){
+  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}})
+    .then(function(r){return r.json();})
+    .then(function(data){
+      epRenderLoc(which,(data||[]).map(function(it){var a=it.address||{};var city=a.city||a.town||a.village||a.county||a.state||it.name;var country=a.country||'';return city+(country?', '+country:'');}));
+    }).catch(function(){ var dd=document.getElementById('ep-'+which+'-dd'); if(dd){dd.style.display='none';} });
+}
+function epRenderLoc(which, items){
+  var dd=document.getElementById('ep-'+which+'-dd'); if(!dd)return;
+  items=(items||[]).filter(Boolean);
+  if(!items.length){ dd.style.display='none'; dd.innerHTML=''; return; }
+  dd.innerHTML=items.slice(0,6).map(function(lab){
+    var safe=String(lab).replace(/"/g,'&quot;');
+    return '<div style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--paper-3);display:flex;align-items:center;gap:8px" onclick="epPickLoc(\''+which+'\',this)" data-label="'+safe+'"><span style="font-size:14px">📍</span><span>'+String(lab).replace(/</g,'&lt;')+'</span></div>';
+  }).join('');
+  dd.style.display='block';
+}
+function epPickLoc(which,el){
+  var inp=document.getElementById(which==='from'?'ep-from':'ep-lives');
+  if(inp)inp.value=el.getAttribute('data-label')||el.textContent.trim();
+  var dd=document.getElementById('ep-'+which+'-dd'); if(dd){dd.style.display='none';dd.innerHTML='';}
+}
+// Hide the from/lives dropdowns when clicking elsewhere.
+document.addEventListener('click',function(e){
+  ['from','lives'].forEach(function(w){
+    var dd=document.getElementById('ep-'+w+'-dd'), inp=document.getElementById('ep-'+w);
+    if(dd&&dd.style.display!=='none'&&e.target!==inp&&!dd.contains(e.target)){ dd.style.display='none'; }
+  });
+});
 function copyProfileLink(){navigator.clipboard?.writeText('https://trafolio.travel/'+userData.username).then(function(){toast(t('profileLinkCopied'));});}
 function editProfile(){
   var n=document.getElementById('ep-name');if(n)n.value=userData.name||'';
@@ -3840,6 +4014,7 @@ function editProfile(){
   var b=document.getElementById('ep-bio');if(b)b.value=userData.bio||'';
   var ef=document.getElementById('ep-from');if(ef)ef.value=userData.from||'';
   var el=document.getElementById('ep-lives');if(el)el.value=userData.livesIn||'';
+  ['ep-from-dd','ep-lives-dd'].forEach(function(id){var d=document.getElementById(id);if(d){d.style.display='none';d.innerHTML='';}});
   var c=document.getElementById('ep-currency');if(c)c.value=userData.currency||'AED';
   var av=document.getElementById('ep-av-prev');
   if(av){if(userData.avatar){av.style.backgroundImage='url('+userData.avatar+')';av.style.backgroundSize='cover';av.style.backgroundPosition='center';av.textContent='';}else{av.style.backgroundImage='';av.textContent=(userData.name||'?').charAt(0).toUpperCase();}}
@@ -3890,23 +4065,43 @@ function openPaywall(reason){
   var pi=document.getElementById('promo-input'); if(pi)pi.value='';
   openModal('sheet-upgrade');
 }
-// Redeem a promo code — validated SERVER-SIDE against the Supabase promo_codes table.
+// Known good codes for the client-side fallback (used only when the backend isn't reachable,
+// so a valid promo can still bypass checkout in demo / pre-launch). The server enforces the
+// real per-code usage cap; the fallback cannot.
+var PROMO_LOCAL=['trafolio90210'];
+function promoGrant(msg){
+  userData.plan='pro'; userData.subStatus='promo';
+  if(typeof applyPlanUI==='function')applyPlanUI();
+  if(typeof persistSoon==='function')persistSoon();                 // survive reload locally
+  try{ if(sb&&userData.id) sb.from('profiles').update({plan:'pro',sub_status:'promo'}).eq('id',userData.id); }catch(e){} // best-effort cross-device
+  if(msg){msg.textContent=t('promoApplied');msg.style.color='#1a9d5a';}
+  toast(t('proWelcome'));
+  setTimeout(function(){ closeModal(); if(typeof renderProfile==='function')renderProfile(); },1000);
+}
+// Redeem a promo code. Primary: SERVER-SIDE check against Supabase promo_codes (enforces the
+// 100-use cap). Fallback: if the server is unreachable/unconfigured, a valid code still works
+// so it bypasses checkout even with no backend wired.
 async function redeemPromo(){
   var inp=document.getElementById('promo-input'), msg=document.getElementById('promo-msg');
-  var code=(inp&&inp.value||'').trim();
+  var code=(inp&&inp.value||'').trim(); var lc=code.toLowerCase();
   if(!code){ if(msg){msg.textContent=t('enterPromo');msg.style.color='var(--ink-4)';} return; }
-  if(!sb||!userData.id){ toast(t('signInToSubscribe')); return; }
   if(msg){msg.textContent='…';msg.style.color='var(--ink-4)';}
-  try{
-    var r=await fetch('/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code})});
-    var d=await r.json();
-    if(d&&d.ok){
-      userData.plan='pro'; userData.subStatus='promo'; applyPlanUI();
-      if(msg){msg.textContent=t('promoApplied');msg.style.color='#1a9d5a';}
-      toast(t('proWelcome'));
-      setTimeout(function(){ closeModal(); if(typeof renderProfile==='function')renderProfile(); },1000);
-    } else { if(msg){msg.textContent=(d&&d.error)||t('promoInvalid');msg.style.color='#E8334A';} }
-  }catch(e){ if(msg){msg.textContent=t('checkoutUnavailable');msg.style.color='#E8334A';} }
+  // 1) Secure server path (only when we have a Supabase user to attribute the redemption to).
+  if(sb && userData.id){
+    try{
+      var r=await fetch('/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code})});
+      if(r.status===404 || r.status===409){ // server says: invalid / fully redeemed → respect it, no bypass
+        var de=await r.json().catch(function(){return{};});
+        if(msg){msg.textContent=(de&&de.error)||t('promoInvalid');msg.style.color='#E8334A';}
+        return;
+      }
+      if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.ok){ promoGrant(msg); return; } }
+      // any other status (503 not configured, 5xx) → fall through to the local fallback
+    }catch(e){ /* network error → fall through to local fallback */ }
+  }
+  // 2) Fallback: code is valid locally → grant Pro and bypass checkout.
+  if(PROMO_LOCAL.indexOf(lc)>=0){ promoGrant(msg); return; }
+  if(msg){msg.textContent=t('promoInvalid');msg.style.color='#E8334A';}
 }
 // Stripe Checkout — the server (server.js) holds the secret key and creates the session.
 async function startCheckout(){
@@ -3941,11 +4136,23 @@ async function refreshSubStatus(){
 function applyPlanUI(){
   var badge=document.getElementById('profile-plan-badge');
   if(badge){ badge.textContent=isPro()?t('planPro'):t('planFree'); badge.style.background=isPro()?'var(--ember)':'var(--paper-3)'; badge.style.color=isPro()?'#fff':'var(--ink-3)'; }
-  var up=document.getElementById('profile-upgrade-btn'); if(up)up.textContent=isPro()?t('manageSub'):t('upgradeCta');
+  var up=document.getElementById('profile-upgrade-btn'); if(up){up.textContent=isPro()?t('unsubscribe'):t('upgradeCta');up.style.background=isPro()?'var(--paper-3)':'var(--ember)';up.style.color=isPro()?'var(--ink-2)':'#fff';}
   var hint=document.getElementById('profile-trips-left');
   if(hint){ if(isPro()){ hint.style.display='none'; } else { hint.style.display=''; hint.textContent=Math.max(0,FREE_TRIP_LIMIT-activeTripCount())+' '+t('freeTripsLeft'); } }
 }
-function onProfileUpgradeClick(){ if(isPro())manageSubscription(); else openPaywall(); }
+function onProfileUpgradeClick(){ if(isPro())unsubscribePro(); else openPaywall(); }
+// Cancel the subscription. Cancels the real Stripe subscription when wired (server),
+// and always downgrades the user to Free locally so it works in demo / promo too.
+function unsubscribePro(){
+  if(!confirm(t('confirmUnsub'))) return;
+  try{ if(sb&&userData.id) fetch('/api/cancel-sub',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id})}); }catch(e){}
+  userData.plan='free'; userData.subStatus='canceled';
+  if(typeof applyPlanUI==='function')applyPlanUI();
+  if(typeof persistSoon==='function')persistSoon();
+  try{ if(sb&&userData.id) sb.from('profiles').update({plan:'free',sub_status:'canceled'}).eq('id',userData.id); }catch(e){}
+  if(typeof renderProfile==='function')renderProfile();
+  toast(t('unsubscribed'));
+}
 // City vs Country (multi-city) toggle in the Add Trip flow.
 function setTripType(tt){
   _tripType=(tt==='country')?'country':'city';
@@ -5228,6 +5435,25 @@ const S={
     cityAddedToast:"added to the trip",
     cityAlready:"That city is already on this trip",
     cityWord:"city",
+    openEditBook:"Open & edit",
+    pagesWord:"pages",
+    profBookEmpty:"Create a trip to start a memory book.",
+    tierGlobal:"Global",
+    tierSetCountry:"Set your home country to see your local ranking.",
+    tierHow:"Based on unique countries visited · approximate, survey-based bands (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"You just reached",
+    countriesWordCap:"Countries",
+    commentsLabel:"Comments",
+    addComment:"Add a comment…",
+    postBtn:"Post",
+    tagPeople:"Tag people",
+    noComments:"Be the first to comment",
+    unsubscribe:"Unsubscribe",
+    confirmUnsub:"Cancel your Trafolio Pro subscription? You will keep your trips but lose Pro features.",
+    unsubscribed:"Subscription canceled",
+    navCityGuide:"City Guide",
+    cityGuideTitle:"City Guide Recommendations",
+    cityGuideSub:"Your guide to the world’s top 100 cities",
     promoPlaceholder:"Promo code",
     applyCode:"Apply",
     promoApplied:"Code applied — you are Pro! 🎉",
@@ -6000,6 +6226,25 @@ const S={
     cityAddedToast:"أُضيفت إلى الرحلة",
     cityAlready:"هذه المدينة موجودة بالفعل في الرحلة",
     cityWord:"مدينة",
+    openEditBook:"فتح وتعديل",
+    pagesWord:"صفحات",
+    profBookEmpty:"أنشئ رحلة لبدء كتاب ذكريات.",
+    tierGlobal:"عالميًا",
+    tierSetCountry:"حدد بلدك الأصلي لرؤية ترتيبك المحلي.",
+    tierHow:"بناءً على عدد الدول الفريدة · نطاقات تقريبية من استطلاعات (Pew 2023، Agoda، UNWTO).",
+    reachedTier:"لقد وصلت إلى",
+    countriesWordCap:"دول",
+    commentsLabel:"تعليقات",
+    addComment:"أضف تعليقًا…",
+    postBtn:"نشر",
+    tagPeople:"الإشارة إلى أشخاص",
+    noComments:"كن أول من يعلّق",
+    unsubscribe:"إلغاء الاشتراك",
+    confirmUnsub:"إلغاء اشتراك Trafolio Pro؟ ستحتفظ برحلاتك لكنك ستفقد ميزات Pro.",
+    unsubscribed:"تم إلغاء الاشتراك",
+    navCityGuide:"دليل المدن",
+    cityGuideTitle:"توصيات دليل المدن",
+    cityGuideSub:"دليلك لأفضل 100 مدينة في العالم",
     promoPlaceholder:"رمز ترويجي",
     applyCode:"تطبيق",
     promoApplied:"تم تطبيق الرمز — أصبحت Pro! 🎉",
@@ -6774,6 +7019,25 @@ const S={
     cityAddedToast:"ajoutée au voyage",
     cityAlready:"Cette ville est déjà dans ce voyage",
     cityWord:"ville",
+    openEditBook:"Ouvrir et modifier",
+    pagesWord:"pages",
+    profBookEmpty:"Créez un voyage pour commencer un livre souvenir.",
+    tierGlobal:"Mondial",
+    tierSetCountry:"Indiquez votre pays d’origine pour voir votre classement local.",
+    tierHow:"Basé sur les pays uniques visités · tranches approximatives issues d’enquêtes (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"Vous venez d’atteindre",
+    countriesWordCap:"Pays",
+    commentsLabel:"Commentaires",
+    addComment:"Ajouter un commentaire…",
+    postBtn:"Publier",
+    tagPeople:"Identifier des personnes",
+    noComments:"Soyez le premier à commenter",
+    unsubscribe:"Se désabonner",
+    confirmUnsub:"Annuler votre abonnement Trafolio Pro ? Vous gardez vos voyages mais perdez les fonctions Pro.",
+    unsubscribed:"Abonnement annulé",
+    navCityGuide:"Guide des villes",
+    cityGuideTitle:"Recommandations du guide des villes",
+    cityGuideSub:"Votre guide des 100 plus belles villes du monde",
     promoPlaceholder:"Code promo",
     applyCode:"Appliquer",
     promoApplied:"Code appliqué — vous êtes Pro ! 🎉",
@@ -7548,6 +7812,25 @@ const S={
     cityAddedToast:"añadida al viaje",
     cityAlready:"Esa ciudad ya está en este viaje",
     cityWord:"ciudad",
+    openEditBook:"Abrir y editar",
+    pagesWord:"páginas",
+    profBookEmpty:"Crea un viaje para empezar un libro de recuerdos.",
+    tierGlobal:"Global",
+    tierSetCountry:"Indica tu país de origen para ver tu ranking local.",
+    tierHow:"Según países únicos visitados · bandas aproximadas de encuestas (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"Acabas de alcanzar",
+    countriesWordCap:"Países",
+    commentsLabel:"Comentarios",
+    addComment:"Añade un comentario…",
+    postBtn:"Publicar",
+    tagPeople:"Etiquetar personas",
+    noComments:"Sé el primero en comentar",
+    unsubscribe:"Cancelar suscripción",
+    confirmUnsub:"¿Cancelar tu suscripción a Trafolio Pro? Conservarás tus viajes pero perderás las funciones Pro.",
+    unsubscribed:"Suscripción cancelada",
+    navCityGuide:"Guía de ciudades",
+    cityGuideTitle:"Recomendaciones de la guía de ciudades",
+    cityGuideSub:"Tu guía de las 100 mejores ciudades del mundo",
     promoPlaceholder:"Código promocional",
     applyCode:"Aplicar",
     promoApplied:"Código aplicado — ¡ya eres Pro! 🎉",
@@ -8322,6 +8605,25 @@ const S={
     cityAddedToast:"geziye eklendi",
     cityAlready:"Bu şehir gezide zaten var",
     cityWord:"şehir",
+    openEditBook:"Aç ve düzenle",
+    pagesWord:"sayfa",
+    profBookEmpty:"Anı kitabı için bir gezi oluştur.",
+    tierGlobal:"Küresel",
+    tierSetCountry:"Yerel sıralamanı görmek için ülkeni ayarla.",
+    tierHow:"Ziyaret edilen benzersiz ülkelere göre · yaklaşık anket bantları (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"Az önce ulaştın:",
+    countriesWordCap:"Ülke",
+    commentsLabel:"Yorumlar",
+    addComment:"Yorum ekle…",
+    postBtn:"Gönder",
+    tagPeople:"Kişileri etiketle",
+    noComments:"İlk yorumu sen yap",
+    unsubscribe:"Aboneliği iptal et",
+    confirmUnsub:"Trafolio Pro aboneliğini iptal et? Gezilerin kalır ama Pro özelliklerini kaybedersin.",
+    unsubscribed:"Abonelik iptal edildi",
+    navCityGuide:"Şehir rehberi",
+    cityGuideTitle:"Şehir Rehberi Önerileri",
+    cityGuideSub:"Dünyanın en iyi 100 şehrine rehberin",
     promoPlaceholder:"Promosyon kodu",
     applyCode:"Uygula",
     promoApplied:"Kod uygulandı — artık Pro oldun! 🎉",
@@ -9096,6 +9398,25 @@ const S={
     cityAddedToast:"aggiunta al viaggio",
     cityAlready:"Quella città è già in questo viaggio",
     cityWord:"città",
+    openEditBook:"Apri e modifica",
+    pagesWord:"pagine",
+    profBookEmpty:"Crea un viaggio per iniziare un libro dei ricordi.",
+    tierGlobal:"Globale",
+    tierSetCountry:"Imposta il tuo Paese d’origine per vedere la classifica locale.",
+    tierHow:"In base ai Paesi unici visitati · fasce approssimative da sondaggi (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"Hai appena raggiunto",
+    countriesWordCap:"Paesi",
+    commentsLabel:"Commenti",
+    addComment:"Aggiungi un commento…",
+    postBtn:"Pubblica",
+    tagPeople:"Tagga persone",
+    noComments:"Scrivi il primo commento",
+    unsubscribe:"Annulla abbonamento",
+    confirmUnsub:"Annullare labbonamento Trafolio Pro? Mantieni i tuoi viaggi ma perdi le funzioni Pro.",
+    unsubscribed:"Abbonamento annullato",
+    navCityGuide:"Guida città",
+    cityGuideTitle:"Consigli della guida città",
+    cityGuideSub:"La tua guida alle 100 migliori città del mondo",
     promoPlaceholder:"Codice promo",
     applyCode:"Applica",
     promoApplied:"Codice applicato — ora sei Pro! 🎉",
@@ -9870,6 +10191,25 @@ const S={
     cityAddedToast:"已添加到旅行",
     cityAlready:"该城市已在此旅行中",
     cityWord:"城市",
+    openEditBook:"打开并编辑",
+    pagesWord:"页",
+    profBookEmpty:"创建一次旅行以开始制作纪念册。",
+    tierGlobal:"全球",
+    tierSetCountry:"设置你的居住国家以查看本地排名。",
+    tierHow:"基于到访的不同国家数 · 来自调查的近似区间（Pew 2023、Agoda、UNWTO）。",
+    reachedTier:"你刚刚达到",
+    countriesWordCap:"国家",
+    commentsLabel:"评论",
+    addComment:"添加评论…",
+    postBtn:"发布",
+    tagPeople:"标记用户",
+    noComments:"抢先评论",
+    unsubscribe:"取消订阅",
+    confirmUnsub:"取消 Trafolio Pro 订阅？你将保留行程但失去 Pro 功能。",
+    unsubscribed:"已取消订阅",
+    navCityGuide:"城市指南",
+    cityGuideTitle:"城市指南推荐",
+    cityGuideSub:"你的全球百大城市指南",
     promoPlaceholder:"促销代码",
     applyCode:"应用",
     promoApplied:"代码已应用 — 你已是 Pro！🎉",
@@ -10644,6 +10984,25 @@ const S={
     cityAddedToast:"zur Reise hinzugefügt",
     cityAlready:"Diese Stadt ist bereits auf dieser Reise",
     cityWord:"Stadt",
+    openEditBook:"Öffnen & bearbeiten",
+    pagesWord:"Seiten",
+    profBookEmpty:"Erstelle eine Reise, um ein Erinnerungsbuch zu starten.",
+    tierGlobal:"Weltweit",
+    tierSetCountry:"Lege dein Heimatland fest, um dein lokales Ranking zu sehen.",
+    tierHow:"Basierend auf besuchten Ländern · ungefähre, umfragebasierte Bänder (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"Du hast gerade erreicht:",
+    countriesWordCap:"Länder",
+    commentsLabel:"Kommentare",
+    addComment:"Kommentar hinzufügen…",
+    postBtn:"Posten",
+    tagPeople:"Personen markieren",
+    noComments:"Schreibe den ersten Kommentar",
+    unsubscribe:"Kündigen",
+    confirmUnsub:"Trafolio Pro kündigen? Deine Reisen bleiben, aber Pro-Funktionen entfallen.",
+    unsubscribed:"Abo gekündigt",
+    navCityGuide:"Städteführer",
+    cityGuideTitle:"Städteführer-Empfehlungen",
+    cityGuideSub:"Dein Führer zu den 100 besten Städten der Welt",
     promoPlaceholder:"Promo-Code",
     applyCode:"Anwenden",
     promoApplied:"Code angewendet — du bist Pro! 🎉",
@@ -11418,6 +11777,25 @@ const S={
     cityAddedToast:"adicionada à viagem",
     cityAlready:"Essa cidade já está nesta viagem",
     cityWord:"cidade",
+    openEditBook:"Abrir e editar",
+    pagesWord:"páginas",
+    profBookEmpty:"Crie uma viagem para iniciar um livro de memórias.",
+    tierGlobal:"Global",
+    tierSetCountry:"Defina seu país de origem para ver seu ranking local.",
+    tierHow:"Com base em países únicos visitados · faixas aproximadas de pesquisas (Pew 2023, Agoda, UNWTO).",
+    reachedTier:"Você acabou de alcançar",
+    countriesWordCap:"Países",
+    commentsLabel:"Comentários",
+    addComment:"Adicione um comentário…",
+    postBtn:"Publicar",
+    tagPeople:"Marcar pessoas",
+    noComments:"Seja o primeiro a comentar",
+    unsubscribe:"Cancelar assinatura",
+    confirmUnsub:"Cancelar sua assinatura Trafolio Pro? Você mantém suas viagens mas perde os recursos Pro.",
+    unsubscribed:"Assinatura cancelada",
+    navCityGuide:"Guia de cidades",
+    cityGuideTitle:"Recomendações do guia de cidades",
+    cityGuideSub:"Seu guia das 100 melhores cidades do mundo",
     promoPlaceholder:"Código promocional",
     applyCode:"Aplicar",
     promoApplied:"Código aplicado — você é Pro! 🎉",
@@ -12192,6 +12570,25 @@ const S={
     cityAddedToast:"を旅行に追加しました",
     cityAlready:"その都市はすでに旅行にあります",
     cityWord:"都市",
+    openEditBook:"開いて編集",
+    pagesWord:"ページ",
+    profBookEmpty:"思い出ブックを始めるには旅行を作成してください。",
+    tierGlobal:"グローバル",
+    tierSetCountry:"地域ランキングを見るには出身国を設定してください。",
+    tierHow:"訪問した国数に基づく · 調査によるおおよその区分（Pew 2023、Agoda、UNWTO）。",
+    reachedTier:"到達しました：",
+    countriesWordCap:"カ国",
+    commentsLabel:"コメント",
+    addComment:"コメントを追加…",
+    postBtn:"投稿",
+    tagPeople:"人をタグ付け",
+    noComments:"最初にコメントしましょう",
+    unsubscribe:"解約する",
+    confirmUnsub:"Trafolio Pro を解約しますか？旅行は残りますが Pro 機能は失われます。",
+    unsubscribed:"解約しました",
+    navCityGuide:"シティガイド",
+    cityGuideTitle:"シティガイドのおすすめ",
+    cityGuideSub:"世界トップ100都市へのガイド",
     promoPlaceholder:"プロモコード",
     applyCode:"適用",
     promoApplied:"コードを適用 — Pro になりました！🎉",
@@ -13351,7 +13748,15 @@ function switchExploreTab(tab) {
 
 function onExploreSearch(val) {
   _exploreQuery = (val||'').trim();
+  // keep the clear-X in sync with the field
+  var inp=document.getElementById('exp-search'); var x=inp&&inp.parentElement&&inp.parentElement.querySelector('.search-clear-x');
+  if(x)x.style.display=_exploreQuery?'flex':'none';
   renderExploreContent();
+}
+// Tap a popular-city pill (Places/Cities) → filter by that city.
+function explorePickCity(city){
+  var inp=document.getElementById('exp-search'); if(inp)inp.value=city;
+  onExploreSearch(city);
 }
 
 function renderExploreContent() {
@@ -13394,7 +13799,16 @@ function renderPlacesTab(body){
   var q=(_exploreQuery||'').toLowerCase().trim();
   var places=allKnownPlaces();
   if(q)places=places.filter(function(p){return p.name.toLowerCase().indexOf(q)>=0||(p.city||'').toLowerCase().indexOf(q)>=0;});
-  var head='<div style="padding:14px 20px 4px">'
+  // Popular cities on top (same as the Cities tab) — tap to filter places by that city.
+  var pills='';
+  if(!q){
+    var popular=['Tokyo','Paris','New York','Beirut','Dubai','Barcelona','Istanbul','Marrakech','Lisbon','Seoul'];
+    pills='<div style="padding:16px 20px 10px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('popularDest')+'</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:8px">'
+      + popular.map(function(c){return '<div class="filter-pill" onclick="explorePickCity(\''+c.replace(/'/g,"\\'")+'\')">'+cityFlag(c)+' '+c+'</div>';}).join('')
+      +'</div></div><div style="height:1px;background:var(--paper-3);margin:0 0 2px"></div>';
+  }
+  var head=pills+'<div style="padding:14px 20px 4px">'
     +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">'+t('tabPlaces')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-4);line-height:1.5;margin-bottom:6px">'+t('placesRatedHint')+'</div></div>';
   if(!places.length){ body.innerHTML=head+'<div style="padding:20px;text-align:center;color:var(--ink-4)">'+(q?t('placeSearchEmpty'):t('noResults'))+'</div>'; return; }
@@ -13746,18 +14160,24 @@ function buildStoriesHTML(cityFilter) {
     + '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('tabStories')+'</div>'
     + list.map(function(s) {
         var ph=storyPhotoFor(s);
-        return '<div class="story-card" data-storyid="'+s.id+'" data-city="'+s.city+'" style="padding:14px 0;border-bottom:1px solid var(--paper-3)">'
-          + '<div style="display:flex;align-items:center;gap:9px;margin-bottom:8px">'
-          + '<div style="width:26px;height:26px;border-radius:50%;'+(userPhoto(s.author.id)?('background:#ccc center/cover no-repeat url('+userPhoto(s.author.id)+')'):('background:'+s.author.color))+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white">'+(userPhoto(s.author.id)?'':s.author.initial)+'</div>'
-          + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+s.author.name.toUpperCase()+' \xB7 '+cityFlag(s.city)+' '+s.city.toUpperCase()+' \xB7 '+s.date+'</div>'
+        var aid=(s.author&&s.author.id)||'';
+        var liked=!!s.liked, likes=s.likes||0, cc=(s.comments||[]).length;
+        return '<div class="story-card" data-storyid="'+s.id+'" data-city="'+escHtml(s.city)+'" data-author="'+escHtml(String(aid))+'" style="padding:14px 0;border-bottom:1px solid var(--paper-3)">'
+          + '<div class="story-author" style="display:flex;align-items:center;gap:9px;margin-bottom:8px;width:fit-content;max-width:100%;'+(aid?'cursor:pointer':'')+'">'
+          + '<div style="width:26px;height:26px;border-radius:50%;'+(userPhoto(aid)?('background:#ccc center/cover no-repeat url('+userPhoto(aid)+')'):('background:'+(s.author.color||'#888')))+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:white;flex-shrink:0">'+(userPhoto(aid)?'':(s.author.initial||'?'))+'</div>'
+          + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(String(s.author.name||'').toUpperCase())+' \xB7 '+cityFlag(s.city)+' '+escHtml(s.city.toUpperCase())+' \xB7 '+escHtml(s.date||'')+'</div>'
           + (s.visibility?'<span class="story-vis-badge">'+storyVisMeta(s.visibility).icon+' '+escHtml(storyVisMeta(s.visibility).label)+'</span>':'')
-          + '<div style="margin-left:auto;font-size:11px;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'\u2665':'\u2661')+' '+s.likes+'</div></div>'
-          + '<div style="display:flex;gap:12px;align-items:flex-start">'
+          + '</div>'
+          + '<div class="story-open" style="display:flex;gap:12px;align-items:flex-start;cursor:pointer">'
           + '<div style="flex:1;min-width:0">'
-          + '<div style="font-family:Cormorant Garamond,serif;font-size:19px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:5px">'+s.title+'</div>'
-          + '<div style="font-size:12.5px;color:var(--ink-3);line-height:1.55;font-style:italic">'+(s.body||'').substring(0,120)+'\u2026</div>'
+          + '<div style="font-family:Cormorant Garamond,serif;font-size:19px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:5px">'+escHtml(s.title||'')+'</div>'
+          + '<div style="font-size:12.5px;color:var(--ink-3);line-height:1.55;font-style:italic">'+escHtml((s.body||'').substring(0,120))+'\u2026</div>'
           + '</div>'
           + (ph?'<div style="width:84px;height:84px;border-radius:10px;overflow:hidden;flex-shrink:0;background:'+cityGradient(s.city)+'"><img src="'+ph+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="imgFallback(this,\''+(s.city||'').replace(/\x27/g,"")+'\')"></div>':'')
+          + '</div>'
+          + '<div style="display:flex;gap:22px;margin-top:11px;align-items:center">'
+          + '<button class="story-like" type="button" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;color:'+(liked?'#E8334A':'var(--ink-3)')+'">'+(liked?'\u2665':'\u2661')+' '+likes+'</button>'
+          + '<button class="story-comment" type="button" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;color:var(--ink-3)">\ud83d\udcac '+cc+'</button>'
           + '</div>'
           + '</div>';
       }).join('')
@@ -13766,18 +14186,37 @@ function buildStoriesHTML(cityFilter) {
 
 function wireStoryCards(container) {
   container.querySelectorAll('.story-card').forEach(function(el) {
-    el.style.cursor = 'pointer';
-    el.addEventListener('click', function() {
-      openCityStory(this.dataset.storyid, this.dataset.city);
-    });
+    var id=el.dataset.storyid, city=el.dataset.city, aid=el.dataset.author;
+    var open=el.querySelector('.story-open');
+    if(open) open.addEventListener('click', function(){ openCityStory(id, city); });
+    var auth=el.querySelector('.story-author');
+    if(auth && aid) auth.addEventListener('click', function(e){ e.stopPropagation(); openUserProfile(isNaN(+aid)?aid:+aid); });
+    var like=el.querySelector('.story-like');
+    if(like) like.addEventListener('click', function(e){ e.stopPropagation(); toggleStoryLike(id); });
+    var com=el.querySelector('.story-comment');
+    if(com) com.addEventListener('click', function(e){ e.stopPropagation(); openCityStory(id, city, true); });
   });
+}
+// Toggle a like from the list (persists on the real story object).
+function toggleStoryLike(id){
+  var s=getStoryById(id); if(!s)return;
+  if(s.liked){ s.liked=false; s.likes=Math.max(0,(s.likes||0)-1); }
+  else { s.liked=true; s.likes=(s.likes||0)+1; }
+  if(typeof persistSoon==='function')persistSoon();
+  refreshStoriesList();
+}
+function refreshStoriesList(){
+  var sb=document.getElementById('explore-body');
+  if(sb && (_exploreTab==='stories'||_exploreTab==='cities')) renderExploreContent();
+  if(typeof renderProfileStories==='function' && document.getElementById('s-profile') && document.getElementById('s-profile').classList.contains('active')) renderProfileStories();
 }
 
 // ── Story reader ──────────────────────────────────────────────────────────
-function openCityStory(id, city) {
+function openCityStory(id, city, focusComments) {
   // Resolve the ACTUAL story object so likes persist outside the reader.
   var story = getStoryById(id);
   if (!story) return;
+  _readerStory = story;
   var auth = story.author || {};
   var aId = auth.id;
 
@@ -13863,8 +14302,80 @@ function openCityStory(id, city) {
   wrap.appendChild(authorRow); wrap.appendChild(meta); wrap.appendChild(title);
   if(storyImg)wrap.appendChild(storyImg);
   wrap.appendChild(bodyText); wrap.appendChild(actions);
+  wrap.appendChild(storyCommentsNode(story));
   body.appendChild(wrap);
   openModal('sheet-story-reader');
+  if(focusComments){ setTimeout(function(){ var i=document.getElementById('story-comment-inp'); if(i){ i.scrollIntoView({block:'center'}); i.focus(); } }, 360); }
+}
+// ── Story comments + @tagging ───────────────────────────────────────────────
+var _readerStory=null;
+function storyCommentsNode(story){
+  if(!Array.isArray(story.comments)) story.comments=[];
+  var box=document.createElement('div');
+  box.style.cssText='margin-top:22px;border-top:1px solid var(--paper-3);padding-top:16px';
+  var head=document.createElement('div'); head.id='story-comments-head';
+  head.style.cssText='font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px';
+  head.textContent=t('commentsLabel')+' ('+story.comments.length+')';
+  box.appendChild(head);
+  var list=document.createElement('div'); list.id='story-comments-list'; box.appendChild(list);
+  renderStoryComments(story, list);
+  var comp=document.createElement('div'); comp.style.cssText='display:flex;gap:8px;align-items:center;margin-top:12px;position:relative';
+  var inp=document.createElement('input'); inp.id='story-comment-inp'; inp.className='inp'; inp.placeholder=t('addComment'); inp.style.cssText='flex:1';
+  inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); postStoryComment(); } });
+  var tagBtn=document.createElement('button'); tagBtn.type='button'; tagBtn.title=t('tagPeople'); tagBtn.textContent='🏷';
+  tagBtn.style.cssText='flex-shrink:0;width:40px;height:40px;border-radius:10px;border:1px solid var(--paper-3);background:var(--paper-2);cursor:pointer;font-size:16px';
+  tagBtn.addEventListener('click',function(e){ e.stopPropagation(); toggleTagPicker(); });
+  var postBtn=document.createElement('button'); postBtn.type='button'; postBtn.className='btn btn-ember'; postBtn.style.flexShrink='0'; postBtn.textContent=t('postBtn');
+  postBtn.addEventListener('click',function(){ postStoryComment(); });
+  var picker=document.createElement('div'); picker.id='story-tag-picker';
+  picker.style.cssText='display:none;position:absolute;bottom:46px;left:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;box-shadow:0 8px 24px rgba(0,28,48,.16);max-height:200px;overflow-y:auto;width:230px;z-index:60';
+  comp.appendChild(inp); comp.appendChild(tagBtn); comp.appendChild(postBtn); comp.appendChild(picker);
+  box.appendChild(comp);
+  return box;
+}
+function renderStoryComments(story, list){
+  list=list||document.getElementById('story-comments-list'); if(!list)return;
+  var cs=story.comments||[];
+  if(!cs.length){ list.innerHTML='<div style="font-size:12.5px;color:var(--ink-4);font-style:italic">'+t('noComments')+'</div>'; return; }
+  list.innerHTML=cs.map(function(c){
+    var nm=escHtml(c.by||'You');
+    var txt=escHtml(c.text||'').replace(/@([\w][\w.\-]*)/g,'<span style="color:var(--ember);font-weight:600">@$1</span>');
+    return '<div style="display:flex;gap:9px;margin-bottom:12px">'
+      +'<div style="width:26px;height:26px;border-radius:50%;background:'+(c.color||'linear-gradient(135deg,var(--ember),var(--gold))')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+escHtml(String(c.by||'Y').charAt(0).toUpperCase())+'</div>'
+      +'<div style="flex:1;min-width:0;font-size:13px;line-height:1.5"><span style="font-weight:600;color:var(--ink)">'+nm+'</span> <span style="color:var(--ink-2)">'+txt+'</span></div>'
+      +'</div>';
+  }).join('');
+}
+function postStoryComment(){
+  var s=_readerStory; if(!s)return;
+  if(!Array.isArray(s.comments)) s.comments=[];
+  var inp=document.getElementById('story-comment-inp'); var txt=(inp&&inp.value||'').trim(); if(!txt)return;
+  s.comments.push({ by:userData.name||'You', byId:userData.id, text:txt });
+  if(inp)inp.value='';
+  renderStoryComments(s);
+  var head=document.getElementById('story-comments-head'); if(head)head.textContent=t('commentsLabel')+' ('+s.comments.length+')';
+  if(typeof persistSoon==='function')persistSoon();
+  refreshStoriesList();
+}
+function toggleTagPicker(){
+  var p=document.getElementById('story-tag-picker'); if(!p)return;
+  if(p.style.display==='block'){ p.style.display='none'; return; }
+  var people=((userData.following&&userData.following.length?userData.following:allUsers)||[]).filter(Boolean).slice(0,12);
+  p.innerHTML='';
+  if(!people.length){ p.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--ink-4)">'+t('noResults')+'</div>'; }
+  people.forEach(function(u){
+    var row=document.createElement('div');
+    row.style.cssText='padding:9px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--paper-3);display:flex;align-items:center;gap:8px';
+    row.innerHTML='<span style="width:22px;height:22px;border-radius:50%;background:'+(u.color||'#888')+';display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fff">'+escHtml(String(u.initial||(u.name||'?').charAt(0)).toUpperCase())+'</span><span>'+escHtml(u.name||u.handle||'')+'</span>';
+    row.addEventListener('click',function(){ insertTag(u.name||u.handle||''); });
+    p.appendChild(row);
+  });
+  p.style.display='block';
+}
+function insertTag(name){
+  var inp=document.getElementById('story-comment-inp');
+  if(inp){ inp.value=(inp.value?inp.value.replace(/\s*$/,'')+' ':'')+'@'+name+' '; inp.focus(); }
+  var p=document.getElementById('story-tag-picker'); if(p)p.style.display='none';
 }
 
 // ── Write story ───────────────────────────────────────────────────────────
@@ -14542,7 +15053,7 @@ function doDeleteTrip(){
   dbDeleteTrip(dbId);
   currentTrip=null;
   showScreen('s-dash');
-  setActiveNav('bnav-trips');
+  setActiveNav('bnav-profile');
   renderDash();
   toast(name+' deleted');
 }
@@ -14687,12 +15198,58 @@ function switchProfileTab(tab){
     b.style.color=on?'var(--ink)':'var(--ink-4)';
     b.style.fontWeight=on?'600':'500';
   });
-  ['trips','stories','wishlist','favorites'].forEach(function(name){
+  ['trips','stories','wishlist','favorites','book'].forEach(function(name){
     var el=document.getElementById('ptab-'+name);
     if(el)el.style.display=(tab===name)?'block':'none';
   });
   if(tab==='wishlist')renderWishlist();
   if(tab==='favorites')renderFavorites();
+  if(tab==='book')renderProfileBooks();
+}
+// ─── PROFILE → MEMORY BOOK (all cities, mirrors each trip's book live) ─────────
+// Same data source as the trip's Memory Book tab (trip.book), so any edit/order made
+// in either place is reflected in both — there's only one book per trip.
+var _pbookTrip=null;
+function renderProfileBooks(){
+  var cwrap=document.getElementById('pbook-cities'), prev=document.getElementById('pbook-preview');
+  if(!cwrap||!prev)return;
+  if(!trips.length){ cwrap.innerHTML=''; prev.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">📖</div>'+t('profBookEmpty')+'</div>'; return; }
+  if(!_pbookTrip || !trips.find(function(t){return t.id===_pbookTrip;})) _pbookTrip=trips[0].id;
+  cwrap.innerHTML=trips.map(function(t){
+    var on=t.id===_pbookTrip;
+    return '<div onclick="selectProfileBook('+t.id+')" style="flex:0 0 auto;cursor:pointer;font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--paper-3);'+(on?'background:var(--ink);color:#fff;border-color:var(--ink)':'background:var(--paper-2);color:var(--ink-2)')+'">'+(t.flag||'📍')+' '+escHtml(t.dest)+'</div>';
+  }).join('');
+  var tr=trips.find(function(t){return t.id===_pbookTrip;});
+  // Build the book if it doesn't exist yet, using the real builder on the same object.
+  var prevCur=currentTrip; currentTrip=tr;
+  if(!tr.book||!tr.book.length){ if(typeof renderMemoryBook==='function'){ try{ renderMemoryBook(); }catch(e){} } }
+  var pages=tr.book||[];
+  var minis=pages.map(function(pg,i){
+    var url=((pg.photos||[]).filter(Boolean))[0]||'';
+    var inner;
+    if(url){ inner='<div style="width:100%;height:100%;background:#e9e6df center/cover no-repeat url(\''+String(url).replace(/\x27/g,'')+'\')"></div>'; }
+    else { var lab=pg.cover?t('bbCoverPage'):pg.about?t('bbAboutPage'):(pg.end?t('bbBackPage'):(t('bbPageWord')+' '+i)); inner='<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:'+(pg.bg||'#fff')+';color:var(--ink-4);font-family:DM Mono,monospace;font-size:9px;text-align:center;padding:4px">'+escHtml(lab)+'</div>'; }
+    return '<div class="pbook-mini" onclick="openTripBook('+tr.id+')" title="'+escHtml(t('openEditBook'))+'" style="width:104px;height:78px;border-radius:6px;overflow:hidden;box-shadow:0 2px 10px rgba(0,28,48,.16),0 0 0 1px var(--paper-3)">'+inner+'</div>';
+  }).join('');
+  currentTrip=prevCur;
+  prev.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 2px 12px">'
+    + '<div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:600;color:var(--ink)">'+(tr.flag||'')+' '+escHtml(tr.dest)+'</div>'
+    + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+pages.length+' '+t('pagesWord')+'</div></div>'
+    + '<div class="pbook-grid">'+(minis||'<div style="color:var(--ink-4);font-size:13px;padding:20px 0;text-align:center">📖</div>')+'</div>'
+    + '<div style="display:flex;gap:10px;margin-top:16px">'
+    + '<button class="btn btn-ghost" style="flex:1" onclick="openTripBook('+tr.id+')">✎ <span data-i18n="openEditBook">'+t('openEditBook')+'</span></button>'
+    + '<button class="btn btn-ember" style="flex:1" onclick="orderTripBook('+tr.id+')">'+t('orderBook2')+'</button>'
+    + '</div>';
+}
+function selectProfileBook(id){ _pbookTrip=id; renderProfileBooks(); }
+// Open the SAME memory-book editor for this trip (edits/orders sync both ways).
+function openTripBook(id){
+  openTrip(id);
+  setTimeout(function(){ var b=document.querySelector('#trip-tabs .tab-btn[data-tab="book"]'); if(b)switchTab(b); var bk=document.getElementById('tab-book'); if(bk)bk.scrollIntoView({behavior:'smooth',block:'start'}); }, 80);
+}
+function orderTripBook(id){
+  openTrip(id);
+  setTimeout(function(){ var b=document.querySelector('#trip-tabs .tab-btn[data-tab="book"]'); if(b)switchTab(b); var fmt=document.getElementById('bb-formats'); if(fmt)fmt.scrollIntoView({behavior:'smooth',block:'center'}); toast(t('orderBook2')); }, 120);
 }
 
 // ── WISHLIST + FAVORITES ──────────────────────────────────────────────────
@@ -15389,6 +15946,7 @@ function _persistPayload(level){
     user:{
       name:userData.name,username:userData.username,bio:userData.bio,from:userData.from,livesIn:userData.livesIn,
       avatar:avatar,cover:cover,currency:userData.currency,isPublic:userData.isPublic,
+      plan:userData.plan,subStatus:userData.subStatus,tierIdx:userData.tierIdx,
       following:(userData.following||[]).map(function(f){return f&&f.id;}).filter(function(x){return x!=null;}),
       pendingFollows:userData.pendingFollows||[]
     }
@@ -15411,7 +15969,7 @@ function restoreState(){
     if(Array.isArray(d.orders)) orders=d.orders;
     if(d.user){
       var u=d.user;
-      ['name','username','bio','from','livesIn','avatar','cover','currency'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
+      ['name','username','bio','from','livesIn','avatar','cover','currency','plan','subStatus','tierIdx'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
       if(typeof u.isPublic!=='undefined') userData.isPublic=u.isPublic;
       if(Array.isArray(u.following)) userData.following=u.following.map(function(id){return allUsers.find(function(x){return x.id===id;});}).filter(Boolean);
       if(Array.isArray(u.pendingFollows)) userData.pendingFollows=u.pendingFollows;
@@ -15435,6 +15993,8 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
   });
   if(typeof applyIdentity==='function')applyIdentity();
   if(typeof initSearchClears==='function')initSearchClears();
+  // Re-run after the whole document (incl. later screens/modals) has parsed.
+  window.addEventListener('load', function(){ if(typeof initSearchClears==='function')initSearchClears(); });
   // Returning from Stripe Checkout — confirm the new plan and clean the URL.
   try{
     if(/[?&]checkout=success/.test(location.search)){
@@ -15480,8 +16040,8 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 <div id="s-concierge" class="screen">
   <div class="pt-nav pb-nav">
     <div style="padding:20px 20px 8px">
-      <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;letter-spacing:-0.01em">Concierge</div>
-      <div style="font-size:13px;color:var(--ink-3);margin-top:2px">Your guide to the world's top 100 cities</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;letter-spacing:-0.01em" data-i18n="cityGuideTitle">City Guide Recommendations</div>
+      <div style="font-size:13px;color:var(--ink-3);margin-top:2px" data-i18n="cityGuideSub">Your guide to the world's top 100 cities</div>
     </div>
     <div style="position:sticky;top:56px;z-index:20;background:white;padding:8px 16px 10px">
       <div style="position:relative">
