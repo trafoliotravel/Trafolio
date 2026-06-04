@@ -473,8 +473,14 @@ body.show-lbar .lbar{display:none}
   <div class="modal-handle"></div>
   <div class="modal-title" data-i18n="newTrip">New trip</div>
   <div class="modal-sub" data-i18n="whereHeaded">Where are you headed?</div>
+  <div class="add-form-field" style="margin-bottom:14px">
+    <div class="seg-toggle" id="at-type-toggle" style="display:flex;gap:8px">
+      <button type="button" class="fpill active" data-tt="city" onclick="setTripType('city')" style="flex:1;justify-content:center">📍 <span data-i18n="tripTypeCity">One city</span></button>
+      <button type="button" class="fpill" data-tt="country" onclick="setTripType('country')" style="flex:1;justify-content:center">🗺️ <span data-i18n="tripTypeCountry">Multi-city</span></button>
+    </div>
+  </div>
   <div class="add-form-field">
-    <label class="add-form-label" data-i18n="searchDest">Search destination</label>
+    <label class="add-form-label" id="at-loc-label" data-i18n="searchDest">Search destination</label>
     <div class="loc-wrap">
       <input class="inp" id="at-loc-search" data-i18n-ph="destExamplePh" placeholder="e.g. Tokyo, Kyoto, Dubai..." autocomplete="off" oninput="onLocSearch(this.value)">
       <div class="loc-dropdown" id="at-loc-dropdown"></div>
@@ -551,10 +557,18 @@ body.show-lbar .lbar{display:none}
       <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.08em;color:var(--ember)">VIEW ON MAPS ↗</span>
     </a>
   </div>
+  <div class="add-form-field" id="pl-city-field" style="display:none">
+    <label class="add-form-label" data-i18n="whichCity">Which city?</label>
+    <div id="pl-city-pills" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
   <div class="add-form-field"><label class="add-form-label" data-i18n="yourTake">Your take</label><input class="inp" id="pl-note" data-i18n-ph="whatSpecialPh" placeholder="What made it special?"></div>
   <div class="add-form-field">
     <label class="add-form-label">Photo <span style="color:var(--ink-4);font-weight:400">(optional)</span></label>
     <div id="pl-photo-preview" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;position:relative"><img id="pl-photo-img" src="" style="width:100%;height:150px;object-fit:cover;display:block"><button type="button" onclick="removePlacePhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">×</button></div>
+    <div id="pl-photo-suggest" style="display:none;margin-bottom:8px">
+      <div style="font-size:11px;color:var(--ink-4);margin-bottom:6px" data-i18n="suggestedFromGoogle">Suggested from Google — tap to use</div>
+      <div id="pl-photo-suggest-row" style="display:flex;gap:8px"></div>
+    </div>
     <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--paper-3);border-radius:12px;cursor:pointer;color:var(--ink-3);font-size:13px"><span style="font-size:17px">📷</span> <span id="pl-photo-label">Add a photo</span><input type="file" accept="image/*" onchange="addPlacePhoto(this)" style="display:none"></label>
   </div>
   <div class="add-form-field">
@@ -568,6 +582,19 @@ body.show-lbar .lbar{display:none}
     </div>
   </div>
   <button class="btn btn-ember btn-full" style="margin-top:8px" onclick="savePlace()" data-i18n="savePlace">Save place</button>
+</div>
+
+<!-- ADD CITY (multi-city / country trips) -->
+<div class="modal-sheet" id="sheet-add-city">
+  <div class="modal-handle"></div>
+  <div class="modal-title" data-i18n="addCity">Add a city</div>
+  <div class="modal-sub" data-i18n="addCitySub">Which city did you visit on this trip?</div>
+  <div class="add-form-field">
+    <div class="loc-wrap">
+      <input class="inp" id="ac-search" data-i18n-ph="citySearchPh" placeholder="e.g. Florence, Venice…" autocomplete="off" oninput="onCitySearch(this.value)">
+      <div class="loc-dropdown" id="ac-dropdown"></div>
+    </div>
+  </div>
 </div>
 
 <!-- ADD ITIN -->
@@ -943,7 +970,7 @@ body.show-lbar .lbar{display:none}
     <p class="lp-subline" data-i18n="lpSubline">The personal travel profile your friends actually want to read. Places you loved. Moments you kept. One beautiful link.</p>
     <div class="lp-ctas">
       <button class="btn btn-sun" onclick="showAuth('signup')" style="font-size:15px;padding:14px 28px" data-i18n="startFree">Start free &#8594;</button>
-      <button class="btn btn-ghost" style="color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.25);font-size:14px" onclick="showScreen('s-share')" data-i18n="seeExample">See an example</button>
+      <button class="btn btn-ghost" style="color:rgba(255,255,255,.7);border-color:rgba(255,255,255,.25);font-size:14px" onclick="openExampleGuide()" data-i18n="seeExample">See an example</button>
     </div>
     <div class="lp-stats">
       <div class="lp-stat"><div class="lp-stat-num">12k+</div><div class="lp-stat-lbl" data-i18n="statTravellers">Travellers</div></div>
@@ -999,7 +1026,7 @@ body.show-lbar .lbar{display:none}
 </div>
 <div class="preview-section">
   <div class="dest-strip-label" style="margin-bottom:18px" data-i18n="exampleTripGuide">Example trip guide</div>
-  <div class="preview-card" onclick="showScreen('s-share');event.stopPropagation()">
+  <div class="preview-card" onclick="openExampleGuide();event.stopPropagation()">
     <img class="preview-trip-img" src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1600&q=95&auto=format&fit=crop" alt="Tokyo" loading="eager">
     <div class="preview-body">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
@@ -1281,6 +1308,7 @@ body.show-lbar .lbar{display:none}
       <div class="trip-hero-actions">
         <button class="btn-icon" onclick="showScreen('s-dash');setActiveNav('bnav-trips')">&#8592;</button>
         <div style="display:flex;gap:8px">
+          <label class="btn-icon" title="Change cover photo" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&#128247;<input type="file" accept="image/*" style="display:none" onchange="editTripCover(this)"></label>
           <button class="btn-icon" onclick="openShareSheet()" title="Share">&#8599;</button>
           <button class="btn-icon" onclick="toggleStar()" id="star-btn" title="Star">&#9734;</button>
           <button class="btn-icon" onclick="confirmDeleteTrip()" title="Delete trip" style="color:#fff">&#128465;&#65039;</button>
@@ -1305,6 +1333,7 @@ body.show-lbar .lbar{display:none}
 
     <!-- TAB: PLACES -->
     <div id="tab-places" class="tab-content">
+      <div id="trip-cities-bar" style="display:none;padding:12px 20px 0"></div>
       <div class="filter-strip" id="places-filter">
         <div class="filter-pill active" data-f="all" onclick="filterPlaces(this)" data-i18n="all">All</div>
         <div class="filter-pill" data-f="eat" onclick="filterPlaces(this)">🍴 <span data-i18n="eat">Eat</span></div>
@@ -1430,7 +1459,7 @@ body.show-lbar .lbar{display:none}
       <div style="padding:20px 20px 0">
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px" data-i18n="include">What to include</div>
         <div id="share-filters" style="display:flex;flex-direction:column;gap:10px"></div>
-        <button class="btn btn-ghost btn-full" style="margin-top:20px" onclick="showScreen('s-share')" data-i18n="previewShared">Preview shared page &#8594;</button>
+        <button class="btn btn-ghost btn-full" style="margin-top:20px" onclick="_shareDemo=null;showScreen('s-share')" data-i18n="previewShared">Preview shared page &#8594;</button>
       </div>
     </div>
 
@@ -1726,6 +1755,7 @@ body.show-lbar .lbar{display:none}
       <div id="share-take-name" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">John K's take</div>
       <p style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;line-height:1.55;color:var(--ink-2);font-style:italic" id="share-curator-note">"One of my favourite trips. The food culture here is unlike anywhere else."</p>
     </div>
+    <div id="share-blog-block" style="display:none;padding:22px;border-bottom:1px solid var(--paper-3)"></div>
     <div class="filter-strip" id="share-filter-strip">
       <div class="filter-pill active" data-f="all" onclick="shareFilter(this)" data-i18n="allPlaces">All places</div>
       <div class="filter-pill" data-f="eat" onclick="shareFilter(this)">&#127869;&#65039; <span data-i18n="eat">Eat</span></div>
@@ -1752,10 +1782,11 @@ body.show-lbar .lbar{display:none}
 <!-- ════ SCREEN: PROFILE ════ -->
 <div id="s-profile" class="screen">
   <div class="pt-nav pb-safe">
-    <div style="position:relative;height:150px;overflow:hidden;background:var(--ink)">
+    <div style="position:relative;height:190px;overflow:hidden;background:var(--ink)">
       <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1600&q=95&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:1" id="profile-cover" alt="" loading="eager">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.10) 0%,transparent 45%,rgba(250,250,248,.4) 82%,rgba(250,250,248,1) 100%)"></div>
-      <button onclick="document.getElementById('profile-cover-input').click()" title="Change cover" data-i18n-title="changeCover" style="position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">📷 <span data-i18n="changeCover">Change cover</span></button>
+      <button onclick="document.getElementById('profile-cover-input').click()" title="Change cover" data-i18n-title="changeCover" style="position:absolute;top:12px;left:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">📷 <span data-i18n="changeCover">Change cover</span></button>
+      <button onclick="editProfile()" title="Edit profile" data-i18n-title="editProfile" style="position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">&#9998; <span data-i18n="editProfile">Edit profile</span></button>
     </div>
     <input type="file" id="profile-cover-input" accept="image/*" style="display:none" onchange="setCoverPhoto(this)">
     <input type="file" id="profile-av-input" accept="image/*" style="display:none" onchange="setProfilePhoto(this)">
@@ -1766,7 +1797,6 @@ body.show-lbar .lbar{display:none}
           <div class="avatar" id="profile-av" style="width:88px;height:88px;font-size:30px;border:3.5px solid var(--paper);box-shadow:0 4px 16px rgba(0,28,48,.2)">J</div>
           <div style="position:absolute;right:0;bottom:0;width:26px;height:26px;border-radius:50%;background:var(--ember);border:2.5px solid var(--paper);display:flex;align-items:center;justify-content:center;font-size:11px;color:#fff">📷</div>
         </div>
-        <button onclick="editProfile()" style="margin-top:10px;background:var(--ink);color:#fff;border:none;border-radius:22px;padding:8px 22px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:0 3px 10px rgba(0,28,48,.18)" data-i18n="editProfile">Edit profile</button>
       </div>
       <!-- Name + handle centered -->
       <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;letter-spacing:-0.01em" id="profile-name">John K</div>
@@ -1788,6 +1818,10 @@ body.show-lbar .lbar{display:none}
         <div style="text-align:center">
           <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink)" id="p-stat-countries">0</div>
           <div style="font-size:11px;color:var(--ink-4)">Countries</div>
+        </div>
+        <div style="text-align:center;display:none" id="p-stat-states-wrap">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;color:var(--ink)" id="p-stat-states">0</div>
+          <div style="font-size:11px;color:var(--ink-4)">States</div>
         </div>
       </div>
       <!-- Bio centered -->
@@ -2020,7 +2054,20 @@ let trips=[
     photos:[{url:'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=800&q=90',caption:'Dubai skyline at sunset',wide:true},{url:'https://images.unsplash.com/photo-1582672060674-bc2bd808a8b5?w=600&q=90',caption:'Burj Khalifa at night'},{url:'https://images.unsplash.com/photo-1549488799-c2e04c44bbf7?w=600&q=90',caption:'Desert dunes aerial'},{url:'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=90',caption:'Marina walk at night'},{url:'https://images.unsplash.com/photo-1526495124232-a04e1849168c?w=600&q=90',caption:'Souk Madinat at dusk',wide:true},{url:'https://images.unsplash.com/photo-1596627116790-af6f46dddbfd?w=600&q=90',caption:'Nobu Dubai — black cod miso'},{url:'https://images.unsplash.com/photo-1563456812-4e1d3c38d094?w=600&q=90',caption:'Al Fahidi old quarter'}]}
 ];
 
+// A fixed Tokyo example guide for the landing page "See an example" preview.
+// Deep-cloned from the seed Tokyo trip so it survives even after the user's own
+// trips are loaded/cleared. Includes a short personal blog.
+var DEMO_GUIDE=(function(){try{
+  var g=JSON.parse(JSON.stringify(trips[0]));
+  g.id='demo'; g.author={name:'John K'};
+  g.blogTitle='Eight days in Tokyo';
+  g.blog="<p>Tokyo is the rare city that rewards both planning and wandering. I came with a long list and threw half of it away by day three, because the best moments were the unplanned ones — a tiny yakitori counter in Yanaka, a 6am temple with no crowds, a coffee shop the size of a closet. Mornings belonged to the markets and shrines; nights belonged to neon and ramen. What surprised me most was how calm a city of 37 million can feel. I left already planning the next trip.</p>";
+  return g;
+}catch(e){return null;}})();
+var _shareDemo=null;
+
 // ─── ROUTING ──────────────────────────────────────────────────────
+function openExampleGuide(){ _shareDemo=DEMO_GUIDE; showScreen('s-share'); }
 function showScreen(id){
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var el=document.getElementById(id);if(el){el.classList.add('active');window.scrollTo(0,0);}
@@ -2088,6 +2135,7 @@ function starTrip(id){var t=trips.find(function(x){return x.id===id;});if(t){t.s
 
 // ─── TRIP DETAIL ──────────────────────────────────────────────────
 function openTrip(id){
+  _shareDemo=null;
   currentTrip=trips.find(function(t){return t.id===id;});if(!currentTrip)return;
   if(!currentTrip.itin)currentTrip.itin=[];
   if(!currentTrip.actualItin)currentTrip.actualItin=[];
@@ -2096,12 +2144,13 @@ function openTrip(id){
   var heroPhoto=document.getElementById('trip-hero-photo');heroPhoto.onerror=function(){this.onerror=null;this.src=FALLBACK_COVER;};heroPhoto.src=currentTrip.cover;
   document.getElementById('trip-hero-flag').textContent=currentTrip.flag;
   document.getElementById('trip-hero-dest').textContent=currentTrip.dest;
-  document.getElementById('trip-hero-meta').textContent=currentTrip.dates.toUpperCase()+' · '+currentTrip.days+' DAYS · '+currentTrip.country.toUpperCase();
+  refreshTripHeroMeta();
   document.getElementById('star-btn').textContent=currentTrip.starred?'★':'☆';
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.toggle('active',b.dataset.tab==='places');});
   document.querySelectorAll('.tab-content').forEach(function(c){c.style.display='none';});
   document.getElementById('tab-places').style.display='';
   document.querySelectorAll('#places-filter .filter-pill').forEach(function(p){p.classList.toggle('active',p.dataset.f==='all');});
+  _cityFilter='all';currentFilter='all';renderCitiesBar();
   renderPlaces('all');renderPhotosTab();renderNotesTab();renderBlogTab();renderShareTab();renderMemoryBook();
   var urlEl=document.getElementById('share-url-display');
   if(urlEl){var slug=currentTrip.dest.toLowerCase().replace(/\s+/g,'-');urlEl.innerHTML='trafolio.travel/<strong>'+userData.username+'</strong>/'+slug;}
@@ -2217,16 +2266,85 @@ function gmapsUrl(p,trip){
 }
 function renderPlaces(filter){
   var list=document.getElementById('places-list');if(!currentTrip)return;
+  var isCountry=currentTrip.tripType==='country';
   var places=filter==='all'?currentTrip.places:currentTrip.places.filter(function(p){return p.cat===filter;});
+  if(isCountry && _cityFilter && _cityFilter!=='all') places=places.filter(function(p){return (p.city||'')===_cityFilter;});
   if(!places.length){list.innerHTML='<div style="padding:40px 0;text-align:center;color:var(--ink-4)"><div style="font-size:28px;margin-bottom:10px">📍</div><div style="font-size:14px">'+t('noPlacesYet')+'</div></div>';return;}
   list.innerHTML=places.map(function(p){
     var photoHtml = placeThumbHtml(p, currentTrip.dest);
-    return'<div class="place-item" data-pid="'+p.id+'">'+photoHtml+'<div style="flex:1;min-width:0"><a class="place-name place-name-link" href="javascript:void(0)" data-map="'+gmapsUrl(p)+'" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.getAttribute(\'data-map\'),\'_blank\',\'noopener\');return false;">'+'<span class="place-cat-mini">'+CAT_ICONS[p.cat]+'</span> '+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'<button class="place-edit-btn">⋮</button></div></div>';
+    var cityTag=(isCountry && p.city && _cityFilter==='all')?'<span class="place-city-tag" style="display:inline-block;font-size:10px;font-family:DM Mono,monospace;letter-spacing:.05em;color:var(--ember);background:var(--ember-lt);padding:1px 7px;border-radius:20px;margin-left:6px;vertical-align:middle">'+p.city+'</span>':'';
+    return'<div class="place-item" data-pid="'+p.id+'">'+photoHtml+'<div style="flex:1;min-width:0"><a class="place-name place-name-link" href="javascript:void(0)" data-map="'+gmapsUrl(p)+'" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.getAttribute(\'data-map\'),\'_blank\',\'noopener\');return false;">'+'<span class="place-cat-mini">'+CAT_ICONS[p.cat]+'</span> '+p.name+'<span class="place-loc-pin">📍</span></a>'+cityTag+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'<button class="place-edit-btn">⋮</button></div></div>';
   }).join('');
   hydratePlaceThumbs(list);
   list.querySelectorAll('.place-edit-btn').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=this.closest('[data-pid]');if(item)openEditPlace(parseInt(item.dataset.pid));});});
 }
 function filterPlaces(el){currentFilter=el.dataset.f;document.querySelectorAll('#places-filter .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderPlaces(el.dataset.f);}
+// ─── MULTI-CITY (country) trips ──────────────────────────────────
+function refreshTripHeroMeta(){
+  if(!currentTrip)return;var el=document.getElementById('trip-hero-meta');if(!el)return;
+  var hm=currentTrip.dates.toUpperCase()+' · '+currentTrip.days+' DAYS · '+(currentTrip.country||'').toUpperCase();
+  if(currentTrip.tripType==='country'&&currentTrip.cities&&currentTrip.cities.length)hm+=' · '+currentTrip.cities.length+' '+(currentTrip.cities.length===1?t('cityWord'):t('citiesWord')).toUpperCase();
+  el.textContent=hm;
+}
+function renderCitiesBar(){
+  var bar=document.getElementById('trip-cities-bar');if(!bar||!currentTrip)return;
+  if(currentTrip.tripType!=='country'){bar.style.display='none';bar.innerHTML='';return;}
+  bar.style.display='block';
+  var cities=currentTrip.cities||[];
+  var chips='<div style="display:flex;gap:7px;flex-wrap:wrap;align-items:center">';
+  if(cities.length){
+    chips+='<div class="city-chip'+(_cityFilter==='all'?' active':'')+'" onclick="selectCityFilter(\'all\')" style="cursor:pointer;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--paper-3);'+(_cityFilter==='all'?'background:var(--ink);color:white;border-color:var(--ink)':'background:var(--paper-2);color:var(--ink-2)')+'">'+t('allCitiesChip')+'</div>';
+  }
+  cities.forEach(function(c){
+    var nm=(c.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+    var active=_cityFilter===c.name;
+    chips+='<div class="city-chip'+(active?' active':'')+'" onclick="selectCityFilter(\''+nm+'\')" style="cursor:pointer;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--paper-3);display:flex;align-items:center;gap:5px;'+(active?'background:var(--ink);color:white;border-color:var(--ink)':'background:var(--paper-2);color:var(--ink-2)')+'">'+(c.flag||'📍')+' '+(c.name||'')+'</div>';
+  });
+  chips+='<div onclick="openAddCity()" style="cursor:pointer;font-size:12px;padding:5px 12px;border-radius:20px;border:1px dashed var(--ember);color:var(--ember);background:transparent">+ '+t('addCity')+'</div>';
+  chips+='</div>';
+  if(!cities.length) chips+='<div style="font-size:12px;color:var(--ink-4);margin-top:8px">'+t('noCitiesYet')+'</div>';
+  bar.innerHTML=chips;
+}
+function selectCityFilter(name){_cityFilter=name;renderCitiesBar();var f=document.querySelector('#places-filter .filter-pill.active');renderPlaces(f?f.dataset.f:'all');}
+var _citySearchT=null;
+function openAddCity(){var s=document.getElementById('ac-search');if(s)s.value='';var dd=document.getElementById('ac-dropdown');if(dd){dd.innerHTML='';dd.classList.remove('open');}openModal('sheet-add-city');}
+function onCitySearch(val){clearTimeout(_citySearchT);var dd=document.getElementById('ac-dropdown');if(!val||val.length<2){if(dd){dd.innerHTML='';dd.classList.remove('open');}return;}_citySearchT=setTimeout(function(){doCitySearch(val);},380);}
+async function doCitySearch(q){
+  var dd=document.getElementById('ac-dropdown');if(!dd)return;
+  dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3)">'+t('searching')+'</div>';dd.classList.add('open');
+  try{
+    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}});
+    var data=await r.json();
+    if(!data.length){dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-4)">'+t('noResults')+'</div>';return;}
+    dd.innerHTML=data.map(function(item){
+      var addr=item.address||{};var city=addr.city||addr.town||addr.village||addr.county||addr.state||item.name;var country=addr.country||'';var flag=getFlagEmoji(addr.country_code);
+      return '<div class="loc-item" data-city="'+(city||'').replace(/"/g,'&quot;')+'" data-flag="'+flag+'" data-lat="'+item.lat+'" data-lng="'+item.lon+'" onclick="addCityToTrip(this)"><div style="font-size:18px;flex-shrink:0">'+flag+'</div><div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--ink)">'+city+(country?', '+country:'')+'</div></div></div>';
+    }).join('');
+  }catch(e){dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3)">'+t('locSearchUnavailable')+'</div>';}
+}
+function addCityToTrip(el){
+  if(!currentTrip)return;
+  if(!Array.isArray(currentTrip.cities))currentTrip.cities=[];
+  var name=el.dataset.city||'';if(!name)return;
+  if(currentTrip.cities.some(function(c){return (c.name||'').toLowerCase()===name.toLowerCase();})){toast(t('cityAlready'));closeModal();return;}
+  currentTrip.cities.push({name:name,flag:el.dataset.flag||'📍',lat:el.dataset.lat||'',lng:el.dataset.lng||''});
+  closeModal();renderCitiesBar();refreshTripHeroMeta();
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{cities:currentTrip.cities});
+  toast('📍 '+name+' '+t('cityAddedToast'));
+}
+function renderPlaceCityField(){
+  var field=document.getElementById('pl-city-field');var pills=document.getElementById('pl-city-pills');if(!field||!pills)return;
+  if(!currentTrip||currentTrip.tripType!=='country'||!(currentTrip.cities||[]).length){field.style.display='none';_placeCity='';return;}
+  field.style.display='';
+  // default to the active city filter, else the first city
+  _placeCity=(_cityFilter&&_cityFilter!=='all')?_cityFilter:(currentTrip.cities[0]&&currentTrip.cities[0].name)||'';
+  pills.innerHTML=currentTrip.cities.map(function(c){
+    var nm=(c.name||'').replace(/'/g,"\\'").replace(/"/g,'&quot;');var active=_placeCity===c.name;
+    return '<div class="fpill'+(active?' active':'')+'" data-pc="'+nm+'" onclick="selectPlaceCity(\''+nm+'\')">'+(c.flag||'📍')+' '+(c.name||'')+'</div>';
+  }).join('');
+}
+function selectPlaceCity(name){_placeCity=name;document.querySelectorAll('#pl-city-pills .fpill').forEach(function(p){p.classList.toggle('active',p.dataset.pc===name);});}
 // Photo visibility — defaults to following the trip's share level unless the user overrides it.
 function photoVisOf(){ if(!currentTrip)return 'public'; return currentTrip.photoVisibility || currentTrip.privacy || 'public'; }
 function renderPhotoVisBar(){
@@ -3419,7 +3537,7 @@ function renderShPhotos(t){var grid=document.getElementById('share-photo-strip')
   if(!(sel.everything||sel.photos)){grid.innerHTML='';return;}if(!t.photos.length)return;var html='';t.photos.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+ph.url+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+ph.caption+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=t.photos[idx]?t.photos[idx].url:'';var c=t.photos[idx]?t.photos[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
 function shareFilter(el){document.querySelectorAll('#share-filter-strip .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderShPlaces(currentTrip||trips[0],el.dataset.f);}
 function renderSharePage(){
-  var t=currentTrip||trips[0];if(!t)return;
+  var t=_shareDemo||currentTrip||trips[0]||DEMO_GUIDE;if(!t)return;
   var heroImg=document.getElementById('share-hero-img');if(heroImg)heroImg.src=t.cover;
   var destTitle=document.getElementById('share-dest-title');if(destTitle)destTitle.textContent=t.flag+' '+t.dest;
   var meta=document.getElementById('share-trip-meta');if(meta)meta.textContent=t.dates.toUpperCase()+' · '+t.days+' '+tt('daysWord').toUpperCase();
@@ -3431,6 +3549,15 @@ function renderSharePage(){
   var avEl=document.getElementById('share-av');if(avEl){if(userData.avatar&&!(t.author&&t.author.name)){avEl.style.backgroundImage='url('+userData.avatar+')';avEl.style.backgroundSize='cover';avEl.style.backgroundPosition='center';avEl.textContent='';}else{avEl.style.backgroundImage='';avEl.textContent=ownerInitial;}}
   var sel=shareSelOf(t);
   var noteBlock=document.getElementById('share-note-block');if(noteBlock)noteBlock.style.display=(sel.everything||sel.notes)?'block':'none';
+  var blogBlock=document.getElementById('share-blog-block');
+  if(blogBlock){
+    var _bt=t.blogTitle||'', _bb=t.blog||'';
+    var _hasBlog=(_bt.trim()||(typeof stripTags==='function'?stripTags(_bb):_bb).trim());
+    if((sel.everything||sel.notes)&&_hasBlog){
+      blogBlock.style.display='block';
+      blogBlock.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">'+tt('tabBlog')+'</div>'+(_bt?'<div style="font-family:Cormorant Garamond,serif;font-size:24px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:10px">'+escHtml(_bt)+'</div>':'')+'<div style="font-size:14.5px;line-height:1.7;color:var(--ink-2)">'+_bb+'</div>';
+    } else { blogBlock.style.display='none'; blogBlock.innerHTML=''; }
+  }
   var missedBlock=document.getElementById('share-missed-block');
   if(missedBlock){
     if((sel.everything||sel.missed)&&(t.missed||[]).length){
@@ -3454,6 +3581,8 @@ function renderProfile(){
   var pp=document.getElementById('p-stat-places');if(pp)pp.textContent=trips.reduce(function(a,t){return a+t.places.length;},0);
   var pp2=document.getElementById('p-stat-places2');if(pp2)pp2.textContent=trips.reduce(function(a,t){return a+(t.places?t.places.length:0);},0);
   var pc=document.getElementById('p-stat-countries');if(pc){pc.textContent=countCountries(trips);}
+  var stWrap=document.getElementById('p-stat-states-wrap');
+  if(stWrap){ if(isUSUser()){ stWrap.style.display=''; var stEl=document.getElementById('p-stat-states'); if(stEl)stEl.textContent=countUSStates(trips); } else { stWrap.style.display='none'; } }
   var pill=document.getElementById('profile-privacy-pill');
   if(pill){pill.className='privacy-pill '+(userData.isPublic?'public':'private');pill.innerHTML=userData.isPublic?t('publicLabel'):t('privateLabel');}
   if(userData.cover){var pc=document.getElementById('profile-cover');if(pc){pc.src=userData.cover;pc.style.opacity='.7';}}
@@ -3519,6 +3648,19 @@ function tripCountry(t){
 function countCountries(list){
   var seen={};(list||[]).forEach(function(t){var c=normCountry(tripCountry(t));if(c)seen[c]=1;});
   return Object.keys(seen).length;
+}
+// US state tracking — shown only for US-based / US-national travellers.
+var US_CITY_STATE={'new york':'NY','brooklyn':'NY','manhattan':'NY','los angeles':'CA','san francisco':'CA','san diego':'CA','sacramento':'CA','napa':'CA','palm springs':'CA','chicago':'IL','miami':'FL','orlando':'FL','tampa':'FL','key west':'FL','las vegas':'NV','reno':'NV','seattle':'WA','boston':'MA','washington':'DC','washington dc':'DC','austin':'TX','dallas':'TX','houston':'TX','san antonio':'TX','new orleans':'LA','honolulu':'HI','maui':'HI','denver':'CO','aspen':'CO','phoenix':'AZ','scottsdale':'AZ','sedona':'AZ','atlanta':'GA','savannah':'GA','nashville':'TN','memphis':'TN','portland':'OR','philadelphia':'PA','pittsburgh':'PA','detroit':'MI','minneapolis':'MN','salt lake city':'UT','charleston':'SC','charlotte':'NC','asheville':'NC','santa fe':'NM','anchorage':'AK','st louis':'MO','kansas city':'MO','cleveland':'OH','columbus':'OH','milwaukee':'WI','baltimore':'MD'};
+function isUSUser(){ var s=((userData.from||'')+' '+(userData.livesIn||'')).toLowerCase(); return /united states|u\.s\.a|u\.s\.|\busa\b|\bus\b|\bamerica\b/.test(s); }
+function countUSStates(list){
+  var set={};
+  (list||[]).forEach(function(t){
+    var names=[];
+    if(t.cities&&t.cities.length) t.cities.forEach(function(c){ if(c&&c.name)names.push(c.name); });
+    if(t.dest) names.push(t.dest);
+    names.forEach(function(n){ var st=US_CITY_STATE[(n||'').toLowerCase().trim()]; if(st)set[st]=1; });
+  });
+  return Object.keys(set).length;
 }
 function mapXY(lat,lng){ return { x:(lng+180)/360*100, y:(90-lat)/180*100 }; }
 function renderTravelMap(){
@@ -3629,14 +3771,27 @@ function saveProfile(){
 function toggleProfilePrivacy(){userData.isPublic=!userData.isPublic;renderProfile();toast(userData.isPublic?t('profilePublic'):t('profilePrivate'));if(typeof dbSaveProfile==='function')dbSaveProfile();if(typeof persistSoon==='function')persistSoon();}
 
 // ─── ADD TRIP ─────────────────────────────────────────────────────
-var _tripWith='solo',_selectedCover=null;
+var _tripWith='solo',_selectedCover=null,_tripType='city',_cityFilter='all',_placeCity='';
+// City vs Country (multi-city) toggle in the Add Trip flow.
+function setTripType(tt){
+  _tripType=(tt==='country')?'country':'city';
+  document.querySelectorAll('#at-type-toggle .fpill').forEach(function(b){b.classList.toggle('active',b.dataset.tt===_tripType);});
+  var lbl=document.getElementById('at-loc-label');var inp=document.getElementById('at-loc-search');
+  if(_tripType==='country'){
+    if(lbl)lbl.textContent=t('searchCountry');
+    if(inp)inp.placeholder=t('searchCountryPh');
+  }else{
+    if(lbl)lbl.textContent=t('searchDest');
+    if(inp)inp.placeholder=t('destExamplePh');
+  }
+}
 function openAddTrip(){setTimeout(function(){if(typeof renderRangeCal==="function"){resetRangeCal();}},50);
   ['at-loc-search','at-cover-url','at-from','at-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['at-dest','at-country','at-flag','at-lat','at-lng'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   var chosen=document.getElementById('at-chosen');if(chosen)chosen.style.display='none';
   var box=document.getElementById('at-cover-options');if(box)box.innerHTML='<div style="grid-column:span 2;padding:10px;text-align:center;font-size:12px;color:var(--ink-4);font-style:italic">'+t('coverHint')+'</div>';
   var dd=document.getElementById('at-loc-dropdown');if(dd){dd.innerHTML='';dd.classList.remove('open');}
-  _selectedCover=null;_tripWith='solo';
+  _selectedCover=null;_tripWith='solo';setTripType('city');
   var adultsInp=document.getElementById('at-adults');var kidsInp=document.getElementById('at-kids');
   if(adultsInp)adultsInp.value=1;if(kidsInp)kidsInp.value=0;
   document.querySelectorAll('#at-with-pills .fpill').forEach(function(p){p.classList.toggle('active',p.dataset.w==='solo');});
@@ -3659,7 +3814,18 @@ function createTrip(){
   var fm={'japan':'🇯🇵','france':'🇫🇷','italy':'🇮🇹','spain':'🇪🇸','united arab emirates':'🇦🇪','uae':'🇦🇪','united states':'🇺🇸','united kingdom':'🇬🇧','thailand':'🇹🇭','greece':'🇬🇷','portugal':'🇵🇹','turkey':'🇹🇷','morocco':'🇲🇦','indonesia':'🇮🇩','singapore':'🇸🇬','india':'🇮🇳','china':'🇨🇳','south korea':'🇰🇷','australia':'🇦🇺','saudi arabia':'🇸🇦','egypt':'🇪🇬','maldives':'🇲🇻','iceland':'🇮🇸'};
   var flag=sf||fm[cn]||'🌍';
   var cu=cover||'https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=90';
-  var newTrip={id:Date.now(),dest:dest.split(',')[0].trim(),country:(dest.split(',')[1]||'').trim()||dest.split(',')[0].trim(),flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public'};
+  var chosenCity=dest.split(',')[0].trim();
+  var chosenCountry=(ci2&&ci2.value?ci2.value.trim():'')||(dest.split(',')[1]||'').trim()||chosenCity;
+  var lat0=(document.getElementById('at-lat')||{}).value||'', lng0=(document.getElementById('at-lng')||{}).value||'';
+  var tripDest=chosenCity, tripCountry=chosenCountry, seedCities=[];
+  if(_tripType==='country'){
+    // Card shows the country; if the picked place was a real city, seed it as the first city.
+    tripDest=chosenCountry||chosenCity;
+    if(chosenCity && chosenCity.toLowerCase()!==(chosenCountry||'').toLowerCase()){
+      seedCities=[{name:chosenCity,flag:flag,lat:lat0,lng:lng0}];
+    }
+  }
+  var newTrip={id:Date.now(),dest:tripDest,country:tripCountry,flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public',tripType:_tripType,cities:seedCities};
   trips.unshift(newTrip);closeModal();renderDash();toast(flag+' '+newTrip.dest+' '+t('addedToast'));
   dbSaveTrip(newTrip);
   setTimeout(function(){openTrip(newTrip.id);},300);
@@ -3669,7 +3835,7 @@ function onFromChange(){var fromVal=document.getElementById('at-from').value;var
 function onToChange(){var toVal=document.getElementById('at-to').value;var fromVal=document.getElementById('at-from').value;if(!toVal||!fromVal)return;if(toVal<fromVal){document.getElementById('at-to').value=fromVal;toast(t('endDateBefore'));}}
 
 // ─── ADD PLACE ────────────────────────────────────────────────────
-function openAddPlace(){document.getElementById('pl-name').value='';document.getElementById('pl-note').value='';_selectedGPlace=null;var _psr=document.getElementById('pl-search-results');if(_psr){_psr.innerHTML='';_psr.style.display='none';}var _pgl=document.getElementById('pl-gmaps-link');if(_pgl)_pgl.style.display='none';selectedCat='eat';selectedRating=4;document.querySelectorAll('.cat-opt').forEach(function(c){c.classList.toggle('on',c.dataset.cat==='eat');});document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=4);});openModal('sheet-add-place');}
+function openAddPlace(){document.getElementById('pl-name').value='';document.getElementById('pl-note').value='';_selectedGPlace=null;var _psr=document.getElementById('pl-search-results');if(_psr){_psr.innerHTML='';_psr.style.display='none';}var _pgl=document.getElementById('pl-gmaps-link');if(_pgl)_pgl.style.display='none';selectedCat='eat';selectedRating=4;document.querySelectorAll('.cat-opt').forEach(function(c){c.classList.toggle('on',c.dataset.cat==='eat');});document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=4);});_placePhoto=null;var _pv=document.getElementById('pl-photo-preview');if(_pv)_pv.style.display='none';var _plb=document.getElementById('pl-photo-label');if(_plb)_plb.textContent='Add a photo';clearPlacePhotoSuggest();renderPlaceCityField();openModal('sheet-add-place');}
 function selectCat(el){selectedCat=el.dataset.cat;document.querySelectorAll('.cat-opt').forEach(function(c){c.classList.toggle('on',c===el);});}
 function setRating(el){selectedRating=parseInt(el.dataset.r);document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=selectedRating);});}
 
@@ -3692,11 +3858,30 @@ function removePlacePhoto(){
   var prev=document.getElementById('pl-photo-preview');if(prev)prev.style.display='none';
   var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent='Add a photo';
 }
+// Google photo recommendations for a place.
+function clearPlacePhotoSuggest(){var box=document.getElementById('pl-photo-suggest');if(box)box.style.display='none';var row=document.getElementById('pl-photo-suggest-row');if(row)row.innerHTML='';}
+function renderPlacePhotoSuggestions(urls){
+  var box=document.getElementById('pl-photo-suggest');var row=document.getElementById('pl-photo-suggest-row');
+  if(!box||!row||!urls||!urls.length){clearPlacePhotoSuggest();return;}
+  row.innerHTML=urls.map(function(u,i){
+    return '<div class="pl-photo-sg" data-url="'+u.replace(/"/g,'&quot;')+'" onclick="pickPlacePhoto(this.getAttribute(\'data-url\'),this)" style="flex:1;aspect-ratio:4/3;border-radius:10px;overflow:hidden;cursor:pointer;border:2.5px solid transparent;position:relative"><img src="'+u+'" style="width:100%;height:100%;object-fit:cover;display:block"></div>';
+  }).join('');
+  box.style.display='block';
+}
+function pickPlacePhoto(url,el){
+  _placePhoto=url;
+  var img=document.getElementById('pl-photo-img');var prev=document.getElementById('pl-photo-preview');
+  if(img)img.src=url; if(prev)prev.style.display='block';
+  var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent=t('changePhoto')||'Change photo';
+  document.querySelectorAll('#pl-photo-suggest-row .pl-photo-sg').forEach(function(d){d.style.borderColor='transparent';});
+  if(el)el.style.borderColor='var(--ember)';
+}
 
 function savePlace(){
   var name=(document.getElementById('pl-name').value||'').trim();
   if(!name||!currentTrip){toast(t('pleaseEnterPlace'));return;}
   var place={id:Date.now(),cat:selectedCat,name:name,note:document.getElementById('pl-note').value.trim(),rating:selectedRating,photo:_placePhoto||(_selectedGPlace&&_selectedGPlace.photo)||null};
+  if(currentTrip.tripType==='country'&&_placeCity)place.city=_placeCity;
   if(_selectedGPlace){
     place.lat=_selectedGPlace.lat||(_selectedGPlace.geometry&&_selectedGPlace.geometry.location&&_selectedGPlace.geometry.location.lat)||null;
     place.lng=_selectedGPlace.lng||_selectedGPlace.lon||null;
@@ -4191,6 +4376,28 @@ function coverImgFailed(img){
 }
 function pickCover(el){document.querySelectorAll('.covopt').forEach(function(c){c.style.borderColor='var(--paper-3)';var t=c.querySelector('[data-tick]');if(t)t.remove();});el.style.borderColor='var(--ember)';var tick=document.createElement('div');tick.setAttribute('data-tick','1');tick.style.cssText='position:absolute;top:5px;right:5px;background:var(--ember);color:white;width:18px;height:18px;border-radius:50%;font-size:11px;display:flex;align-items:center;justify-content:center;pointer-events:none';tick.innerHTML='✓';el.appendChild(tick);_selectedCover=el.dataset.url;var u=document.getElementById('at-cover-url');if(u)u.value='';}
 function selectCustomCover(){_selectedCover=(document.getElementById('at-cover-url')||{value:''}).value.trim()||null;}
+// Change the cover photo of an existing (open) trip.
+function editTripCover(input){
+  var file=input.files[0]; if(!file||!currentTrip)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    bbCompressImage(e.target.result,{maxEdge:1280,quality:.85},function(url){
+      function apply(u){
+        currentTrip.cover=u;
+        var img=document.getElementById('trip-hero-photo'); if(img)img.src=u;
+        if(typeof renderDash==='function')renderDash();
+        if(typeof renderProfileGrid==='function')renderProfileGrid();
+        if(typeof persistSoon==='function')persistSoon();
+        if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{cover_url:u});
+      }
+      apply(url);
+      if(typeof sbUploadImage==='function')sbUploadImage(url,'cover').then(function(u){if(u&&u!==url)apply(u);});
+      toast(t('coverReady'));
+    });
+  };
+  reader.readAsDataURL(file);
+  input.value='';
+}
 function uploadTripCover(input){var file=input.files[0];if(!file)return;var url=URL.createObjectURL(file);_selectedCover=url;var box=document.getElementById('at-cover-options');if(box)box.insertAdjacentHTML('afterbegin','<div class="covopt selected" data-url="'+url+'" onclick="pickCover(this)" style="position:relative;border-radius:10px;overflow:hidden;aspect-ratio:16/9;cursor:pointer;border:2.5px solid var(--ember);"><img src="'+url+'" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,28,48,.55);padding:3px 7px;font-size:9px;font-family:DM Mono,monospace;color:rgba(255,255,255,.8)">'+t('uploadedLabel')+'</div></div>');toast(t('coverReady'));}
 
 // ─── ITIN LOCATION SEARCH ─────────────────────────────────────────
@@ -4369,7 +4576,11 @@ function applyIdentity(){
   var dh=document.getElementById('dash-handle');if(dh)dh.innerHTML='@'+escHtml(un)+' &#183; trafolio.travel/<strong style="color:var(--ink-3)">'+escHtml(un)+'</strong>';
   var plh=document.getElementById('profile-link-handle');if(plh)plh.textContent=un;
   var take=document.getElementById('share-take-name');if(take)take.textContent=nm+"'s take";
-  ['dash-av','profile-av','prefs-av','top-av'].forEach(function(id){var el=document.getElementById(id);if(el&&!el.style.backgroundImage){el.textContent=initial;}});
+  ['dash-av','profile-av','prefs-av','top-av'].forEach(function(id){
+    var el=document.getElementById(id);if(!el)return;
+    if(userData.avatar){ el.style.backgroundImage='url('+userData.avatar+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent=''; }
+    else { el.style.backgroundImage='';el.textContent=initial; }
+  });
 }
 function doAuth(){
   var email=(document.getElementById('auth-email').value||'').trim();
@@ -4385,6 +4596,11 @@ function doAuth(){
     userData.name=name;
     userData.username=clean;
     userData.email=email;
+    // Brand-new account: start with a clean slate (no demo trips/stories/saved/cart leaking in).
+    trips=[]; if(typeof userStories!=='undefined')userStories=[]; if(typeof savedTrips!=='undefined')savedTrips=[]; if(typeof cart!=='undefined')cart=[];
+    userData.avatar=''; userData.cover=''; userData.bio=''; userData.from=''; userData.livesIn='';
+    userData.followers=[]; userData.following=[];
+    if(typeof renderDash==='function')renderDash();
     applyIdentity();
     // Username is now created — send the welcome/confirmation email, then continue to onboarding.
     sendWelcomeEmail(name,email);
@@ -4734,6 +4950,21 @@ const S={
     myTravelMap:"My travel map",
     shareMap:"Share map",
     citiesWord:"cities",
+    tripTypeCity:"One city",
+    tripTypeCountry:"Multi-city",
+    searchCountry:"Search country",
+    searchCountryPh:"e.g. Italy, Japan, Spain…",
+    addCity:"Add a city",
+    addCitySub:"Which city did you visit on this trip?",
+    citySearchPh:"e.g. Florence, Venice…",
+    whichCity:"Which city?",
+    allCitiesChip:"All cities",
+    noCitiesYet:"Add the cities you visited on this trip.",
+    cityAddedToast:"added to the trip",
+    cityAlready:"That city is already on this trip",
+    cityWord:"city",
+    storyShortHint:"Keep it short — for longer writing, use a trip Blog.",
+    suggestedFromGoogle:"Suggested from Google — tap to use",
     countriesWord:"countries",
     mapLoading:"Map still loading — try again",
     mapShareFail:"Couldn't create the image",
@@ -5461,6 +5692,21 @@ const S={
     myTravelMap:"خريطة رحلاتي",
     shareMap:"مشاركة الخريطة",
     citiesWord:"مدن",
+    tripTypeCity:"مدينة واحدة",
+    tripTypeCountry:"عدة مدن",
+    searchCountry:"ابحث عن دولة",
+    searchCountryPh:"مثل إيطاليا، اليابان، إسبانيا…",
+    addCity:"إضافة مدينة",
+    addCitySub:"أي مدينة زرت في هذه الرحلة؟",
+    citySearchPh:"مثل فلورنسا، البندقية…",
+    whichCity:"أي مدينة؟",
+    allCitiesChip:"كل المدن",
+    noCitiesYet:"أضف المدن التي زرتها في هذه الرحلة.",
+    cityAddedToast:"أُضيفت إلى الرحلة",
+    cityAlready:"هذه المدينة موجودة بالفعل في الرحلة",
+    cityWord:"مدينة",
+    storyShortHint:"اجعلها قصيرة — للكتابة الأطول استخدم مدونة الرحلة.",
+    suggestedFromGoogle:"مقترحة من Google — اضغط للاستخدام",
     countriesWord:"دول",
     mapLoading:"الخريطة قيد التحميل — حاول مجدداً",
     mapShareFail:"تعذّر إنشاء الصورة",
@@ -6190,6 +6436,21 @@ const S={
     myTravelMap:"Ma carte de voyage",
     shareMap:"Partager la carte",
     citiesWord:"villes",
+    tripTypeCity:"Une ville",
+    tripTypeCountry:"Plusieurs villes",
+    searchCountry:"Rechercher un pays",
+    searchCountryPh:"ex. Italie, Japon, Espagne…",
+    addCity:"Ajouter une ville",
+    addCitySub:"Quelle ville avez-vous visitée lors de ce voyage ?",
+    citySearchPh:"ex. Florence, Venise…",
+    whichCity:"Quelle ville ?",
+    allCitiesChip:"Toutes les villes",
+    noCitiesYet:"Ajoutez les villes visitées lors de ce voyage.",
+    cityAddedToast:"ajoutée au voyage",
+    cityAlready:"Cette ville est déjà dans ce voyage",
+    cityWord:"ville",
+    storyShortHint:"Restez bref — pour un texte plus long, utilisez le Blog du voyage.",
+    suggestedFromGoogle:"Suggéré par Google — appuyez pour utiliser",
     countriesWord:"pays",
     mapLoading:"Carte en cours de chargement — réessayez",
     mapShareFail:"Impossible de créer l'image",
@@ -6919,6 +7180,21 @@ const S={
     myTravelMap:"Mi mapa de viajes",
     shareMap:"Compartir mapa",
     citiesWord:"ciudades",
+    tripTypeCity:"Una ciudad",
+    tripTypeCountry:"Varias ciudades",
+    searchCountry:"Buscar país",
+    searchCountryPh:"p. ej. Italia, Japón, España…",
+    addCity:"Añadir ciudad",
+    addCitySub:"¿Qué ciudad visitaste en este viaje?",
+    citySearchPh:"p. ej. Florencia, Venecia…",
+    whichCity:"¿Qué ciudad?",
+    allCitiesChip:"Todas las ciudades",
+    noCitiesYet:"Añade las ciudades que visitaste en este viaje.",
+    cityAddedToast:"añadida al viaje",
+    cityAlready:"Esa ciudad ya está en este viaje",
+    cityWord:"ciudad",
+    storyShortHint:"Hazlo breve — para textos largos usa el Blog del viaje.",
+    suggestedFromGoogle:"Sugerido por Google — toca para usar",
     countriesWord:"países",
     mapLoading:"El mapa aún se carga — inténtalo de nuevo",
     mapShareFail:"No se pudo crear la imagen",
@@ -7648,6 +7924,21 @@ const S={
     myTravelMap:"Seyahat haritam",
     shareMap:"Haritayı paylaş",
     citiesWord:"şehir",
+    tripTypeCity:"Tek şehir",
+    tripTypeCountry:"Çok şehir",
+    searchCountry:"Ülke ara",
+    searchCountryPh:"örn. İtalya, Japonya, İspanya…",
+    addCity:"Şehir ekle",
+    addCitySub:"Bu gezide hangi şehri ziyaret ettin?",
+    citySearchPh:"örn. Floransa, Venedik…",
+    whichCity:"Hangi şehir?",
+    allCitiesChip:"Tüm şehirler",
+    noCitiesYet:"Bu gezide gezdiğin şehirleri ekle.",
+    cityAddedToast:"geziye eklendi",
+    cityAlready:"Bu şehir gezide zaten var",
+    cityWord:"şehir",
+    storyShortHint:"Kısa tut — daha uzun yazılar için gezi Blog'unu kullan.",
+    suggestedFromGoogle:"Google önerisi — kullanmak için dokun",
     countriesWord:"ülke",
     mapLoading:"Harita hâlâ yükleniyor — tekrar deneyin",
     mapShareFail:"Görsel oluşturulamadı",
@@ -8377,6 +8668,21 @@ const S={
     myTravelMap:"La mia mappa di viaggio",
     shareMap:"Condividi mappa",
     citiesWord:"città",
+    tripTypeCity:"Una città",
+    tripTypeCountry:"Più città",
+    searchCountry:"Cerca un paese",
+    searchCountryPh:"es. Italia, Giappone, Spagna…",
+    addCity:"Aggiungi città",
+    addCitySub:"Quale città hai visitato in questo viaggio?",
+    citySearchPh:"es. Firenze, Venezia…",
+    whichCity:"Quale città?",
+    allCitiesChip:"Tutte le città",
+    noCitiesYet:"Aggiungi le città visitate in questo viaggio.",
+    cityAddedToast:"aggiunta al viaggio",
+    cityAlready:"Quella città è già in questo viaggio",
+    cityWord:"città",
+    storyShortHint:"Tienilo breve — per testi più lunghi usa il Blog del viaggio.",
+    suggestedFromGoogle:"Suggerito da Google — tocca per usare",
     countriesWord:"paesi",
     mapLoading:"Mappa in caricamento — riprova",
     mapShareFail:"Impossibile creare l'immagine",
@@ -9106,6 +9412,21 @@ const S={
     myTravelMap:"我的旅行地图",
     shareMap:"分享地图",
     citiesWord:"城市",
+    tripTypeCity:"单个城市",
+    tripTypeCountry:"多个城市",
+    searchCountry:"搜索国家",
+    searchCountryPh:"例如 意大利、日本、西班牙…",
+    addCity:"添加城市",
+    addCitySub:"这次旅行你去了哪个城市？",
+    citySearchPh:"例如 佛罗伦萨、威尼斯…",
+    whichCity:"哪个城市？",
+    allCitiesChip:"所有城市",
+    noCitiesYet:"添加本次旅行去过的城市。",
+    cityAddedToast:"已添加到旅行",
+    cityAlready:"该城市已在此旅行中",
+    cityWord:"城市",
+    storyShortHint:"保持简短 — 更长的内容请使用旅行博客。",
+    suggestedFromGoogle:"来自 Google 的建议 — 点按使用",
     countriesWord:"国家",
     mapLoading:"地图仍在加载——请重试",
     mapShareFail:"无法生成图片",
@@ -9835,6 +10156,21 @@ const S={
     myTravelMap:"Meine Reisekarte",
     shareMap:"Karte teilen",
     citiesWord:"Städte",
+    tripTypeCity:"Eine Stadt",
+    tripTypeCountry:"Mehrere Städte",
+    searchCountry:"Land suchen",
+    searchCountryPh:"z. B. Italien, Japan, Spanien…",
+    addCity:"Stadt hinzufügen",
+    addCitySub:"Welche Stadt hast du auf dieser Reise besucht?",
+    citySearchPh:"z. B. Florenz, Venedig…",
+    whichCity:"Welche Stadt?",
+    allCitiesChip:"Alle Städte",
+    noCitiesYet:"Füge die Städte hinzu, die du auf dieser Reise besucht hast.",
+    cityAddedToast:"zur Reise hinzugefügt",
+    cityAlready:"Diese Stadt ist bereits auf dieser Reise",
+    cityWord:"Stadt",
+    storyShortHint:"Halte es kurz — für längere Texte nutze das Reise-Blog.",
+    suggestedFromGoogle:"Von Google vorgeschlagen — zum Verwenden tippen",
     countriesWord:"Länder",
     mapLoading:"Karte lädt noch — bitte erneut versuchen",
     mapShareFail:"Bild konnte nicht erstellt werden",
@@ -10564,6 +10900,21 @@ const S={
     myTravelMap:"Meu mapa de viagens",
     shareMap:"Partilhar mapa",
     citiesWord:"cidades",
+    tripTypeCity:"Uma cidade",
+    tripTypeCountry:"Várias cidades",
+    searchCountry:"Buscar país",
+    searchCountryPh:"ex. Itália, Japão, Espanha…",
+    addCity:"Adicionar cidade",
+    addCitySub:"Que cidade você visitou nesta viagem?",
+    citySearchPh:"ex. Florença, Veneza…",
+    whichCity:"Qual cidade?",
+    allCitiesChip:"Todas as cidades",
+    noCitiesYet:"Adicione as cidades que você visitou nesta viagem.",
+    cityAddedToast:"adicionada à viagem",
+    cityAlready:"Essa cidade já está nesta viagem",
+    cityWord:"cidade",
+    storyShortHint:"Seja breve — para textos longos use o Blog da viagem.",
+    suggestedFromGoogle:"Sugerido pelo Google — toque para usar",
     countriesWord:"países",
     mapLoading:"Mapa ainda a carregar — tente de novo",
     mapShareFail:"Não foi possível criar a imagem",
@@ -11293,6 +11644,21 @@ const S={
     myTravelMap:"私の旅マップ",
     shareMap:"マップを共有",
     citiesWord:"都市",
+    tripTypeCity:"1都市",
+    tripTypeCountry:"複数都市",
+    searchCountry:"国を検索",
+    searchCountryPh:"例：イタリア、日本、スペイン…",
+    addCity:"都市を追加",
+    addCitySub:"この旅行で訪れた都市は？",
+    citySearchPh:"例：フィレンツェ、ヴェネツィア…",
+    whichCity:"どの都市？",
+    allCitiesChip:"すべての都市",
+    noCitiesYet:"この旅行で訪れた都市を追加しましょう。",
+    cityAddedToast:"を旅行に追加しました",
+    cityAlready:"その都市はすでに旅行にあります",
+    cityWord:"都市",
+    storyShortHint:"短めに — 長い文章は旅行ブログを使いましょう。",
+    suggestedFromGoogle:"Google の候補 — タップして使用",
     countriesWord:"カ国",
     mapLoading:"マップを読み込み中 — もう一度お試しください",
     mapShareFail:"画像を作成できませんでした",
@@ -12949,7 +13315,13 @@ function openWriteStory() {
   var chip = document.getElementById('story-city-flag');
   if (chip){ chip.textContent = _storyChosenFlag; chip.style.display = _storyChosenFlag ? 'inline-block' : 'none'; }
   setStoryVis('public');
+  updateStoryCount();
   openModal('sheet-write-story');
+}
+function updateStoryCount(){
+  var ta=document.getElementById('story-body-inp'); var c=document.getElementById('story-char-count'); if(!ta||!c)return;
+  var max=parseInt(ta.getAttribute('maxlength')||'500',10); var n=ta.value.length;
+  c.textContent=n+' / '+max; c.style.color=(n>=max)?'#E8334A':'var(--ink-4)';
 }
 var _storyVis = 'public';
 function setStoryVis(v){
@@ -13223,15 +13595,11 @@ function doGooglePlaceSearch(q,res){
               _selectedGPlace.lng=result.geometry.location.lng();
               _selectedGPlace.formatted_address=result.formatted_address;
               _selectedGPlace.rating=result.rating||0;
-              // Auto-fetch the Google place photo if the user hasn't added one
+              // Recommend up to 2 Google photos for the place — the user taps one to use it.
               if(result.photos&&result.photos.length&&!_placePhoto){
                 try{
-                  _selectedGPlace.photo=result.photos[0].getUrl({maxWidth:800,maxHeight:600});
-                  // Show it as a preview in the add-place form
-                  var pp=document.getElementById('pl-photo-preview');
-                  if(pp){pp.src=_selectedGPlace.photo;pp.style.display='block';}
-                  var plab=document.getElementById('pl-photo-label');
-                  if(plab)plab.textContent='Photo from Google';
+                  var urls=result.photos.slice(0,2).map(function(ph){return ph.getUrl({maxWidth:800,maxHeight:600});});
+                  renderPlacePhotoSuggestions(urls);
                 }catch(e){}
               }
             }
@@ -13355,17 +13723,24 @@ function onStoryCitySearch(val) {
 
 async function dbSaveTrip(trip){
   if(!sb||!userData.id){console.warn('dbSaveTrip: no sb or userData.id',!!sb,userData.id);return;}
+  var base={
+    user_id: userData.id,
+    dest: trip.dest,
+    country: trip.country||'',
+    flag: trip.flag||'',
+    date_from: trip.startDate||null,
+    date_to: trip.endDate||null,
+    cover_url: trip.cover||'',
+    privacy: trip.privacy||'public'
+  };
+  // Optional newer columns — if the migration hasn't run, retry without them so trip-saving never breaks.
+  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[]});
   try{
-    var res=await sb.from('trips').insert({
-      user_id: userData.id,
-      dest: trip.dest,
-      country: trip.country||'',
-      flag: trip.flag||'',
-      date_from: trip.startDate||null,
-      date_to: trip.endDate||null,
-      cover_url: trip.cover||'',
-      privacy: trip.privacy||'public'
-    }).select();
+    var res=await sb.from('trips').insert(row).select();
+    if(res.error && /trip_type|cities|column|schema cache/i.test(res.error.message||'')){
+      console.warn('dbSaveTrip: trip_type/cities columns missing — saving without them. Run the migration to enable multi-city sync.');
+      res=await sb.from('trips').insert(base).select();
+    }
     if(res.error){console.error('dbSaveTrip DB error:',res.error);}
     else{console.log('Trip saved to DB:',res.data);if(res.data&&res.data[0])trip.dbId=res.data[0].id;}
   }catch(e){console.error('dbSaveTrip error:',e);}
@@ -13390,7 +13765,11 @@ async function dbSavePlace(place, tripId){
     if(place.lng) row.lng = place.lng;
     if(place.photo) row.photo = place.photo;
     if(place.placeId) row.place_id = place.placeId;
+    if(place.city) row.city = place.city;
     var res=await sb.from('places').insert(row).select();
+    if(res.error && place.city && /(\bcity\b|column|schema cache)/i.test(res.error.message||'')){
+      delete row.city; res=await sb.from('places').insert(row).select();
+    }
     if(res.error){console.error('dbSavePlace DB error:',res.error);}
     else{
       console.log('Place saved to DB:',res.data);
@@ -13424,7 +13803,7 @@ async function dbLoadUserTrips(){
       var dbTrips = res.data.map(function(t){
         // Match places to this trip by trip_id
         var tripPlaces = allPlaces.filter(function(p){ return p.trip_id === t.id; }).map(function(p){
-          return { id:p.id, dbId:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, lat:p.lat, lng:p.lng, photo:p.photo||null, placeId:p.place_id||null };
+          return { id:p.id, dbId:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, lat:p.lat, lng:p.lng, photo:p.photo||null, placeId:p.place_id||null, city:p.city||'' };
         });
         var tripPhotos = allPhotos.filter(function(p){ return p.trip_id === t.id; }).map(function(p){
           return { url:p.url, caption:p.caption||'', day:p.day, dbId:p.id, wide:false };
@@ -13435,6 +13814,7 @@ async function dbLoadUserTrips(){
           startDate: t.date_from||'', endDate: t.date_to||'',
           days: t.date_from&&t.date_to ? Math.max(1,Math.round((new Date(t.date_to)-new Date(t.date_from))/86400000)+1) : 5,
           starred: false, cover: t.cover_url||'', privacy: t.privacy||'public',
+          tripType: t.trip_type||'city', cities: (Array.isArray(t.cities)?t.cities:[]),
           photoVisibility: t.photo_visibility||null,
           blog: t.blog||'', blogTitle: t.blog_title||'',
           notes: t.notes||'', missed: (Array.isArray(t.missed)?t.missed:[]),
@@ -14514,7 +14894,7 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
   </div>
 </div>
 <div class="modal-sheet" id="sheet-story-reader" style="max-height:88vh"><div class="modal-handle"></div><div id="story-reader-body" style="padding:0 4px 8px;overflow-y:auto;max-height:80vh"></div></div>
-<div class="modal-sheet" id="sheet-write-story"><div class="modal-handle"></div><div class="modal-title" data-i18n="writeStory">Write a story</div><div class="modal-sub" data-i18n="writeStorySub">Share what you discovered</div><div class="form-field"><label class="form-label"><span data-i18n="cityLabel">City</span> <span id="story-city-flag" style="display:none;font-size:15px;margin-left:4px;vertical-align:middle"></span></label><div style="position:relative"><input class="inp" id="story-city-inp" data-i18n-ph="searchCityPh" placeholder="Search city..." oninput="onStoryCitySearch(this.value)" autocomplete="off"><div id="story-city-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.12);z-index:20"></div></div></div><div class="form-field" style="margin-top:12px"><label class="form-label" data-i18n="titleLabel">Title</label><input class="inp" id="story-title-inp" data-i18n-ph="headlinePh" placeholder="Your headline..."></div><div class="form-field" style="margin-top:12px"><label class="form-label" data-i18n="yourStory">Your story</label><textarea class="inp" id="story-body-inp" rows="7" data-i18n-ph="storyBodyPh" placeholder="What did you discover?" style="resize:none;line-height:1.65;font-style:italic"></textarea></div><div class="form-field" style="margin-top:12px"><label class="form-label">Cover photo <span style="color:var(--ink-4);font-weight:400">(optional)</span></label>
+<div class="modal-sheet" id="sheet-write-story"><div class="modal-handle"></div><div class="modal-title" data-i18n="writeStory">Write a story</div><div class="modal-sub" data-i18n="writeStorySub">Share what you discovered</div><div class="form-field"><label class="form-label"><span data-i18n="cityLabel">City</span> <span id="story-city-flag" style="display:none;font-size:15px;margin-left:4px;vertical-align:middle"></span></label><div style="position:relative"><input class="inp" id="story-city-inp" data-i18n-ph="searchCityPh" placeholder="Search city..." oninput="onStoryCitySearch(this.value)" autocomplete="off"><div id="story-city-results" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.12);z-index:20"></div></div></div><div class="form-field" style="margin-top:12px"><label class="form-label" data-i18n="titleLabel">Title</label><input class="inp" id="story-title-inp" data-i18n-ph="headlinePh" placeholder="Your headline..."></div><div class="form-field" style="margin-top:12px"><label class="form-label" data-i18n="yourStory">Your story</label><textarea class="inp" id="story-body-inp" rows="7" maxlength="500" oninput="updateStoryCount()" data-i18n-ph="storyBodyPh" placeholder="What did you discover?" style="resize:none;line-height:1.65;font-style:italic"></textarea><div style="display:flex;justify-content:space-between;align-items:center;margin-top:5px"><span style="font-size:11px;color:var(--ink-4)" data-i18n="storyShortHint">Keep it short — for longer writing, use a trip Blog.</span><span id="story-char-count" style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4)">0 / 500</span></div></div><div class="form-field" style="margin-top:12px"><label class="form-label">Cover photo <span style="color:var(--ink-4);font-weight:400">(optional)</span></label>
 <div id="story-photo-preview" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;position:relative"><img id="story-photo-img" src="" style="width:100%;height:160px;object-fit:cover;display:block"><button type="button" onclick="removeStoryPhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">×</button></div>
 <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;border:1.5px dashed var(--paper-3);border-radius:12px;cursor:pointer;color:var(--ink-3);font-size:13px"><span style="font-size:18px">📷</span> <span id="story-photo-label">Add a photo</span><input type="file" accept="image/*" onchange="addStoryPhoto(this)" style="display:none"></label></div>
 <div class="form-field" style="margin-top:12px"><label class="form-label" data-i18n="visibilityLabel">Who can see this</label><div id="story-vis-row" style="display:flex;gap:6px"><button type="button" class="vis-seg active" data-vis="public" onclick="setStoryVis('public')">&#127758; <span data-i18n="visPublic">Public</span></button><button type="button" class="vis-seg" data-vis="friends" onclick="setStoryVis('friends')">&#128101; <span data-i18n="visFriends">Trafollowers</span></button><button type="button" class="vis-seg" data-vis="private" onclick="setStoryVis('private')">&#128274; <span data-i18n="visPrivate">Private</span></button></div></div><button class="btn btn-ember btn-full" style="margin-top:14px" onclick="publishStory()" data-i18n="publishStory">Publish story</button></div>
