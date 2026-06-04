@@ -4600,25 +4600,32 @@ function openEditTrip(){
 }
 function saveEditTrip(){
   if(!currentTrip)return;
+  var origDest=currentTrip.dest||'';          // the trip's name BEFORE this edit (usually the city)
   var dest=(document.getElementById('et-dest')||{value:''}).value.trim();
   var country=(document.getElementById('et-country')||{value:''}).value.trim();
   if(!dest){toast(t('pleaseEnterDest'));return;}
   var from=(document.getElementById('et-from')||{value:''}).value;
   var to=(document.getElementById('et-to')||{value:''}).value;
+  var wasType=currentTrip.tripType||'city';
+  var eq=function(a,b){return (a||'').toLowerCase()===(b||'').toLowerCase();};
+  if(_editTripType==='country'){
+    if(!Array.isArray(currentTrip.cities))currentTrip.cities=[];
+    // Converting a one-city trip → multi-city: the trip should be named after the COUNTRY,
+    // and the original city becomes the first city tab — never duplicate the name as a city.
+    if(wasType!=='country' && !currentTrip.cities.length){
+      var city0=origDest;
+      // If the user left the name as the city, retitle the trip to the country.
+      if(eq(dest,city0) && country && !eq(country,city0)) dest=country;
+      // Seed the original city as a tab only if it isn't the same as the (new) trip name.
+      if(city0 && !eq(city0,dest)) currentTrip.cities=[{name:city0,flag:currentTrip.flag||'📍',lat:'',lng:''}];
+    }
+  }
   currentTrip.dest=dest;
   currentTrip.country=country||dest;
   if(from){currentTrip.startDate=from;currentTrip.dates=new Date(from).toLocaleDateString('en-GB',{month:'short',year:'numeric'});}
   if(to)currentTrip.endDate=to;
   if(from&&to)currentTrip.days=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
-  var wasType=currentTrip.tripType||'city';
   currentTrip.tripType=_editTripType;
-  if(_editTripType==='country'){
-    if(!Array.isArray(currentTrip.cities))currentTrip.cities=[];
-    // Seed the first city from the trip's own city name when switching from a one-city trip.
-    if(wasType!=='country' && !currentTrip.cities.length && dest){
-      currentTrip.cities=[{name:dest,flag:currentTrip.flag||'📍',lat:'',lng:''}];
-    }
-  }
   closeModal();
   // refresh everything that shows trip identity
   document.getElementById('trip-hero-dest').textContent=currentTrip.dest;
