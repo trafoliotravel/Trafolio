@@ -962,7 +962,7 @@ body.show-lbar .lbar{display:none}
   <div class="bb-preview-wrap"><iframe id="bb-preview-frame" title="Book preview"></iframe></div>
   <div class="bb-preview-actions">
     <button class="btn btn-ghost" onclick="closeModal('sheet-bb-preview')"><span data-i18n="bbPreviewClose">Close</span></button>
-    <button class="btn btn-ember" onclick="bbDownload()">&#11015; <span data-i18n="bbPreviewDownload">Download</span></button>
+    <button class="btn btn-ember" onclick="bbDoPrint()">&#11015; <span data-i18n="bbDownloadPdf">Download PDF</span></button>
   </div>
 </div>
 
@@ -1861,6 +1861,11 @@ body.show-lbar .lbar{display:none}
         <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,.45);margin-top:5px;letter-spacing:.08em" id="share-trip-meta">MARCH 2026 &#183; 8 DAYS</div>
       </div>
     </div>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:14px 16px 6px;border-bottom:1px solid var(--paper-3)">
+      <button class="btn btn-ghost btn-sm" onclick="shareGuidePrint()">&#128424;&#65039; <span data-i18n="bbPrint">Print</span></button>
+      <button class="btn btn-ghost btn-sm" onclick="shareGuidePrint()">&#11015;&#65039; <span data-i18n="bbDownloadPdf">Download PDF</span></button>
+      <button class="btn btn-ghost btn-sm" onclick="shareCopyLink()">&#128279; <span data-i18n="copyLinkBtn">Copy link</span></button>
+    </div>
     <div id="share-note-block" style="padding:22px 22px 18px;border-bottom:1px solid var(--paper-3)">
       <div id="share-take-name" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">John K's take</div>
       <p style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;line-height:1.55;color:var(--ink-2);font-style:italic" id="share-curator-note">"One of my favourite trips. The food culture here is unlike anywhere else."</p>
@@ -1974,7 +1979,7 @@ body.show-lbar .lbar{display:none}
             <img id="travel-map-img" crossorigin="anonymous" alt="World map" src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/World_map_-_low_resolution.svg/1280px-World_map_-_low_resolution.svg.png" style="width:100%;height:100%;display:block;object-fit:fill;filter:grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4);opacity:.55">
             <!-- Trafolio watermark, centered behind the pins -->
             <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:1">
-              <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(30px,12vw,96px);line-height:1;letter-spacing:-0.02em;color:var(--ink);opacity:.2;white-space:nowrap">Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:clamp(30px,12vw,96px);line-height:1;letter-spacing:-0.02em;color:var(--ink);opacity:.15;white-space:nowrap">Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io</div>
             </div>
           </div>
         </div>
@@ -2175,7 +2180,7 @@ const userData={name:'John K',username:'johnk',bio:'Dubai-based traveller. Alway
 var _SEED_TRIPS=[
   {id:1,dest:'Tokyo',country:'Japan',flag:'🇯🇵',dates:'Mar 2026',days:8,starred:false,privacy:'public',cover:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=80',startDate:'2026-03-01',endDate:'2026-03-08',notes:"One of my favourite trips. The food culture here is unlike anywhere else — every meal felt like an event. Senso-ji at sunrise is worth setting an alarm for.",missed:['TeamLab Planets','Climbing Fuji-san'],itin:[],actualItin:[],expenses:[],
     places:[{id:1,cat:'eat',name:'Ichiran Ramen',note:'Solo booths, rich tonkotsu, ordering by machine. Perfect.',rating:5},{id:2,cat:'see',name:'Senso-ji Temple',note:'Get there at 6am. The lantern light with no crowds is worth losing sleep for.',rating:5},{id:3,cat:'do',name:'teamLab Borderless',note:'A full-body art experience. Book 2 weeks ahead.',rating:4},{id:4,cat:'eat',name:'Tsukiji Outer Market',note:'Tuna sashimi at 7am. The freshest thing I have ever eaten.',rating:5},{id:5,cat:'stay',name:'Trunk Hotel Shibuya',note:'Design-forward, neighbourhood feel. Rooftop bar excellent.',rating:4},{id:6,cat:'see',name:'Yanaka District',note:'Old Tokyo. Cats everywhere. No tourists. Go on foot.',rating:4}],
-    photos:[{url:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=90',caption:'Tokyo at night — Shinjuku skyline',wide:true},{url:'https://images.unsplash.com/photo-1571401835393-8c5f35328320?w=600&q=90',caption:'Shibuya crossing — 7pm rush'},{url:'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=600&q=90',caption:'Senso-ji — 6am, no crowds'},{url:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=90',caption:'Shibuya streets at dusk'},{url:'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&q=90',caption:'Tokyo Tower reflected'},{url:'https://images.unsplash.com/photo-1549921296-bc643ead1e65?w=600&q=90',caption:'Ramen at Ichiran — solo booth'},{url:'https://images.unsplash.com/photo-1536098561742-ca998e48cbcc?w=600&q=90',caption:'Tsukiji market at dawn',wide:true}]},
+    photos:[{url:'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=800&q=90',caption:'Tokyo at night — Shinjuku skyline',wide:true},{url:'https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=600&q=90',caption:'Shibuya crossing — 7pm rush'},{url:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/Sensoji_2023.jpg/960px-Sensoji_2023.jpg',caption:'Senso-ji Temple — Asakusa'},{url:'https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=600&q=90',caption:'Shibuya streets at dusk'},{url:'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?w=600&q=90',caption:'Tokyo Tower reflected'},{url:'https://images.unsplash.com/photo-1557872943-16a5ac26437e?w=600&q=90',caption:'Ramen at Ichiran — solo booth'},{url:'https://images.unsplash.com/photo-1553621042-f6e147245754?w=600&q=90',caption:'Sushi breakfast at Tsukiji'}]},
   {id:2,dest:'Paris',country:'France',flag:'🇫🇷',dates:'Oct 2025',days:5,starred:true,privacy:'public',cover:'https://upload.wikimedia.org/wikipedia/commons/thumb/4/4b/La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg/960px-La_Tour_Eiffel_vue_de_la_Tour_Saint-Jacques%2C_Paris_ao%C3%BBt_2014_%282%29.jpg',startDate:'2025-10-12',endDate:'2025-10-16',notes:"Paris never disappoints. The boulangerie on Rue de Bretagne alone is reason enough to go back.",missed:["Musée de l'Orangerie"],itin:[],actualItin:[],expenses:[],
     places:[{id:7,cat:'eat',name:'Le Comptoir du Relais',note:'Book 3 months ahead for weekends. Worth every email.',rating:5},{id:8,cat:'see',name:'Palais Royal Gardens',note:'The quiet version of Paris nobody tells you about.',rating:5},{id:9,cat:'stay',name:'Hôtel du Petit Moulin',note:'Marais neighbourhood. Rooms designed by Christian Lacroix.',rating:5},{id:10,cat:'eat',name:'Septime',note:'The natural wine list is extraordinary.',rating:4},{id:11,cat:'shop',name:'Marché des Enfants Rouges',note:'Oldest covered market in Paris. Go hungry.',rating:4}],
     photos:[{url:'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=800&q=90',caption:'Eiffel Tower at golden hour',wide:true},{url:'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&q=90',caption:'Café terrace, Saint-Germain'},{url:'https://images.unsplash.com/photo-1431274172761-fca41d930114?w=600&q=90',caption:'Paris from above at dusk'},{url:'https://images.unsplash.com/photo-1520939817895-060bdaf4fe1b?w=600&q=90',caption:'Palais Royal gardens'},{url:'https://images.unsplash.com/photo-1508050919630-b135583b29ab?w=600&q=90',caption:'Marché des Enfants Rouges'},{url:'https://images.unsplash.com/photo-1519550099730-aedb3ceb37e5?w=600&q=90',caption:'Seine at sunset',wide:true},{url:'https://images.unsplash.com/photo-1551887373-3c5bd224f6e2?w=600&q=90',caption:'Louvre pyramid at night'}]},
@@ -2564,21 +2569,25 @@ function renderShareTab(){
     : '<label onclick="toggleSharePhotos()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ink-4)">'+((currentTrip.photos||[]).length)+' '+t('bbPhotos')+'</div></div>'+shareCheck(pon)+'</label>';
   var non=sel.everything||sel.notes;
   var notesRow='<label onclick="toggleShareNotes()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📝</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('shareNotes')+'</div><div style="font-size:12px;color:var(--ink-4)">'+t('shareNotesSub')+'</div></div>'+shareCheck(non)+'</label>';
+  var bon=sel.everything||sel.blog;
+  var blogRow='<label onclick="toggleShareBlog()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📖</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('tabBlog')+'</div><div style="font-size:12px;color:var(--ink-4)">'+t('shareBlogSub')+'</div></div>'+shareCheck(bon)+'</label>';
   var mon=sel.everything||sel.missed;
   var nMissed=(currentTrip.missed||[]).length;
   var missedRow='<label onclick="toggleShareMissed()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">🗒️</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('shareMissed')+'</div><div style="font-size:12px;color:var(--ink-4)">'+(nMissed?nMissed+' · ':'')+t('shareMissedSub')+'</div></div>'+shareCheck(mon)+'</label>';
-  cont.innerHTML=master+rows+photoRow+notesRow+missedRow;
+  cont.innerHTML=master+rows+photoRow+notesRow+blogRow+missedRow;
 }
 function shareCheck(on){return'<div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;border:2px solid '+(on?'var(--ember)':'var(--paper-3)')+';background:'+(on?'var(--ember)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff">'+(on?'✓':'')+'</div>';}
 function shareSelOf(trip){
-  if(!trip.shareSel)trip.shareSel={everything:true,photos:true,notes:true,missed:true,cats:{eat:true,stay:true,see:true,do:true,shop:true}};
+  if(!trip.shareSel)trip.shareSel={everything:true,photos:true,notes:true,blog:true,missed:true,cats:{eat:true,stay:true,see:true,do:true,shop:true}};
   if(!trip.shareSel.cats)trip.shareSel.cats={eat:true,stay:true,see:true,do:true,shop:true};
   if(typeof trip.shareSel.notes==='undefined')trip.shareSel.notes=true;
+  if(typeof trip.shareSel.blog==='undefined')trip.shareSel.blog=true;
   if(typeof trip.shareSel.missed==='undefined')trip.shareSel.missed=true;
   return trip.shareSel;
 }
-function _syncShareEverything(s){s.everything=s.photos&&s.notes&&s.missed&&['eat','stay','see','do','shop'].every(function(c){return s.cats[c];});}
-function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.notes=true;s.missed=true;['eat','stay','see','do','shop'].forEach(function(c){s.cats[c]=true;});}renderShareTab();}
+function _syncShareEverything(s){s.everything=s.photos&&s.notes&&s.blog&&s.missed&&['eat','stay','see','do','shop'].every(function(c){return s.cats[c];});}
+function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.notes=true;s.blog=true;s.missed=true;['eat','stay','see','do','shop'].forEach(function(c){s.cats[c]=true;});}renderShareTab();}
+function toggleShareBlog(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.blog=!s.blog;_syncShareEverything(s);renderShareTab();}
 function toggleShareCat(c){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.cats[c]=!s.cats[c];_syncShareEverything(s);renderShareTab();}
 function toggleSharePhotos(){if(!currentTrip)return;if(photoVisOf()==='private'){toast(t('photosPrivateLocked'));return;}var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);renderShareTab();}
 function toggleShareNotes(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.notes=!s.notes;_syncShareEverything(s);renderShareTab();}
@@ -3687,6 +3696,48 @@ function renderShPhotos(t){var grid=document.getElementById('share-photo-strip')
   if(pvis==='private'){grid.innerHTML='';return;}
   if(!(sel.everything||sel.photos)){grid.innerHTML='';return;}if(!t.photos.length)return;var html='';t.photos.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+ph.url+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+ph.caption+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=t.photos[idx]?t.photos[idx].url:'';var c=t.photos[idx]?t.photos[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
 function shareFilter(el){document.querySelectorAll('#share-filter-strip .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderShPlaces(currentTrip||trips[0],el.dataset.f);}
+// The trip currently shown on the share page (demo example, open trip, or first trip).
+function shareTripData(){ return _shareDemo||currentTrip||trips[0]||DEMO_GUIDE; }
+// Build a clean printable document of the shared guide, honouring the share selection.
+function shareGuideDoc(){
+  var tr=shareTripData(); if(!tr)return '';
+  var sel=shareSelOf(tr); var E=escHtml;
+  var owner=(tr.author&&tr.author.name)||userData.name||'';
+  var notes=(sel.everything||sel.notes)&&tr.notes?'<p class="q">"'+E(tr.notes)+'"</p>':'';
+  var blog=(sel.everything||sel.blog)&&((tr.blogTitle||'')||(tr.blog||''))?'<h2>'+E(tr.blogTitle||'')+'</h2><div class="blog">'+(tr.blog||'')+'</div>':'';
+  var places=(tr.places||[]).filter(function(p){return sel.everything||(sel.cats&&sel.cats[p.cat]);});
+  var placesHtml=places.length?'<h3>Places</h3>'+places.map(function(p){return '<div class="pl"><b>'+E(p.name)+'</b>'+(p.note?' — '+E(p.note):'')+'</div>';}).join(''):'';
+  var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<h3>Things we missed</h3><ul>'+tr.missed.map(function(m){return '<li>'+E(m)+'</li>';}).join('')+'</ul>':'';
+  var photos=(sel.everything||sel.photos)&&(tr.photos||[]).length?'<h3>Photos</h3><div class="ph">'+tr.photos.map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+E(tr.dest)+' — Trafolio</title><style>'
+    +'*{box-sizing:border-box}body{font-family:Georgia,"Times New Roman",serif;color:#1a2b3a;max-width:760px;margin:0 auto;padding:40px 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +'h1{font-size:30px;margin:0 0 2px}.meta{font-family:Arial,sans-serif;font-size:12px;color:#888;letter-spacing:.08em;text-transform:uppercase;margin:0 0 18px}'
+    +'.q{font-style:italic;font-size:18px;color:#444;border-left:3px solid #E0633A;padding-left:14px;margin:14px 0}'
+    +'h2{font-size:22px;margin:22px 0 6px}h3{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin:24px 0 8px;border-bottom:1px solid #eee;padding-bottom:6px}'
+    +'.blog{font-size:15px;line-height:1.7}.pl{padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:14px}ul{margin:0;padding-left:18px}li{font-size:14px;padding:3px 0}'
+    +'.ph{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.ph img{width:100%;height:auto;border-radius:6px;display:block}'
+    +'.foot{margin-top:30px;text-align:center;font-family:Arial,sans-serif;font-size:11px;color:#bbb;letter-spacing:.1em}'
+    +'</style></head><body>'
+    +'<h1>'+E(tr.flag||'')+' '+E(tr.dest)+'</h1><div class="meta">'+E(tr.dates||'')+' · '+(tr.days||'')+' days'+(owner?' · '+E(owner)+'’s guide':'')+'</div>'
+    + notes + blog + placesHtml + missed + photos
+    + '<div class="foot">TRAFOLIO.TRAVEL</div></body></html>';
+}
+// Print / Save-as-PDF the shared guide (browser print dialog offers "Save as PDF").
+function shareGuidePrint(){
+  var doc=shareGuideDoc(); if(!doc){toast(t('mapShareFail')||'Nothing to print');return;}
+  var w=window.open('','_blank'); if(!w){toast(t('bbPopupBlocked')||'Allow popups to print');return;}
+  w.document.write(doc); w.document.close();
+  var imgs=(doc.match(/<img src="([^"]+)"/g)||[]).map(function(m){return (m.match(/"([^"]+)"/)||[])[1];}).filter(Boolean);
+  var pending=imgs.length, printed=false; function go(){ if(printed)return; printed=true; try{w.focus();w.print();}catch(e){} }
+  if(!pending){ setTimeout(go,400); }
+  else { imgs.forEach(function(u){var im=new Image();im.onload=im.onerror=function(){if(--pending<=0)setTimeout(go,300);};im.src=u;}); setTimeout(go,2600); }
+}
+function shareCopyLink(){
+  var tr=shareTripData(); var slug=tr?String(tr.dest||'').toLowerCase().replace(/\s+/g,'-'):'';
+  var url='https://trafolio.travel/'+(userData.username||'me')+(slug?'/'+slug:'');
+  if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){toast(t('profileLinkCopied'));}).catch(function(){toast(url);}); }
+  else toast(url);
+}
 function renderSharePage(){
   var t=_shareDemo||currentTrip||trips[0]||DEMO_GUIDE;if(!t)return;
   var heroImg=document.getElementById('share-hero-img');if(heroImg)heroImg.src=t.cover;
@@ -3704,7 +3755,7 @@ function renderSharePage(){
   if(blogBlock){
     var _bt=t.blogTitle||'', _bb=t.blog||'';
     var _hasBlog=(_bt.trim()||(typeof stripTags==='function'?stripTags(_bb):_bb).trim());
-    if((sel.everything||sel.notes)&&_hasBlog){
+    if((sel.everything||sel.blog)&&_hasBlog){
       blogBlock.style.display='block';
       blogBlock.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">'+tt('tabBlog')+'</div>'+(_bt?'<div style="font-family:Cormorant Garamond,serif;font-size:24px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:10px">'+escHtml(_bt)+'</div>':'')+'<div style="font-size:14.5px;line-height:1.7;color:var(--ink-2)">'+_bb+'</div>';
     } else { blogBlock.style.display='none'; blogBlock.innerHTML=''; }
@@ -3780,7 +3831,7 @@ function renderProfileGrid(){
 }
 // ── Travel map: plot visited cities (red dots) on an equirectangular world map ──
 var CITY_COORDS={
-"Paris":[48.85,2.35],"London":[51.51,-0.13],"New York":[40.71,-74.0],"Tokyo":[35.68,139.69],"Rome":[41.9,12.5],"Barcelona":[41.39,2.17],"Dubai":[25.2,55.27],"Istanbul":[41.01,28.98],"Bangkok":[13.76,100.5],"Singapore":[1.35,103.82],"Amsterdam":[52.37,4.9],"Lisbon":[38.72,-9.14],"Prague":[50.08,14.44],"Vienna":[48.21,16.37],"Berlin":[52.52,13.4],"Madrid":[40.42,-3.7],"Venice":[45.44,12.33],"Florence":[43.77,11.26],"Athens":[37.98,23.73],"Seoul":[37.57,126.98],"Hong Kong":[22.32,114.17],"Sydney":[-33.87,151.21],"Melbourne":[-37.81,144.96],"Marrakech":[31.63,-7.99],"Cairo":[30.04,31.24],"Cape Town":[-33.92,18.42],"Rio de Janeiro":[-22.91,-43.17],"Buenos Aires":[-34.6,-58.38],"Mexico City":[19.43,-99.13],"Bali":[-8.34,115.09],"Kyoto":[35.01,135.77],"Hanoi":[21.03,105.85],"Beirut":[33.89,35.5],"Doha":[25.29,51.53],"Abu Dhabi":[24.45,54.38],"Mumbai":[19.08,72.88],"Delhi":[28.61,77.21],"Shanghai":[31.23,121.47],"Beijing":[39.9,116.41],"Los Angeles":[34.05,-118.24],"San Francisco":[37.77,-122.42],"Chicago":[41.88,-87.63],"Miami":[25.76,-80.19],"Toronto":[43.65,-79.38],"Vancouver":[49.28,-123.12],"Reykjavik":[64.15,-21.94],"Copenhagen":[55.68,12.57],"Stockholm":[59.33,18.07],"Oslo":[59.91,10.75],"Helsinki":[60.17,24.94],"Dublin":[53.35,-6.26],"Edinburgh":[55.95,-3.19],"Zurich":[47.37,8.54],"Geneva":[46.2,6.14],"Brussels":[50.85,4.35],"Budapest":[47.5,19.04],"Warsaw":[52.23,21.01],"Krakow":[50.06,19.94],"Moscow":[55.76,37.62],"St Petersburg":[59.93,30.34],"Dubrovnik":[42.65,18.09],"Santorini":[36.39,25.46],"Mykonos":[37.45,25.33],"Nice":[43.7,7.27],"Milan":[45.46,9.19],"Naples":[40.85,14.27],"Porto":[41.16,-8.62],"Seville":[37.39,-5.99],"Valencia":[39.47,-0.38],"Phuket":[7.88,98.39],"Chiang Mai":[18.79,98.98],"Kuala Lumpur":[3.14,101.69],"Jakarta":[-6.21,106.85],"Manila":[14.6,120.98],"Ho Chi Minh City":[10.82,106.63],"Taipei":[25.03,121.57],"Osaka":[34.69,135.5],"Bali Ubud":[-8.51,115.26],"Maldives":[3.2,73.22],"Cancun":[21.16,-86.85],"Havana":[23.11,-82.37],"Lima":[-12.05,-77.04],"Cusco":[-13.53,-71.97],"Santiago":[-33.45,-70.67],"Bogota":[4.71,-74.07],"Cartagena":[10.39,-75.51],"Fes":[34.02,-5.0],"Petra":[30.33,35.44],"Amman":[31.95,35.93],"Muscat":[23.59,58.41],"Manama":[26.23,50.59],"Kuwait City":[29.38,47.99],"Riyadh":[24.71,46.68],"Jeddah":[21.49,39.19],"Nairobi":[-1.29,36.82],"Zanzibar":[-6.16,39.2],"Queenstown":[-45.03,168.66],"Auckland":[-36.85,174.76]
+"Paris":[48.85,2.35],"London":[51.51,-0.13],"New York":[40.71,-74.0],"Tokyo":[35.68,139.69],"Rome":[41.9,12.5],"Barcelona":[41.39,2.17],"Dubai":[25.2,55.27],"Istanbul":[41.01,28.98],"Bangkok":[13.76,100.5],"Singapore":[1.35,103.82],"Amsterdam":[52.37,4.9],"Lisbon":[38.72,-9.14],"Prague":[50.08,14.44],"Vienna":[48.21,16.37],"Berlin":[52.52,13.4],"Madrid":[40.42,-3.7],"Venice":[45.44,12.33],"Florence":[43.77,11.26],"Athens":[37.98,23.73],"Seoul":[37.57,126.98],"Hong Kong":[22.32,114.17],"Sydney":[-33.87,151.21],"Melbourne":[-37.81,144.96],"Marrakech":[31.63,-7.99],"Cairo":[30.04,31.24],"Cape Town":[-33.92,18.42],"Rio de Janeiro":[-22.91,-43.17],"Buenos Aires":[-34.6,-58.38],"Mexico City":[19.43,-99.13],"Bali":[-8.34,115.09],"Kyoto":[35.01,135.77],"Hanoi":[21.03,105.85],"Beirut":[33.89,35.5],"Doha":[25.29,51.53],"Abu Dhabi":[24.45,54.38],"Mumbai":[19.08,72.88],"Delhi":[28.61,77.21],"Shanghai":[31.23,121.47],"Beijing":[39.9,116.41],"Los Angeles":[34.05,-118.24],"San Francisco":[37.77,-122.42],"Chicago":[41.88,-87.63],"Miami":[25.76,-80.19],"Toronto":[43.65,-79.38],"Vancouver":[49.28,-123.12],"Reykjavik":[64.15,-21.94],"Copenhagen":[55.68,12.57],"Stockholm":[59.33,18.07],"Oslo":[59.91,10.75],"Helsinki":[60.17,24.94],"Dublin":[53.35,-6.26],"Edinburgh":[55.95,-3.19],"Zurich":[47.37,8.54],"Geneva":[46.2,6.14],"Brussels":[50.85,4.35],"Budapest":[47.5,19.04],"Warsaw":[52.23,21.01],"Krakow":[50.06,19.94],"Moscow":[55.76,37.62],"St Petersburg":[59.93,30.34],"Dubrovnik":[42.65,18.09],"Santorini":[36.39,25.46],"Mykonos":[37.45,25.33],"Nice":[43.7,7.27],"Milan":[45.46,9.19],"Naples":[40.85,14.27],"Porto":[41.16,-8.62],"Seville":[37.39,-5.99],"Valencia":[39.47,-0.38],"Phuket":[7.88,98.39],"Chiang Mai":[18.79,98.98],"Kuala Lumpur":[3.14,101.69],"Jakarta":[-6.21,106.85],"Manila":[14.6,120.98],"Ho Chi Minh City":[10.82,106.63],"Taipei":[25.03,121.57],"Osaka":[34.69,135.5],"Bali Ubud":[-8.51,115.26],"Maldives":[3.2,73.22],"Cancun":[21.16,-86.85],"Havana":[23.11,-82.37],"Lima":[-12.05,-77.04],"Cusco":[-13.53,-71.97],"Santiago":[-33.45,-70.67],"Bogota":[4.71,-74.07],"Cartagena":[10.39,-75.51],"Fes":[34.02,-5.0],"Petra":[30.33,35.44],"Amman":[31.95,35.93],"Muscat":[23.59,58.41],"Manama":[26.23,50.59],"Kuwait City":[29.38,47.99],"Riyadh":[24.71,46.68],"Jeddah":[21.49,39.19],"Nairobi":[-1.29,36.82],"Zanzibar":[-6.16,39.2],"Queenstown":[-45.03,168.66],"Auckland":[-36.85,174.76],"Mauritius":[-20.35,57.55],"Seychelles":[-4.68,55.49],"Costa Rica":[9.75,-83.75],"Bahamas":[25.03,-77.40],"Armenia":[40.18,44.51],"Fiji":[-17.71,178.07],"Cambodia":[11.55,104.92],"Sri Lanka":[7.87,80.77],"Nepal":[28.39,84.12],"Tel Aviv":[32.07,34.78]
 };
 var COUNTRY_COORDS={"Japan":[35.68,139.69],"France":[48.85,2.35],"UAE":[24.45,54.38],"Italy":[41.9,12.5],"Spain":[40.42,-3.7],"USA":[38.9,-77.0],"UK":[51.51,-0.13],"United Kingdom":[51.51,-0.13],"Lebanon":[33.89,35.5],"Morocco":[31.63,-7.99],"Egypt":[30.04,31.24],"Turkey":[41.01,28.98],"Greece":[37.98,23.73],"Thailand":[13.76,100.5],"India":[28.61,77.21],"China":[39.9,116.41],"Australia":[-33.87,151.21],"Brazil":[-22.91,-43.17],"Portugal":[38.72,-9.14],"Germany":[52.52,13.4],"Netherlands":[52.37,4.9]};
 function tripCoords(t){
@@ -3922,7 +3973,7 @@ function shareTravelMap(){
   // draw the map with the same ember duotone as on screen
   try{ ctx.filter='grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4)'; ctx.globalAlpha=.55; ctx.drawImage(img,0,TOP,W,MH); ctx.filter='none'; ctx.globalAlpha=1; }catch(e){ ctx.filter='none'; ctx.globalAlpha=1; toast(t('mapShareFail')); return; }
   // Trafolio watermark behind the pins (≈20% visible, centered)
-  ctx.save(); ctx.globalAlpha=.2; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='600 110px Georgia, serif'; ctx.fillStyle='#001C30'; ctx.fillText('Trafolio', W/2, TOP+MH/2); ctx.restore();
+  ctx.save(); ctx.globalAlpha=.15; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='600 110px Georgia, serif'; ctx.fillStyle='#001C30'; ctx.fillText('Trafolio', W/2, TOP+MH/2); ctx.restore();
   var cities={},countries={};
   (trips||[]).forEach(function(tp){var co=tripCoords(tp);if(!co)return;cities[tp.dest]={co:co,flag:tp.flag||cityFlag(tp.dest)};var cc=normCountry(tripCountry(tp));if(cc)countries[cc]=1;});
   Object.keys(cities).forEach(function(dest){
@@ -5435,6 +5486,10 @@ const S={
     cityAddedToast:"added to the trip",
     cityAlready:"That city is already on this trip",
     cityWord:"city",
+    conciergeMoreHint:"Searching for somewhere else? Search 100+ cities above.",
+    bbDownloadPdf:"Download PDF",
+    copyLinkBtn:"Copy link",
+    shareBlogSub:"Your written trip blog",
     openEditBook:"Open & edit",
     pagesWord:"pages",
     profBookEmpty:"Create a trip to start a memory book.",
@@ -6226,6 +6281,10 @@ const S={
     cityAddedToast:"أُضيفت إلى الرحلة",
     cityAlready:"هذه المدينة موجودة بالفعل في الرحلة",
     cityWord:"مدينة",
+    conciergeMoreHint:"تبحث عن مكان آخر؟ ابحث في أكثر من 100 مدينة بالأعلى.",
+    bbDownloadPdf:"تنزيل PDF",
+    copyLinkBtn:"نسخ الرابط",
+    shareBlogSub:"مدونة رحلتك المكتوبة",
     openEditBook:"فتح وتعديل",
     pagesWord:"صفحات",
     profBookEmpty:"أنشئ رحلة لبدء كتاب ذكريات.",
@@ -7019,6 +7078,10 @@ const S={
     cityAddedToast:"ajoutée au voyage",
     cityAlready:"Cette ville est déjà dans ce voyage",
     cityWord:"ville",
+    conciergeMoreHint:"Vous cherchez ailleurs ? Recherchez parmi 100+ villes ci-dessus.",
+    bbDownloadPdf:"Télécharger le PDF",
+    copyLinkBtn:"Copier le lien",
+    shareBlogSub:"Le blog rédigé de votre voyage",
     openEditBook:"Ouvrir et modifier",
     pagesWord:"pages",
     profBookEmpty:"Créez un voyage pour commencer un livre souvenir.",
@@ -7812,6 +7875,10 @@ const S={
     cityAddedToast:"añadida al viaje",
     cityAlready:"Esa ciudad ya está en este viaje",
     cityWord:"ciudad",
+    conciergeMoreHint:"¿Buscas otro lugar? Busca entre más de 100 ciudades arriba.",
+    bbDownloadPdf:"Descargar PDF",
+    copyLinkBtn:"Copiar enlace",
+    shareBlogSub:"El blog escrito de tu viaje",
     openEditBook:"Abrir y editar",
     pagesWord:"páginas",
     profBookEmpty:"Crea un viaje para empezar un libro de recuerdos.",
@@ -8605,6 +8672,10 @@ const S={
     cityAddedToast:"geziye eklendi",
     cityAlready:"Bu şehir gezide zaten var",
     cityWord:"şehir",
+    conciergeMoreHint:"Başka bir yer mi arıyorsun? Yukarıdan 100+ şehirde ara.",
+    bbDownloadPdf:"PDF indir",
+    copyLinkBtn:"Bağlantıyı kopyala",
+    shareBlogSub:"Yazdığın gezi blogu",
     openEditBook:"Aç ve düzenle",
     pagesWord:"sayfa",
     profBookEmpty:"Anı kitabı için bir gezi oluştur.",
@@ -9398,6 +9469,10 @@ const S={
     cityAddedToast:"aggiunta al viaggio",
     cityAlready:"Quella città è già in questo viaggio",
     cityWord:"città",
+    conciergeMoreHint:"Cerchi un altro posto? Cerca tra 100+ città qui sopra.",
+    bbDownloadPdf:"Scarica PDF",
+    copyLinkBtn:"Copia link",
+    shareBlogSub:"Il blog scritto del tuo viaggio",
     openEditBook:"Apri e modifica",
     pagesWord:"pagine",
     profBookEmpty:"Crea un viaggio per iniziare un libro dei ricordi.",
@@ -10191,6 +10266,10 @@ const S={
     cityAddedToast:"已添加到旅行",
     cityAlready:"该城市已在此旅行中",
     cityWord:"城市",
+    conciergeMoreHint:"想找别的地方？在上方搜索 100+ 座城市。",
+    bbDownloadPdf:"下载 PDF",
+    copyLinkBtn:"复制链接",
+    shareBlogSub:"你撰写的旅行博客",
     openEditBook:"打开并编辑",
     pagesWord:"页",
     profBookEmpty:"创建一次旅行以开始制作纪念册。",
@@ -10984,6 +11063,10 @@ const S={
     cityAddedToast:"zur Reise hinzugefügt",
     cityAlready:"Diese Stadt ist bereits auf dieser Reise",
     cityWord:"Stadt",
+    conciergeMoreHint:"Woanders hin? Suche oben aus 100+ Städten.",
+    bbDownloadPdf:"PDF herunterladen",
+    copyLinkBtn:"Link kopieren",
+    shareBlogSub:"Dein geschriebenes Reise-Blog",
     openEditBook:"Öffnen & bearbeiten",
     pagesWord:"Seiten",
     profBookEmpty:"Erstelle eine Reise, um ein Erinnerungsbuch zu starten.",
@@ -11777,6 +11860,10 @@ const S={
     cityAddedToast:"adicionada à viagem",
     cityAlready:"Essa cidade já está nesta viagem",
     cityWord:"cidade",
+    conciergeMoreHint:"Procurando outro lugar? Pesquise 100+ cidades acima.",
+    bbDownloadPdf:"Baixar PDF",
+    copyLinkBtn:"Copiar link",
+    shareBlogSub:"O blog escrito da sua viagem",
     openEditBook:"Abrir e editar",
     pagesWord:"páginas",
     profBookEmpty:"Crie uma viagem para iniciar um livro de memórias.",
@@ -12570,6 +12657,10 @@ const S={
     cityAddedToast:"を旅行に追加しました",
     cityAlready:"その都市はすでに旅行にあります",
     cityWord:"都市",
+    conciergeMoreHint:"別の場所をお探し？上で100以上の都市を検索。",
+    bbDownloadPdf:"PDFをダウンロード",
+    copyLinkBtn:"リンクをコピー",
+    shareBlogSub:"あなたが書いた旅行ブログ",
     openEditBook:"開いて編集",
     pagesWord:"ページ",
     profBookEmpty:"思い出ブックを始めるには旅行を作成してください。",
@@ -14011,7 +14102,10 @@ function cityGradient(name){
 // onerror handler: if an Unsplash photo 404s, pull a correct image from Wikipedia;
 // if that fails too, show a branded gradient tile (never a wrong/generic photo).
 // Better search terms for cities whose plain name resolves to a flag / wrong page.
-var WIKI_IMG_QUERY={'Zanzibar':'Stone Town Zanzibar','Muscat':'Muscat, Oman'};
+var WIKI_IMG_QUERY={'Zanzibar':'Stone Town Zanzibar','Muscat':'Muscat, Oman',
+ 'Cambodia':'Angkor Wat','Nepal':'Boudhanath stupa Kathmandu','Sri Lanka':'Sigiriya','Armenia':'Tatev Monastery',
+ 'Mauritius':'Le Morne Brabant Mauritius','Seychelles':'La Digue Anse Source d\'Argent','Costa Rica':'Arenal Volcano Costa Rica',
+ 'Bahamas':'Exuma Bahamas beach','Fiji':'Mamanuca Islands Fiji','Tel Aviv':'Tel Aviv beach skyline'};
 function imgFallback(img,name,extra){
   if(img.dataset.fbStage==='done')return;
   if(img.dataset.fbStage!=='wiki'){
@@ -15543,6 +15637,16 @@ var CONCIERGE_CITIES=[
 {n:'Osaka',c:'Japan',f:'🇯🇵',p:'photo-1590559899731-a382839e5549'},
 {n:'Bali Ubud',c:'Indonesia',f:'🇮🇩',p:'photo-1518548419970-58e3b4079ab2'},
 {n:'Maldives',c:'Maldives',f:'🇲🇻',p:'photo-1514282401047-d79a71a590e8'},
+{n:'Mauritius',c:'Mauritius',f:'🇲🇺',p:'force-wiki'},
+{n:'Seychelles',c:'Seychelles',f:'🇸🇨',p:'force-wiki'},
+{n:'Costa Rica',c:'Costa Rica',f:'🇨🇷',p:'force-wiki'},
+{n:'Bahamas',c:'Bahamas',f:'🇧🇸',p:'force-wiki'},
+{n:'Armenia',c:'Armenia',f:'🇦🇲',p:'force-wiki'},
+{n:'Fiji',c:'Fiji',f:'🇫🇯',p:'force-wiki'},
+{n:'Cambodia',c:'Cambodia',f:'🇰🇭',p:'force-wiki'},
+{n:'Sri Lanka',c:'Sri Lanka',f:'🇱🇰',p:'force-wiki'},
+{n:'Nepal',c:'Nepal',f:'🇳🇵',p:'force-wiki'},
+{n:'Tel Aviv',c:'Israel',f:'🇮🇱',p:'force-wiki'},
 {n:'Cancun',c:'Mexico',f:'🇲🇽',p:'photo-1510097467424-192d713fd8b2'},
 {n:'Havana',c:'Cuba',f:'🇨🇺',p:'photo-1500759285222-a95626b934cb'},
 {n:'Lima',c:'Peru',f:'🇵🇪',p:'photo-1531968455001-5c5272a41129'},
@@ -15653,6 +15757,16 @@ var CITY_GUIDES={
 'Manila':[['🏰','The walled city of Intramuros (by bike or kalesa)'],['⛪','San Agustin Church (UNESCO) and Manila Cathedral'],['🏛️','Fort Santiago and Rizal Park'],['🌅','Sunset over Manila Bay'],['🍴','Filipino food — adobo, sinigang, lechon'],['🛍️','The huge SM Mall of Asia'],['🎨','The National Museum complex (free)'],['🍮','Halo-halo dessert'],['🏘️','Street art and cafés in Poblacion, Makati'],['🛒','Quiapo market and Binondo (oldest Chinatown)'],['🥢','A Binondo food crawl'],['🌃','Rooftop bars in BGC and Makati'],['⛪','The Quiapo Church'],['☕','Third-wave coffee in BGC'],['🎭','Cultural shows at the CCP'],['🚤','Day trip to Tagaytay and Taal Volcano'],['🛍️','Greenhills for pearls and bargains'],['🍢','Isaw and street barbecue'],['🏛️','Ayala Museum'],['🌴','Gateway to the islands (Palawan, Boracay)']],
 'Bali Ubud':[['🌾','The Tegalalang rice terraces'],['🐒','The Sacred Monkey Forest Sanctuary'],['🛕','Goa Gajah (Elephant Cave) temple'],['🧘','A yoga and wellness retreat'],['🛍️','Ubud Art Market and craft villages'],['💦','Tegenungan and Tibumana waterfalls'],['🎭','A Legong or Kecak dance performance'],['🍛','Babi guling and a healthy café scene'],['🌅','Sunrise trek up Mount Batur'],['🛕','Tirta Empul holy spring temple'],['☕','A luwak coffee plantation'],['🌳','Campuhan Ridge Walk at dawn'],['🖼️','The ARMA and Blanco art museums'],['🌾','Jatiluwih UNESCO rice terraces'],['🏊','Jungle infinity-pool day'],['🛕','Gunung Kawi rock-cut shrines'],['🥥','Fresh juices and vegan cafés'],['🎨','Silver-smithing in Celuk village'],['🌸','The Royal Palace (Puri Saren)'],['🛶','White-water rafting on the Ayung River']],
 'Maldives':[['🏝️','Stay in an overwater villa'],['🤿','Snorkel or dive vibrant coral reefs'],['🐠','Swim with manta rays and whale sharks'],['🌅','Sunset dolphin cruise'],['✨','See the bioluminescent \'sea of stars\' at night'],['🍴','A private beach or sandbank dinner'],['💆','An overwater spa treatment'],['🏖️','Laze on powder-white sand'],['🛥️','Seaplane transfer (an experience itself)'],['🐢','Sea turtle snorkeling'],['🏄','Surf the Indian Ocean breaks (seasonal)'],['🌊','A submarine or glass-bottom boat'],['🏘️','Visit a local island (Maafushi) for culture'],['🎣','Sunset fishing trip'],['🥥','Fresh coconut and Maldivian curry'],['🤿','Night dive with reef sharks'],['💍','A honeymoon-style picnic on a sandbank'],['🐬','Dolphin watching at dawn'],['🌴','Kayak or paddleboard the lagoon'],['📸','The clearest water you\'ll ever see']],
+ 'Mauritius':[['🏝️','Relax on Belle Mare or Le Morne beach'],['🤿','Snorkel & dive at Blue Bay Marine Park'],['⛰️','Hike Le Morne Brabant (UNESCO)'],['🌈','See the Seven Coloured Earths at Chamarel'],['💦','Chamarel Waterfall & rum distillery'],['🌿','Black River Gorges National Park'],['🛕','Grand Bassin (Ganga Talao) sacred lake'],['🏙️','Port Louis market & waterfront'],['🐬','Dolphin watching off Tamarin'],['🍛','Try dholl puri & Creole curry']],
+ 'Seychelles':[['🏖️','Anse Source d\'Argent on La Digue'],['🐢','Meet the giant tortoises'],['🌴','Vallée de Mai (UNESCO), Praslin'],['🚲','Cycle car-free La Digue'],['🤿','Snorkel Sainte Anne Marine Park'],['⛰️','Hike Morne Seychellois, Mahé'],['🏝️','Beach-hop Anse Lazio & Anse Georgette'],['🛥️','Island-hop by ferry'],['🐠','Dive with reef sharks & rays'],['🍤','Creole seafood & fresh fruit']],
+ 'Costa Rica':[['🌋','Arenal Volcano & hot springs'],['☁️','Monteverde cloud-forest bridges'],['🦥','Spot sloths & toucans'],['🪢','Zipline through the jungle'],['🏖️','Surf & sunset at Tamarindo / Santa Teresa'],['🐢','Watch turtles nest (seasonal)'],['🦋','Manuel Antonio National Park'],['💦','Río Celeste waterfall'],['🐦','Birdwatch for the quetzal'],['🌿','Live the pura vida']],
+ 'Bahamas':[['🐷','Swim with the pigs in the Exumas'],['🏖️','Pink Sands Beach, Harbour Island'],['🤿','Snorkel Thunderball Grotto'],['🐢','Swim with turtles & rays'],['🏝️','Boat the Exuma cays'],['🎰','Nassau & Paradise Island'],['🐠','Dive reefs & blue holes'],['🛥️','Sandbar picnic stop'],['🍤','Conch fritters & fresh seafood'],['🌅','Sunset sail']],
+ 'Armenia':[['⛪','Geghard Monastery (rock-cut, UNESCO)'],['🏛️','Garni Temple'],['🚠','Wings of Tatev cable car'],['🏞️','Lake Sevan & Sevanavank'],['🍷','Areni wine country & cave'],['⛲','Yerevan singing fountains'],['🥃','Brandy factory tour'],['🏔️','Mt Ararat views from Khor Virap'],['🏙️','Cascade Complex & Republic Square'],['🍢','Try khorovats & lavash']],
+ 'Fiji':[['🤿','Dive & snorkel the soft-coral reefs'],['🏝️','Island-hop the Mamanucas & Yasawas'],['🥥','Join a kava ceremony'],['🏖️','Natadola & island beaches'],['🐠','Swim with manta rays (seasonal)'],['🛶','Sail or cruise the islands'],['💦','Sabeto mud pools & hot springs'],['🌋','Sigatoka sand dunes'],['🏘️','Visit a traditional village'],['🌅','Sunset over the lagoon']],
+ 'Cambodia':[['🛕','Angkor Wat at sunrise'],['🌳','Ta Prohm, the jungle temple'],['😊','Bayon\'s stone faces'],['🏛️','Phnom Penh Royal Palace'],['🕊️','Tuol Sleng & the Killing Fields'],['🌅','Kampot riverside & pepper farms'],['🏝️','Koh Rong islands'],['🚣','Floating villages of Tonlé Sap'],['🍲','Try fish amok'],['🛍️','Siem Reap night market']],
+ 'Sri Lanka':[['🪨','Climb Sigiriya rock fortress'],['🚂','Ride the Kandy–Ella hill train'],['🍃','Tour the tea plantations'],['🐆','Leopard safari in Yala'],['🛕','Temple of the Tooth, Kandy'],['🏖️','Surf & beaches in Mirissa'],['🐋','Whale watching off Mirissa'],['🏛️','Ancient Anuradhapura & Polonnaruwa'],['🌉','Nine Arch Bridge, Ella'],['🥥','Eat rice & curry and hoppers']],
+ 'Nepal':[['🏔️','Trek the Annapurna or Everest region'],['🌄','Himalayan sunrise from Nagarkot/Pokhara'],['🛕','Boudhanath & Swayambhunath stupas'],['🏯','Kathmandu Durbar Square'],['🚣','Boat Phewa Lake, Pokhara'],['🐅','Chitwan jungle safari'],['🪂','Paraglide over Pokhara'],['🙏','Pashupatinath Temple'],['🥟','Eat momos & dal bhat'],['🎒','Explore Thamel']],
+ 'Tel Aviv':[['🏖️','Lounge on the Mediterranean beaches'],['🏛️','Bauhaus / White City architecture'],['🛍️','Carmel Market & Levinsky Market'],['🏘️','Old Jaffa & the flea market'],['🍽️','World-class food & hummus scene'],['🚲','Cycle the Tayelet promenade'],['🌃','Famous nightlife & bars'],['🎨','Tel Aviv Museum of Art'],['☕','Rothschild Boulevard cafés'],['🌅','Sunset at the Old Port (Namal)']],
 'Cancun':[['🏖️','The white sand and turquoise Caribbean beaches'],['🛕','Day trip to the Chichén Itzá pyramid'],['🤿','Snorkel the Mesoamerican Reef (Isla Mujeres)'],['💦','Swim in a cenote (natural sinkhole)'],['🏝️','Ferry to Isla Mujeres'],['🐠','The underwater MUSA sculpture museum'],['🍴','Tacos, ceviche and Yucatán cochinita pibil'],['🛕','Tulum\'s clifftop Mayan ruins (day trip)'],['🌃','Nightlife in the Hotel Zone'],['🐢','Snorkel with whale sharks (seasonal)'],['🛶','Sail or catamaran the coast'],['🌳','Xcaret or Xel-Há eco-park'],['🍹','Beach club day with a margarita'],['🏛️','El Rey Mayan ruins in the city'],['🛍️','La Isla and Mercado 28 markets'],['🐬','Swim with dolphins'],['🌅','Sunrise over the Caribbean'],['🚤','Speedboat through the mangroves'],['🌮','Downtown (El Centro) local food'],['🏝️','Day trip to Holbox island']],
 'Santiago':[['🚠','Funicular up San Cristóbal Hill for the view'],['🏛️','The Plaza de Armas and historic centre'],['🍴','Chilean seafood and a pisco sour'],['🍷','Day trip to the Maipo or Casablanca wine valleys'],['🏘️','Bohemian Bellavista and Lastarria neighborhoods'],['🎨','Pablo Neruda\'s house, La Chascona'],['🌄','The Andes as a backdrop everywhere'],['🛒','Mercado Central for seafood'],['🏛️','The pre-Columbian art museum'],['🌃','Sky Costanera, South America\'s tallest tower'],['🍇','Carmenère wine tasting'],['⛷️','Ski in the Andes (winter, day trip)'],['☕','Café and street art in Barrio Italia'],['🏞️','Cerro Santa Lucía park'],['🍴','A traditional completo hot dog and empanadas'],['🚂','Gateway to Valparaíso (day trip)'],['🎭','The Municipal Theatre'],['🌅','Sunset over the Andes'],['🛍️','Los Dominicos craft village'],['🏔️','Day trip to the Cajón del Maipo mountains']],
 'Bogota':[['⛰️','Cable car up Monserrate for the view'],['🏘️','The colorful colonial La Candelaria quarter'],['🖼️','The Botero Museum (free)'],['💰','The Gold Museum (Museo del Oro)'],['🎨','Graffiti and street-art tour'],['☕','Colombian coffee tasting'],['🍴','Ajiaco soup and arepas'],['🛒','Paloquemao market'],['🚲','Sunday Ciclovía (car-free streets)'],['⛪','The Salt Cathedral of Zipaquirá (day trip)'],['🌳','Simón Bolívar Park'],['🍹','Chicha and aguardiente in La Candelaria'],['🏛️','Plaza de Bolívar'],['🌃','Nightlife in Chapinero and Zona Rosa'],['🥑','A fruit-tasting tour (Colombia\'s incredible variety)'],['🚠','Day trip to Guatavita lagoon (El Dorado legend)'],['🎭','The Gold Museum\'s Muisca raft'],['☕','Café-hop in Usaquén (Sunday flea market)'],['🍫','Hot chocolate with cheese (a local quirk)'],['🏞️','Andean páramo day hike']],
@@ -15732,21 +15846,27 @@ function conciergeThings(city){
 
 // CONCIERGE RENDER
 var _conciergeCity=null;
+// Curated featured set shown on the landing grid (Euromonitor 2025 visitor ranking order).
+// Search still covers the FULL CONCIERGE_CITIES list — no city/guide is removed.
+var FEATURED_CITIES=["Bangkok","Hong Kong","London","Istanbul","Dubai","Paris","Kuala Lumpur","Tokyo","Singapore","New York","Rome","Madrid","Milan","Barcelona","Amsterdam","Seoul","Osaka","Vienna","Venice","Prague","Los Angeles","Miami","Berlin","Lisbon","Athens","Cairo","Mumbai","Delhi","Shanghai","Beijing","Marrakech","Cape Town","Mexico City","Toronto","San Francisco","Chicago","Sydney","Melbourne","Kyoto","Abu Dhabi","Doha","Rio de Janeiro","Buenos Aires","Bali","Phuket","Hanoi","Ho Chi Minh City","Florence","Budapest","Dublin","Tel Aviv"];
 function renderConcierge(q){
   var grid=document.getElementById('concierge-grid');
   if(!grid)return;
   q=(q||'').toLowerCase().trim();
-  var list=CONCIERGE_CITIES.filter(function(c){
-    if(!q)return true;
-    return c.n.toLowerCase().indexOf(q)>=0||c.c.toLowerCase().indexOf(q)>=0;
-  });
+  var hasGuide=function(c){return typeof CITY_GUIDES!=='undefined'&&CITY_GUIDES[c.n];};
+  var list;
+  if(!q){
+    // Landing: only the curated featured cities, in the ranking order above.
+    list=FEATURED_CITIES.map(function(n){return CONCIERGE_CITIES.find(function(c){return c.n===n;});}).filter(Boolean);
+  } else {
+    // Search: across ALL cities (guide cities surfaced first).
+    list=CONCIERGE_CITIES.filter(function(c){return c.n.toLowerCase().indexOf(q)>=0||c.c.toLowerCase().indexOf(q)>=0;});
+    list=list.slice().sort(function(a,b){return (hasGuide(b)?1:0)-(hasGuide(a)?1:0);});
+  }
   if(!list.length){
     grid.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)">No cities match "'+q+'"</div>';
     return;
   }
-  // Sort curated cities (those with a full guide) first
-  var hasGuide=function(c){return typeof CITY_GUIDES!=='undefined'&&CITY_GUIDES[c.n];};
-  list=list.slice().sort(function(a,b){return (hasGuide(b)?1:0)-(hasGuide(a)?1:0);});
   grid.innerHTML='<div class="concierge-grid-responsive">'+list.map(function(c){
     var img='https://images.unsplash.com/'+c.p+'?w=400&q=80&auto=format&fit=crop';
     var badge=hasGuide(c)?'<div style="position:absolute;top:8px;right:8px;background:var(--ember);color:#fff;font-family:DM Mono,monospace;font-size:8px;letter-spacing:.06em;padding:3px 7px;border-radius:20px;font-weight:600">★ GUIDE</div>':'';
@@ -15760,11 +15880,22 @@ function renderConcierge(q){
       +'<div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:600;color:white;line-height:1.1">'+c.n+'</div>'
       +'<div style="font-family:DM Mono,monospace;font-size:8px;color:rgba(255,255,255,.8);letter-spacing:.08em;text-transform:uppercase">'+c.c+'</div>'
       +'</div></div>';
-  }).join('')+'</div>';
+  }).join('')+'</div>'
+   + (q?'':'<div style="text-align:center;font-size:12px;color:var(--ink-4);padding:16px 16px 4px" data-i18n="conciergeMoreHint">'+t('conciergeMoreHint')+'</div>');
 }
 // Short editorial brief shown atop a city guide. Start with Paris as the template; others
 // can be filled in the same shape. Fields are optional — only present ones render.
 var CITY_BRIEF={
+  "Tel Aviv":{intro:"A sun-soaked Mediterranean city of Bauhaus boulevards, beach culture, big nightlife and one of the world's best food scenes — with ancient Jaffa next door.",bestTime:"Apr–Jun & Sep–Nov (warm, less humid); hot Jul–Aug, mild winters.",stay:"City centre/Rothschild for cafés & nightlife; near the beach for sea & promenade; Jaffa for old-world charm.",weather:"Mediterranean. Hot humid summers 28–33°C, mild winters 12–18°C, little rain in summer.",crowd:"Beaches & bars busy on weekends and summer evenings; Jaffa flea market lively by day.",nice:"Walk the Tayelet, eat at Carmel/Levinsky markets, explore Jaffa, and embrace the late-night scene.",avoid:"Midday August heat, assuming everything's open on Shabbat, and beach valuables left unattended."},
+  "Mauritius":{intro:"An Indian Ocean island of turquoise lagoons, volcanic peaks and a Creole-French-Indian culture — polished resorts in the north, wild beauty in the south.",bestTime:"May–Dec (cooler & drier); cyclone risk Jan–Mar.",stay:"North (Grand Baie) for buzz & beaches; west (Flic en Flac) for sunsets & diving; south for wild luxury.",weather:"Tropical. Nov–Apr 25–33°C & humid; May–Oct 18–25°C.",crowd:"Busiest over Christmas & European summer; beaches quiet midweek.",nice:"Hire a car, eat Creole street food (dholl puri), and explore the south coast & Black River Gorges.",avoid:"Swimming at unpatrolled beaches, peak cyclone season, and unmetered taxis — agree the fare first."},
+  "Seychelles":{intro:"115 granite-and-coral islands with some of the planet's most beautiful beaches, giant tortoises and barefoot luxury.",bestTime:"Apr–May & Oct–Nov — calm seas between the trade winds.",stay:"Mahé for variety & transport; Praslin for beaches & Vallée de Mai; La Digue for car-free charm.",weather:"Warm year-round 26–31°C; wetter Dec–Feb, windier Jun–Aug.",crowd:"Never mass-tourism busy; honeymooners year-round, peak at Christmas.",nice:"Island-hop by ferry, cycle La Digue, and snorkel the marine parks.",avoid:"Expecting it cheap (it isn't), seaweed season on some beaches (Jun–Sep), and littering — it's pristine."},
+  "Costa Rica":{intro:"Central America's eco-paradise — rainforests, volcanoes, two coastlines and 'pura vida' living, bursting with wildlife and adventure.",bestTime:"Dec–Apr (dry); the green season May–Nov is lush & cheaper.",stay:"La Fortuna (Arenal) for volcano & hot springs; Monteverde for cloud forest; Manuel Antonio/Tamarindo for beaches.",weather:"Tropical; hot lowlands 25–32°C, cooler highlands. Dry & green (rainy) seasons.",crowd:"Busiest Dec–Apr & US holidays; book Arenal/Monteverde ahead.",nice:"Zipline, soak in hot springs, spot sloths & toucans, and surf the Pacific.",avoid:"Driving rural roads at night, valuables left in cars, and underestimating drive times."},
+  "Bahamas":{intro:"700 islands of powder beaches and gin-clear water off Florida — Nassau's energy, the Exumas' swimming pigs and endless cays.",bestTime:"Dec–Apr (dry & warm); hurricane risk Jun–Nov.",stay:"Nassau/Paradise Island for resorts & nightlife; the Exumas for nature; Harbour Island for pink sand.",weather:"Warm year-round 24–32°C; humid summers with afternoon storms.",crowd:"Busiest winter & spring break; cruise days pack Nassau — explore early.",nice:"Boat to the Exuma cays, swim the pigs, snorkel reefs, and try conch fritters.",avoid:"Hurricane-season risk, pricey resort taxis, and crowded cruise-ship hours downtown."},
+  "Armenia":{intro:"An ancient Caucasus nation of cliff-top monasteries, brandy and warm hospitality, with lively Yerevan framed by Mount Ararat.",bestTime:"May–Jun & Sep–Oct (mild & scenic); hot summers, snowy winters.",stay:"Yerevan (Kentron) as a base; day-trip to Garni, Geghard, Lake Sevan & Tatev.",weather:"Continental & dry. Summer 25–35°C, winter -5–5°C; high altitude.",crowd:"Rarely crowded; Yerevan lively at night, monasteries quiet midweek.",nice:"Ride the Wings of Tatev cable car, taste Areni wine & brandy, and watch the singing fountains.",avoid:"The closed Turkey/Azerbaijan borders for travel, midday summer heat, and rural tap water."},
+  "Fiji":{intro:"Over 300 South Pacific islands of soft-coral reefs, palm-fringed sand and famously warm 'bula' hospitality.",bestTime:"May–Oct (dry & cooler); cyclone risk Nov–Apr.",stay:"Viti Levu (Coral Coast/Denarau) for access; the Mamanuca & Yasawa islands for postcard beaches.",weather:"Tropical 24–31°C year-round; wetter & humid Nov–Apr.",crowd:"Peak Jun–Sep & Christmas; outer islands always feel remote.",nice:"Dive the soft-coral reefs, island-hop by catamaran, and join a kava ceremony.",avoid:"Cyclone season, walking barefoot on coral, and skipping village etiquette (cover shoulders/knees)."},
+  "Cambodia":{intro:"Home of Angkor's jaw-dropping temples, a moving recent history and a laid-back river-and-coast charm.",bestTime:"Nov–Feb (cool & dry); hot Mar–May, rainy Jun–Oct.",stay:"Siem Reap for Angkor; Phnom Penh for history; Kampot/Koh Rong for river & islands.",weather:"Tropical; hot 28–36°C, monsoon May–Oct.",crowd:"Angkor busiest at sunrise & Nov–Feb; temples calmer midday.",nice:"See Angkor Wat at sunrise, eat fish amok, and slow down in Kampot.",avoid:"Immodest dress at temples (cover shoulders/knees), tuk-tuk overcharging, and tap water."},
+  "Sri Lanka":{intro:"A teardrop island packing ancient cities, hill-country tea, wildlife safaris and surf beaches into one scenic train ride.",bestTime:"Dec–Mar for the west/south & hills; May–Sep for the east coast.",stay:"Kandy & Ella for hills/tea; Galle for the colonial coast; near Yala for safari.",weather:"Tropical; coast 26–32°C, cooler hills. Two monsoons hit opposite coasts.",crowd:"Busiest Dec–Mar; the Kandy–Ella train packs out — board early or pre-book.",nice:"Ride the hill train, climb Sigiriya at dawn, safari for leopards, and eat rice & curry.",avoid:"Midday heat on Sigiriya, cruel wildlife shows, and immodest dress at temples."},
+  "Nepal":{intro:"The roof of the world — Himalayan giants, Kathmandu's temple-packed alleys, and the trailheads to Everest and Annapurna.",bestTime:"Oct–Nov (clearest peaks) & Mar–Apr; avoid the Jun–Sep monsoon.",stay:"Kathmandu (Thamel) as a base; Pokhara for lakes & treks; Chitwan for jungle safari.",weather:"Varies by altitude — warm valleys, freezing peaks. Clear skies in autumn & spring.",crowd:"Trekking peaks Oct–Nov; Kathmandu always bustling, trails busiest in season.",nice:"Trek the Annapurna/Everest foothills, watch Himalayan sunrises from Pokhara/Nagarkot, and visit Boudhanath.",avoid:"Altitude sickness (acclimatise), monsoon-season trekking, and unlicensed guides."},
   "Paris":{intro:"The world’s most visited city wears its clichés well — but the real Paris is in its neighbourhoods: morning markets, canal-side apéros and tiny bistros down cobbled lanes.",bestTime:"Apr–Jun & Sep–Oct — mild, long days and lighter crowds than peak summer.",stay:"Le Marais (3rd/4th) for charm; Saint-Germain (6th) for classic Paris; Canal Saint-Martin (10th) for a local feel.",weather:"Temperate. Spring 12–20°C, summer 20–28°C, grey winters 3–8°C. Pack a layer and an umbrella.",crowd:"Busiest Jul–Aug and Christmas. Big sights are calmest at opening or late evening.",nice:"Pre-book timed tickets, walk more than you metro, and eat where the menu is only in French.",avoid:"Restaurants beside monuments, the Champs-Élysées for food, and ‘free’ bracelets near Sacré-Cœur."},
   "London":{intro:"A sprawling, multicultural capital where every village-like neighbourhood has its own character, from royal pomp to canal-side cool.",bestTime:"May–Sep for long days and parks in bloom; Dec for festive lights.",stay:"Covent Garden/Soho for first-timers; South Bank for views; Shoreditch for nightlife; Notting Hill for charm.",weather:"Mild and changeable. Summer 18–24°C, winter 4–9°C. Always carry a brolly.",crowd:"Year-round busy; West End and museums peak on weekends and school holidays.",nice:"Most major museums are free, use an Oyster/contactless card, and explore the markets (Borough, Maltby St).",avoid:"Leicester Square restaurants, rush-hour Tube (8–9am, 5–6:30pm), and unlicensed pedicabs."},
   "New York":{intro:"Relentless, electric and endlessly walkable — five boroughs of food, art and energy that reward curiosity beyond Times Square.",bestTime:"Apr–Jun & Sep–Nov for mild weather; Dec for the holiday spectacle.",stay:"Midtown for first-timers; West Village/SoHo for charm; Williamsburg (Brooklyn) for cool.",weather:"Four real seasons. Humid summers 25–32°C, cold winters -3–5°C. Layers in spring/fall.",crowd:"Midtown is always packed; sights calmest early morning. Holidays jam the city.",nice:"Walk the High Line and Brooklyn Bridge, ride the subway, and eat in the outer boroughs.",avoid:"Times Square chain restaurants, costumed characters wanting tips, and driving in Manhattan."},
