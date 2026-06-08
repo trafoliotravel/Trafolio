@@ -107,6 +107,8 @@ a.place-name-link:hover { text-decoration: underline; }
 .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px; }
 .photo-grid-item { position: relative; aspect-ratio: 1; overflow: hidden; cursor: pointer; }
 .photo-grid-item.wide { grid-column: span 2; aspect-ratio: 2/1; }
+/* Backfill any gap left by a wide tile so there's never an empty cell on the right. */
+.photo-grid { grid-auto-flow: dense; }
 .photo-grid-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s cubic-bezier(.22,.68,0,1); }
 .photo-grid-item:active img { transform: scale(1.04); }
 .photo-caption { position: absolute; bottom: 0; left: 0; right: 0; padding: 24px 10px 9px; background: linear-gradient(transparent, rgba(0,0,0,.5)); font-size: 11px; color: rgba(255,255,255,.85); font-style: italic; }
@@ -564,7 +566,7 @@ body.show-lbar .lbar{display:none}
   <div class="add-form-field"><label class="add-form-label" data-i18n="yourTake">Your take</label><input class="inp" id="pl-note" data-i18n-ph="whatSpecialPh" placeholder="What made it special?"></div>
   <div class="add-form-field">
     <label class="add-form-label">Photo <span style="color:var(--ink-4);font-weight:400">(optional)</span></label>
-    <div id="pl-photo-preview" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;position:relative"><img id="pl-photo-img" src="" style="width:100%;height:150px;object-fit:cover;display:block"><button type="button" onclick="removePlacePhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">×</button></div>
+    <div id="pl-photo-preview" style="display:none;margin-bottom:8px;border-radius:12px;overflow:hidden;position:relative;width:160px;aspect-ratio:1/1;margin-left:auto;margin-right:auto"><img id="pl-photo-img" src="" style="width:100%;height:100%;object-fit:cover;display:block"><button type="button" onclick="removePlacePhoto()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.6);color:white;border:none;width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px">×</button></div>
     <div id="pl-photo-suggest" style="display:none;margin-bottom:8px">
       <div style="font-size:11px;color:var(--ink-4);margin-bottom:6px" data-i18n="suggestedFromGoogle">Suggested from Google — tap to use</div>
       <div id="pl-photo-suggest-row" style="display:flex;gap:8px"></div>
@@ -1489,9 +1491,11 @@ body.show-lbar .lbar{display:none}
       <div style="margin-top:24px">
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px" data-i18n="thingsMissed">Things we missed</div>
         <div id="missed-list"></div>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <input class="inp" id="missed-inp" placeholder="Add something you wish you'd done&#8230;" data-i18n-ph="missedPh" style="font-size:13px;padding:11px 14px">
-          <button class="btn btn-ghost btn-sm" onclick="addMissed()" data-i18n="addBtn">Add</button>
+        <div style="margin-top:10px">
+          <textarea class="inp" id="missed-inp" rows="3" placeholder="Add something you wish you'd done&#8230;" data-i18n-ph="missedPh" style="font-size:13px;padding:11px 14px;line-height:1.6;resize:vertical;width:100%;min-height:64px"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-ghost btn-sm" onclick="addMissed()" data-i18n="addBtn">Add</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1901,11 +1905,13 @@ body.show-lbar .lbar{display:none}
 <!-- ════ SCREEN: PROFILE ════ -->
 <div id="s-profile" class="screen">
   <div class="pt-nav pb-safe">
-    <div style="position:relative;height:190px;overflow:hidden;background:var(--ink)">
-      <img src="https://images.unsplash.com/photo-1502920917128-1aa500764cbd?w=1600&q=95&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:1" id="profile-cover" alt="" loading="eager">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.10) 0%,transparent 45%,rgba(250,250,248,.4) 82%,rgba(250,250,248,1) 100%)"></div>
+    <div style="position:relative;height:220px;overflow:hidden;background:var(--ink)">
+      <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=95&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:1" id="profile-cover" alt="" loading="eager">
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.06) 0%,transparent 38%,rgba(250,250,248,.22) 90%,rgba(250,250,248,1) 100%)"></div>
       <button onclick="document.getElementById('profile-cover-input').click()" title="Change cover" data-i18n-title="changeCover" style="position:absolute;top:12px;left:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">📷 <span data-i18n="changeCover">Change cover</span></button>
       <button onclick="editProfile()" title="Edit profile" data-i18n-title="editProfile" style="position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">&#9998; <span data-i18n="editProfile">Edit profile</span></button>
+      <!-- Subtle Trafolio brand mark, bottom-right of the cover (dark pill keeps it legible on any photo) -->
+      <div style="position:absolute;bottom:52px;right:14px;background:rgba(0,28,48,.42);backdrop-filter:blur(5px);border-radius:20px;padding:4px 12px;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:600;color:rgba(255,255,255,.96);text-shadow:0 1px 6px rgba(0,0,0,.4);letter-spacing:.01em;pointer-events:none;z-index:3">Trafo<em style="font-style:italic;color:#5BB0F0">l</em>io</div>
     </div>
     <input type="file" id="profile-cover-input" accept="image/*" style="display:none" onchange="setCoverPhoto(this)">
     <input type="file" id="profile-av-input" accept="image/*" style="display:none" onchange="setProfilePhoto(this)">
@@ -2059,8 +2065,11 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
     }
     var alreadyIn = document.getElementById('s-dash').classList.contains('active');
     if(!alreadyIn){
-      // Clear demo trips before entering app
+      // Restore THIS account's local trips as a baseline (so nothing is lost while the
+      // cloud loads). dbLoadUserTrips() then merges cloud data on top — never blanks it.
+      if(typeof setCurrentAccount==='function') setCurrentAccount(user.email||user.id);
       trips = [];
+      if(typeof restoreState==='function') restoreState();
       enterApp();
       if(showWelcome) toast('Welcome back, '+fullName.split(' ')[0]+'!');
     }
@@ -2086,7 +2095,7 @@ const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABA
           if(userData.avatar){
             ['prefs-av','dash-av','top-av','profile-av','ep-av-prev'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.backgroundImage='url('+userData.avatar+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}});
           }
-          if(userData.cover){var _pc=document.getElementById('profile-cover');if(_pc){_pc.src=userData.cover;_pc.style.opacity='.7';}}
+          if(userData.cover){var _pc=document.getElementById('profile-cover');if(_pc){_pc.src=userData.cover;_pc.style.opacity='1';}}
           if(typeof renderProfile==='function') renderProfile();
           console.log('Profile restored from DB');
           dbLoadUserTrips();
@@ -2548,7 +2557,7 @@ function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('t
   if(currentTrip&&typeof dbSaveTripNotes==='function'){var tr=currentTrip;if(_notesDbT)clearTimeout(_notesDbT);_notesDbT=setTimeout(function(){dbSaveTripNotes(tr);},800);}}
 function renderNotesTab(){var inp=document.getElementById('trip-notes-input');if(inp)inp.value=currentTrip?(currentTrip.notes||''):'';renderMissedList();}
 function addMissed(){var inp=document.getElementById('missed-inp');var val=(inp?inp.value:'').trim();if(!val||!currentTrip)return;if(!currentTrip.missed)currentTrip.missed=[];currentTrip.missed.push(val);inp.value='';renderMissedList();}
-function renderMissedList(){var list=document.getElementById('missed-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.missed||[]).map(function(m,i){return'<div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:13px;color:var(--ink-2);font-style:italic">'+m+'</div><button onclick="removeMissed('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:13px">×</button></div>';}).join('');}
+function renderMissedList(){var list=document.getElementById('missed-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.missed||[]).map(function(m,i){return'<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:13px;color:var(--ink-2);font-style:italic;white-space:pre-wrap;line-height:1.6">'+(typeof escHtml==='function'?escHtml(m):m)+'</div><button onclick="removeMissed('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:13px;flex-shrink:0">×</button></div>';}).join('');}
 function removeMissed(i){if(currentTrip&&currentTrip.missed){currentTrip.missed.splice(i,1);renderMissedList();}}
 function renderShareTab(){
   var urlEl=document.getElementById('share-url-display');
@@ -3180,6 +3189,25 @@ function bbCompressImage(srcUrl,opts,cb){
   img.onerror=function(){cb(srcUrl);};
   img.src=srcUrl;
 }
+// Center-crop any image to a square JPEG data-URL (used for place photos so they
+// render square, never stretched). size = output edge in px.
+function squareCropImage(srcUrl,size,cb){
+  size=size||640;
+  var img=new Image();img.crossOrigin='anonymous';
+  img.onload=function(){
+    try{
+      var iw=img.naturalWidth,ih=img.naturalHeight;
+      var edge=Math.min(iw,ih);
+      var sx=Math.max(0,(iw-edge)/2), sy=Math.max(0,(ih-edge)/2);
+      var cv=document.createElement('canvas');cv.width=size;cv.height=size;
+      var ctx=cv.getContext('2d');
+      ctx.drawImage(img,sx,sy,edge,edge,0,0,size,size);
+      cb(cv.toDataURL('image/jpeg',0.85));
+    }catch(e){cb(srcUrl);}
+  };
+  img.onerror=function(){cb(srcUrl);};
+  img.src=srcUrl;
+}
 function bbPickRefreshGrid(){
   var grid=document.getElementById('bb-photo-picker');if(!grid)return;
   var photos=(currentTrip&&currentTrip.photos)||[];
@@ -3647,7 +3675,7 @@ function bbBookDoc(){
     }
     body+='<div class="page" style="background:'+pg.bg+';'+(tpl?bbTplGridStyle(tpl):bbGridStyle(n))+'">'+slots+titleOv+'</div>';
   });
-  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>'+escHtml(currentTrip.dest)+' — Travel Book</title><style>'+css+'</style></head><body>'+body+'</html>';
+  return '<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+escHtml(currentTrip.dest)+' — Travel Book</title><style>'+css+'</style></head><body>'+body+'</html>';
 }
 // Open the printable preview modal, rendering the book into an iframe.
 function bbPreview(){
@@ -3725,15 +3753,16 @@ function shareGuideDoc(){
   var blog=(sel.everything||sel.blog)&&((tr.blogTitle||'')||(tr.blog||''))?'<h2>'+E(tr.blogTitle||'')+'</h2><div class="blog">'+(tr.blog||'')+'</div>':'';
   var places=(tr.places||[]).filter(function(p){return sel.everything||(sel.cats&&sel.cats[p.cat]);});
   var placesHtml=places.length?'<h3>Places</h3>'+places.map(function(p){return '<div class="pl"><b>'+E(p.name)+'</b>'+(p.note?' — '+E(p.note):'')+'</div>';}).join(''):'';
-  var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<h3>Things we missed</h3><ul>'+tr.missed.map(function(m){return '<li>'+E(m)+'</li>';}).join('')+'</ul>':'';
+  var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<h3>Things we missed</h3><ul>'+tr.missed.map(function(m){return '<li style="white-space:pre-wrap">'+E(m)+'</li>';}).join('')+'</ul>':'';
   var photos=(sel.everything||sel.photos)&&(tr.photos||[]).length?'<h3>Photos</h3><div class="ph">'+tr.photos.map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
-  return '<!DOCTYPE html><html><head><meta charset="utf-8"><title>'+E(tr.dest)+' — Trafolio</title><style>'
+  return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+E(tr.dest)+' — Trafolio</title><style>'
     +'*{box-sizing:border-box}body{font-family:Georgia,"Times New Roman",serif;color:#1a2b3a;max-width:760px;margin:0 auto;padding:40px 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'h1{font-size:30px;margin:0 0 2px}.meta{font-family:Arial,sans-serif;font-size:12px;color:#888;letter-spacing:.08em;text-transform:uppercase;margin:0 0 18px}'
     +'.q{font-style:italic;font-size:18px;color:#444;border-left:3px solid #E0633A;padding-left:14px;margin:14px 0}'
     +'h2{font-size:22px;margin:22px 0 6px}h3{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin:24px 0 8px;border-bottom:1px solid #eee;padding-bottom:6px}'
     +'.blog{font-size:15px;line-height:1.7}.pl{padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:14px}ul{margin:0;padding-left:18px}li{font-size:14px;padding:3px 0}'
-    +'.ph{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.ph img{width:100%;height:auto;border-radius:6px;display:block}'
+    +'.ph{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.ph img{width:100%;height:100%;aspect-ratio:1/1;object-fit:cover;border-radius:6px;display:block}'
+    +'.ph img:last-child:nth-child(odd){grid-column:1 / -1;aspect-ratio:16/9}'
     +'.foot{margin-top:30px;text-align:center;font-family:Arial,sans-serif;font-size:11px;color:#bbb;letter-spacing:.1em}'
     +'</style></head><body>'
     +'<h1>'+E(tr.flag||'')+' '+E(tr.dest)+'</h1><div class="meta">'+E(tr.dates||'')+' · '+(tr.days||'')+' days'+(owner?' · '+E(owner)+'’s guide':'')+'</div>'
@@ -3783,7 +3812,7 @@ function renderSharePage(){
   if(missedBlock){
     if((sel.everything||sel.missed)&&(t.missed||[]).length){
       missedBlock.style.display='block';
-      missedBlock.innerHTML='<div style="padding:20px 20px 10px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)">'+tt('missedHeading')+'</div></div><div style="padding:0 20px 22px">'+t.missed.map(function(m){return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><span style="font-size:13px;color:var(--ink-4)">○</span><span style="font-size:14px;color:var(--ink-2)">'+escHtml(m)+'</span></div>';}).join('')+'</div>';
+      missedBlock.innerHTML='<div style="padding:20px 20px 10px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)">'+tt('missedHeading')+'</div></div><div style="padding:0 20px 22px">'+t.missed.map(function(m){return'<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><span style="font-size:13px;color:var(--ink-4)">○</span><span style="font-size:14px;color:var(--ink-2);white-space:pre-wrap;line-height:1.6">'+escHtml(m)+'</span></div>';}).join('')+'</div>';
     } else { missedBlock.style.display='none';missedBlock.innerHTML=''; }
   }
   renderShPlaces(t,'all');renderShPhotos(t);
@@ -3806,7 +3835,7 @@ function renderProfile(){
   if(stWrap){ if(isUSUser()){ stWrap.style.display=''; var stEl=document.getElementById('p-stat-states'); if(stEl)stEl.textContent=countUSStates(trips); } else { stWrap.style.display='none'; } }
   var pill=document.getElementById('profile-privacy-pill');
   if(pill){pill.className='privacy-pill '+(userData.isPublic?'public':'private');pill.innerHTML=userData.isPublic?t('publicLabel'):t('privateLabel');}
-  if(userData.cover){var pc=document.getElementById('profile-cover');if(pc){pc.src=userData.cover;pc.style.opacity='.7';}}
+  if(userData.cover){var pc=document.getElementById('profile-cover');if(pc){pc.src=userData.cover;pc.style.opacity='1';}}
   if(userData.avatar){['profile-av','dash-av','top-av'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.backgroundImage='url('+userData.avatar+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}});}
   renderProfileGrid();
   renderTravelMap();
@@ -3857,6 +3886,69 @@ function tripCoords(t){
   if(!t)return null;
   var c=CITY_COORDS[t.dest]||(t.country&&COUNTRY_COORDS[t.country]);
   return c||null;
+}
+// Country centroids keyed by NORMALISED country name (see normCountry) → [lat,lng,flag].
+// Lets the travel map place a pin for every counted country, even when the specific
+// city isn't in CITY_COORDS, so the map's country count matches the profile stat.
+var COUNTRY_CENTROID={
+"france":[46.6,2.2,"🇫🇷"],"united kingdom":[54.0,-2.0,"🇬🇧"],"united states":[39.5,-98.35,"🇺🇸"],
+"japan":[36.2,138.25,"🇯🇵"],"italy":[41.9,12.5,"🇮🇹"],"spain":[40.4,-3.7,"🇪🇸"],
+"united arab emirates":[24.0,54.0,"🇦🇪"],"turkey":[39.0,35.0,"🇹🇷"],"thailand":[15.0,101.0,"🇹🇭"],
+"singapore":[1.35,103.82,"🇸🇬"],"netherlands":[52.1,5.3,"🇳🇱"],"portugal":[39.5,-8.0,"🇵🇹"],
+"czech republic":[49.8,15.5,"🇨🇿"],"austria":[47.5,14.5,"🇦🇹"],"germany":[51.0,10.0,"🇩🇪"],
+"greece":[39.0,22.0,"🇬🇷"],"south korea":[36.5,127.8,"🇰🇷"],"hong kong":[22.32,114.17,"🇭🇰"],
+"australia":[-25.0,134.0,"🇦🇺"],"morocco":[31.8,-7.0,"🇲🇦"],"egypt":[26.8,30.8,"🇪🇬"],
+"south africa":[-29.0,24.0,"🇿🇦"],"brazil":[-10.0,-52.0,"🇧🇷"],"argentina":[-34.0,-64.0,"🇦🇷"],
+"mexico":[23.6,-102.5,"🇲🇽"],"indonesia":[-2.5,118.0,"🇮🇩"],"vietnam":[16.0,108.0,"🇻🇳"],
+"india":[22.0,79.0,"🇮🇳"],"china":[35.0,103.0,"🇨🇳"],"canada":[56.0,-106.0,"🇨🇦"],
+"iceland":[65.0,-18.0,"🇮🇸"],"denmark":[56.0,10.0,"🇩🇰"],"sweden":[62.0,15.0,"🇸🇪"],
+"norway":[62.0,10.0,"🇳🇴"],"finland":[64.0,26.0,"🇫🇮"],"ireland":[53.4,-8.0,"🇮🇪"],
+"switzerland":[46.8,8.2,"🇨🇭"],"belgium":[50.6,4.6,"🇧🇪"],"hungary":[47.2,19.5,"🇭🇺"],
+"poland":[52.0,19.0,"🇵🇱"],"russia":[61.5,105.0,"🇷🇺"],"croatia":[45.1,15.2,"🇭🇷"],
+"malaysia":[4.2,101.97,"🇲🇾"],"philippines":[12.9,121.77,"🇵🇭"],"taiwan":[23.7,121.0,"🇹🇼"],
+"maldives":[3.2,73.22,"🇲🇻"],"cuba":[21.5,-79.0,"🇨🇺"],"peru":[-9.2,-75.0,"🇵🇪"],
+"chile":[-35.7,-71.5,"🇨🇱"],"colombia":[4.6,-74.3,"🇨🇴"],"jordan":[31.0,36.0,"🇯🇴"],
+"oman":[21.0,57.0,"🇴🇲"],"bahrain":[26.0,50.55,"🇧🇭"],"kuwait":[29.3,47.5,"🇰🇼"],
+"saudi arabia":[24.0,45.0,"🇸🇦"],"kenya":[0.2,37.9,"🇰🇪"],"tanzania":[-6.4,34.9,"🇹🇿"],
+"new zealand":[-42.0,173.0,"🇳🇿"],"mauritius":[-20.35,57.55,"🇲🇺"],"seychelles":[-4.68,55.49,"🇸🇨"],
+"costa rica":[9.75,-83.75,"🇨🇷"],"bahamas":[25.03,-77.4,"🇧🇸"],"armenia":[40.18,44.51,"🇦🇲"],
+"fiji":[-17.71,178.07,"🇫🇯"],"cambodia":[12.5,104.99,"🇰🇭"],"sri lanka":[7.87,80.77,"🇱🇰"],
+"nepal":[28.39,84.12,"🇳🇵"],"israel":[31.0,34.85,"🇮🇱"],"qatar":[25.3,51.2,"🇶🇦"]
+};
+// Country name for a known city (via the concierge dataset).
+function cityCountryName(cn){
+  if(typeof CONCIERGE_CITIES!=='undefined'){
+    var c=CONCIERGE_CITIES.find(function(x){return x.n.toLowerCase()===String(cn||'').toLowerCase();});
+    if(c)return c.c;
+  }
+  return '';
+}
+// All map points for the user's trips: every city we can place, PLUS a centroid pin for any
+// counted country that didn't get a city pin — so the map never shows fewer countries than the stat.
+function travelMapPoints(list){
+  var cities={}, countrySet={}, pinnedCountries={};
+  (list||[]).forEach(function(t){
+    var names=[];
+    if(t.cities&&t.cities.length) t.cities.forEach(function(c){ if(c&&c.name)names.push(c.name); });
+    if(t.dest) names.push(t.dest);
+    names.forEach(function(cn){
+      var co=CITY_COORDS[cn];
+      if(co){
+        cities[cn]={co:co, flag:(typeof cityFlag==='function'&&cityFlag(cn))||t.flag||'📍'};
+        var ccn=normCountry(cityCountryName(cn)||t.country); if(ccn)pinnedCountries[ccn]=1;
+      }
+    });
+    var cc=normCountry(tripCountry(t)); if(cc)countrySet[cc]=1;
+  });
+  // Guarantee every counted country has at least one pin.
+  Object.keys(countrySet).forEach(function(cc){
+    if(!pinnedCountries[cc] && COUNTRY_CENTROID[cc]){
+      var d=COUNTRY_CENTROID[cc];
+      cities['__c_'+cc]={co:[d[0],d[1]], flag:d[2]||'📍'};
+      pinnedCountries[cc]=1;
+    }
+  });
+  return {cities:cities, countryCount:Object.keys(countrySet).length};
 }
 // Canonical country for a trip — derive from the city (concierge map) so a wrong/missing
 // country field (e.g. "Abu Dhabi") still resolves to the real country (UAE).
@@ -3959,23 +4051,20 @@ function renderTravelMap(){
   var map=document.getElementById('travel-map'); if(!map)return;
   // remove old markers
   [].slice.call(map.querySelectorAll('.tm-dot,.tm-pin')).forEach(function(d){d.remove();});
-  var cities={}, countries={};
-  (trips||[]).forEach(function(t){
-    var co=tripCoords(t); if(!co)return;
-    cities[t.dest]={co:co, flag:t.flag||cityFlag(t.dest)};
-    var cc=normCountry(tripCountry(t)); if(cc)countries[cc]=1;
-  });
+  var pts=travelMapPoints(trips||[]);
+  var cities=pts.cities;
   Object.keys(cities).forEach(function(dest){
     var c=cities[dest], pos=mapXY(c.co[0],c.co[1]);
     // Pin = a circular country flag head over a red pointer; the tip sits on the coordinate.
     var pin=document.createElement('div');
-    pin.className='tm-pin'; pin.title=dest;
+    pin.className='tm-pin'; pin.title=(dest.indexOf('__c_')===0?'':dest);
     pin.style.cssText='position:absolute;left:'+pos.x+'%;top:'+pos.y+'%;transform:translate(-50%,-100%);transform-origin:bottom center;cursor:pointer;z-index:2';
     pin.innerHTML='<div style="width:20px;height:20px;border-radius:50%;border:2px solid var(--ember);background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+(c.flag||'📍')+'</div>'
       +'<div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:7px solid var(--ember);margin:-1px auto 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))"></div>';
     map.appendChild(pin);
   });
-  var nc=Object.keys(cities).length, ncc=Object.keys(countries).length;
+  var nc=Object.keys(cities).filter(function(k){return k.indexOf('__c_')!==0;}).length;
+  var ncc=pts.countryCount;
   var ec=document.getElementById('tm-cities'); if(ec)ec.textContent=nc;
   var ecc=document.getElementById('tm-countries'); if(ecc)ecc.textContent=ncc;
   var nm=document.getElementById('tm-name'); if(nm)nm.textContent=(userData.name?userData.name+'’s':'My');
@@ -3993,8 +4082,8 @@ function shareTravelMap(){
   try{ ctx.filter='grayscale(1) brightness(1.05) sepia(1) hue-rotate(-18deg) saturate(2.4)'; ctx.globalAlpha=.55; ctx.drawImage(img,0,TOP,W,MH); ctx.filter='none'; ctx.globalAlpha=1; }catch(e){ ctx.filter='none'; ctx.globalAlpha=1; toast(t('mapShareFail')); return; }
   // Trafolio watermark behind the pins (≈20% visible, centered)
   ctx.save(); ctx.globalAlpha=.15; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.font='600 110px Georgia, serif'; ctx.fillStyle='#001C30'; ctx.fillText('Trafolio', W/2, TOP+MH/2); ctx.restore();
-  var cities={},countries={};
-  (trips||[]).forEach(function(tp){var co=tripCoords(tp);if(!co)return;cities[tp.dest]={co:co,flag:tp.flag||cityFlag(tp.dest)};var cc=normCountry(tripCountry(tp));if(cc)countries[cc]=1;});
+  var _pts=travelMapPoints(trips||[]);
+  var cities=_pts.cities, countryCount=_pts.countryCount;
   Object.keys(cities).forEach(function(dest){
     var c=cities[dest],x=(c.co[1]+180)/360*W,y=TOP+(90-c.co[0])/180*MH; // tip at (x,y)
     var hx=x,hy=y-24,r=13;
@@ -4009,14 +4098,15 @@ function shareTravelMap(){
   ctx.fillText((userData.name?userData.name+'’s':'My')+' Trafolio Map', W/2, 60);
   // cities/countries on the bottom band (dark ink)
   ctx.font='700 30px monospace';ctx.fillStyle='#001C30';
-  ctx.fillText(Object.keys(cities).length+' cities · '+Object.keys(countries).length+' countries', W/2, TOP+MH+54);
+  var _ncCities=Object.keys(cities).filter(function(k){return k.indexOf('__c_')!==0;}).length;
+  ctx.fillText(_ncCities+' cities · '+countryCount+' countries', W/2, TOP+MH+54);
   ctx.textAlign='right';ctx.font='500 20px monospace';ctx.fillStyle='#9a5a3a';
   ctx.fillText('trafolio.travel', W-26, 60);
   cv.toBlob(function(blob){
     if(!blob){ toast(t('mapShareFail')); return; }
     var file=new File([blob],'trafolio-travel-map.png',{type:'image/png'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
-      navigator.share({files:[file],title:t('myTravelMap'),text:Object.keys(cities).length+' cities · '+Object.keys(countries).length+' countries on Trafolio'}).catch(function(){});
+      navigator.share({files:[file],title:t('myTravelMap'),text:_ncCities+' cities · '+countryCount+' countries on Trafolio'}).catch(function(){});
     }else{
       var url=URL.createObjectURL(blob),a=document.createElement('a');
       a.href=url;a.download='trafolio-travel-map.png';document.body.appendChild(a);a.click();
@@ -4300,12 +4390,15 @@ function addPlacePhoto(input){
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
-    _placePhoto=e.target.result;
-    var prev=document.getElementById('pl-photo-preview');
-    var img=document.getElementById('pl-photo-img');
-    if(img)img.src=_placePhoto;
-    if(prev)prev.style.display='block';
-    var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent='Change photo';
+    // Center-crop to a square so the photo is never stretched in the place card / guide.
+    squareCropImage(e.target.result,640,function(sq){
+      _placePhoto=sq;
+      var prev=document.getElementById('pl-photo-preview');
+      var img=document.getElementById('pl-photo-img');
+      if(img)img.src=_placePhoto;
+      if(prev)prev.style.display='block';
+      var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent='Change photo';
+    });
   };
   reader.readAsDataURL(file);
 }
@@ -4325,12 +4418,15 @@ function renderPlacePhotoSuggestions(urls){
   box.style.display='block';
 }
 function pickPlacePhoto(url,el){
-  _placePhoto=url;
-  var img=document.getElementById('pl-photo-img');var prev=document.getElementById('pl-photo-preview');
-  if(img)img.src=url; if(prev)prev.style.display='block';
+  var prev=document.getElementById('pl-photo-preview');var img=document.getElementById('pl-photo-img');
   var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent=t('changePhoto')||'Change photo';
   document.querySelectorAll('#pl-photo-suggest-row .pl-photo-sg').forEach(function(d){d.style.borderColor='transparent';});
   if(el)el.style.borderColor='var(--ember)';
+  // Square-crop the chosen suggestion too (falls back to the raw URL on cross-origin).
+  squareCropImage(url,640,function(sq){
+    _placePhoto=sq||url;
+    if(img)img.src=_placePhoto; if(prev)prev.style.display='block';
+  });
 }
 
 function savePlace(){
@@ -4985,13 +5081,22 @@ function importFromLibrary(input){
   if(props)props.style.display='block';
   if(summ)summ.textContent=t('readingPrefix')+' '+total+'…';
   if(daysEl)daysEl.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink-4)">'+t('scanningExif')+'</div>';
-  files.forEach(function(file){
+  // Big batches: shrink a little harder so memory + localStorage stay sane.
+  var maxEdge=total>80?1100:1400;
+  // Process with LIMITED CONCURRENCY. Loading + canvas-compressing 100+ photos all at
+  // once exhausts memory on phones and reloads the tab. A small pool keeps peak memory
+  // bounded; each blob URL is revoked as soon as it's been re-encoded to a data-URL.
+  var CONC=4, idx=0, active=0, finished=false;
+  function finishOne(){
+    active--; processed++;
+    if(summ)summ.textContent=t('readingPrefix')+' '+processed+'/'+total+'…';
+    if(processed>=total){ if(!finished){ finished=true; showProposals(dayBuckets,noExif); } }
+    else pump();
+  }
+  function processOne(file,done){
     var objUrl=URL.createObjectURL(file);
     readExifFromFile(file,function(exifData){
-      processed++;
       var photoObj={url:objUrl,caption:'',wide:false};
-      // Re-encode to a compressed data-URL so the photo survives reload (blob: URLs don't).
-      bbCompressImage(objUrl,{maxEdge:1400,quality:.8},function(d){ photoObj.url=d; if(typeof sbUploadImage==='function')sbUploadImage(d,'photo').then(function(u){ if(u)photoObj.url=u; }); });
       if(exifData&&exifData.dateTime)photoObj.dateTime=exifData.dateTime;
       if(exifData&&exifData.lat!=null)photoObj.gps={lat:exifData.lat,lng:exifData.lng};
       var matched=false;
@@ -5005,9 +5110,22 @@ function importFromLibrary(input){
         }
       }
       if(!matched)noExif.push({photoObj:photoObj,file:file});
-      if(processed===total)showProposals(dayBuckets,noExif);
+      // Re-encode to a compressed data-URL (blob: URLs don't survive reload), then free the blob.
+      bbCompressImage(objUrl,{maxEdge:maxEdge,quality:.8},function(d){
+        photoObj.url=d;
+        try{URL.revokeObjectURL(objUrl);}catch(e){}
+        if(typeof sbUploadImage==='function'){ try{ sbUploadImage(d,'photo').then(function(u){ if(u)photoObj.url=u; }); }catch(e){} }
+        done();
+      });
     });
-  });
+  }
+  function pump(){
+    while(active<CONC && idx<total){
+      active++;
+      processOne(files[idx++], finishOne);
+    }
+  }
+  pump();
 }
 function parseExifDate(str){if(!str)return null;var m=str.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);var d=str.match(/^(\d{4}):(\d{2}):(\d{2})/);return d?new Date(+d[1],+d[2]-1,+d[3]):null;}
 function _dms(arr,ref){if(!arr||arr.length<3)return null;var dec=arr[0]+arr[1]/60+arr[2]/3600;if(ref==='S'||ref==='W')dec=-dec;return Math.round(dec*1e6)/1e6;}
@@ -5079,6 +5197,35 @@ function acceptDayProposed(btn){
   renderPhotosTab();renderDash();toast(t('photosAddedDay')+' '+day);
   if(typeof persistSoon==='function')persistSoon();
 }
+function acceptAllProposed(){
+  if(!currentTrip)return;
+  if(!currentTrip.photos)currentTrip.photos=[];
+  var added=0;
+  // All date-matched buckets
+  var buckets=window._dayBuckets||{};
+  Object.keys(buckets).map(Number).forEach(function(day){
+    (buckets[day]||[]).forEach(function(p){
+      var po={url:p.url,caption:p.caption||'',wide:false,day:day,dateTime:p.dateTime,gps:p.gps};
+      currentTrip.photos.push(po);added++;
+      if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
+    });
+  });
+  window._dayBuckets={};
+  // Undated photos → use the chosen day (or day 1)
+  if(_pendingNoExif&&_pendingNoExif.length){
+    var day=parseInt((document.getElementById('no-exif-day')||{value:'1'}).value)||1;
+    _pendingNoExif.forEach(function(x){
+      var po={url:x.photoObj.url,caption:x.photoObj.caption||'',wide:false,day:day,dateTime:x.photoObj.dateTime,gps:x.photoObj.gps};
+      currentTrip.photos.push(po);added++;
+      if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
+    });
+    _pendingNoExif=[];
+  }
+  clearProposals();
+  renderPhotosTab();renderDash();
+  toast((added||0)+' '+(t('photosAddedAll')||'photos added'));
+  if(typeof persistSoon==='function')persistSoon();
+}
 function addNoExifPhotos(){
   var day=parseInt((document.getElementById('no-exif-day')||{value:'1'}).value)||1;
   if(!_pendingNoExif.length||!currentTrip)return;
@@ -5124,9 +5271,42 @@ function applyIdentity(){
     else { el.style.backgroundImage='';el.textContent=initial; }
   });
 }
+function setAuthErr(msg){
+  var e=document.getElementById('auth-err');
+  if(e){ e.textContent=msg||''; e.style.display=msg?'block':'none'; }
+  else if(msg&&typeof toast==='function'){ toast(msg); }
+}
+// Local (per-device) signup — fallback when Supabase Auth isn't available.
+function _localSignup(email,pass,name,clean){
+  registerAccount(email,pass,name,clean);
+  setCurrentAccount(email);
+  if(typeof _resetInMemoryState==='function')_resetInMemoryState();
+  else { trips=[]; if(typeof userStories!=='undefined')userStories=[]; if(typeof savedTrips!=='undefined')savedTrips=[]; if(typeof cart!=='undefined')cart=[]; }
+  userData.name=name; userData.username=clean; userData.email=email;
+  if(typeof persistState==='function')persistState();
+  if(typeof renderDash==='function')renderDash();
+  applyIdentity();
+  sendWelcomeEmail(name,email);
+}
+// Local (per-device) login — fallback when Supabase Auth isn't available.
+function _localLogin(email,rec){
+  setCurrentAccount(email);
+  if(typeof _resetInMemoryState==='function')_resetInMemoryState();
+  var had=restoreState();
+  if(rec&&rec.name) userData.name=rec.name;
+  if(rec&&rec.username) userData.username=rec.username;
+  if(!had && !(rec&&rec.name)){ var id=deriveIdentityFromEmail(email); userData.name=id.name; userData.username=id.username; }
+  userData.email=email;
+  applyIdentity();
+  enterApp();
+}
 function doAuth(){
   var email=(document.getElementById('auth-email').value||'').trim();
+  var passEl=document.getElementById('auth-pass');
+  var pass=(passEl?passEl.value:'')||'';
   if(!email){setAuthErr('Please enter your email.');return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){setAuthErr('Please enter a valid email address.');return;}
+  var hasSb = (typeof sb!=='undefined' && sb && sb.auth);
   if(_amode!=='login'){
     var name=(document.getElementById('auth-name').value||'').trim();
     var uname=(document.getElementById('auth-uname').value||'').trim();
@@ -5134,26 +5314,63 @@ function doAuth(){
     if(!uname){setAuthErr('Please choose a username.');return;}
     var clean=uname.replace('@','').toLowerCase().replace(/[^a-z0-9_]/g,'');
     if(!clean){setAuthErr('Please choose a valid username.');return;}
+    if(!pass||pass.length<6){setAuthErr('Please choose a password (at least 6 characters).');return;}
     if(isUsernameTaken(clean)){setAuthErr('That username is already taken. Please choose another.');return;}
-    userData.name=name;
-    userData.username=clean;
-    userData.email=email;
-    // Brand-new account: start with a clean slate (no demo trips/stories/saved/cart leaking in).
-    trips=[]; if(typeof userStories!=='undefined')userStories=[]; if(typeof savedTrips!=='undefined')savedTrips=[]; if(typeof cart!=='undefined')cart=[];
-    userData.avatar=''; userData.cover=''; userData.bio=''; userData.from=''; userData.livesIn='';
-    userData.followers=[]; userData.following=[];
-    if(typeof renderDash==='function')renderDash();
-    applyIdentity();
-    // Username is now created — send the welcome/confirmation email, then continue to onboarding.
-    sendWelcomeEmail(name,email);
+    if(hasSb){
+      // Cloud signup → creates a Supabase session so the account (and its trips/photos)
+      // syncs across every device the user logs in from.
+      setAuthErr('');
+      sb.auth.signUp({email:email,password:pass,options:{data:{full_name:name,preferred_username:clean}}}).then(function(res){
+        if(res.error){
+          var m=String(res.error.message||'');
+          if(/already|registered|exists/i.test(m)){ setAuthErr('An account already exists for this email. Please log in instead.'); return; }
+          // Email auth not configured / other server error → fall back to local so the app still works.
+          _localSignup(email,pass,name,clean); return;
+        }
+        // Keep a local credential copy too (offline / fallback).
+        registerAccount(email,pass,name,clean);
+        if(res.data && res.data.session){
+          // Instant session (email confirmation disabled) → onAuthStateChange enters the app and syncs.
+          sendWelcomeEmail(name,email);
+        } else {
+          // Supabase requires email confirmation before the first login.
+          setAuthErr('We sent a confirmation link to '+email+'. Confirm it, then log in — your trips will sync across devices.');
+        }
+      }).catch(function(){ _localSignup(email,pass,name,clean); });
+      return;
+    }
+    // No Supabase → local-only (per-device) account.
+    if(accountExists(email)){setAuthErr('An account already exists for this email. Please log in instead.');return;}
+    _localSignup(email,pass,name,clean);
   } else {
-    // Log in: identity comes from the credentials entered, not a hardcoded demo user.
-    var id=deriveIdentityFromEmail(email);
-    userData.name=id.name;
-    userData.username=id.username;
-    userData.email=email;
-    applyIdentity();
-    enterApp();
+    if(!pass){setAuthErr('Please enter your password.');return;}
+    if(hasSb){
+      // Cloud login → onAuthStateChange(SIGNED_IN) loads this user's trips/photos from Supabase
+      // (same data on phone and desktop).
+      setAuthErr('');
+      sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
+        if(res.error){
+          // Maybe a local/offline account created before cloud auth existed.
+          var rec=verifyPassword(email,pass);
+          if(rec && rec!==false){ _localLogin(email,rec); return; }
+          var m=String(res.error.message||'');
+          if(/confirm/i.test(m)) setAuthErr('Please confirm your email first (check your inbox), then log in.');
+          else setAuthErr('Incorrect email or password. Please try again.');
+          return;
+        }
+        // success → session created → applySession() loads cloud data automatically.
+      }).catch(function(){
+        var rec=verifyPassword(email,pass);
+        if(rec && rec!==false){ _localLogin(email,rec); }
+        else setAuthErr('Sign in failed — please check your connection.');
+      });
+      return;
+    }
+    // No Supabase → local verify.
+    var rec=verifyPassword(email,pass);
+    if(rec===null){ setAuthErr('No account found for this email. Tap “Create account” to sign up.'); return; }
+    if(rec===false){ setAuthErr('Incorrect password. Please try again.'); return; }
+    _localLogin(email,rec);
   }
 }
 // Welcome / confirmation "email" shown once the username is created at signup.
@@ -5195,7 +5412,7 @@ function setCoverPhoto(input){var file=input.files[0];if(!file)return;var reader
   // Use a compressed data-URL (NOT createObjectURL — blob: URLs become invalid after reload).
   bbCompressImage(e.target.result,{maxEdge:1280,quality:.82},function(url){
     function apply(u){ userData.cover=u;
-      var pc=document.getElementById('profile-cover');if(pc){pc.src=u;pc.style.opacity='.7';}
+      var pc=document.getElementById('profile-cover');if(pc){pc.src=u;pc.style.opacity='1';}
       var prev=document.getElementById('ep-cover-prev');if(prev)prev.src=u;
       if(typeof dbSaveProfile==='function')dbSaveProfile();
       if(typeof persistSoon==='function')persistSoon();
@@ -5823,7 +6040,7 @@ const S={
     yourTravelProfile:'Your travel profile',
     yourTrips:'Your trips',
     nextTripTitle:'Your next trip starts here',
-    nextTripSub:'Add your first trip and start building your personal travel guide.',
+    nextTripSub:'You travelled — now it’s worth sharing what you loved and what you didn’t. Tap “+ Add a trip” to start your travel story.',
     addTripBtn:'Add a trip',
     smartPhotoImport:'Smart photo import',
     smartPhotoSub:'Reads date & GPS — matches photos to trip days',
@@ -5907,6 +6124,7 @@ const S={
     coverReady:'Cover ready',
     uploadedLabel:'Uploaded',
     photosAddedDay:'Photos added to Day',
+    photosAddedAll:"photos added to your album",
     msgComingSoon:'Message feature coming soon',
     storyPublished:'Story published!',
     welcomePrefix:'Welcome,',
@@ -6622,7 +6840,7 @@ const S={
     yourTravelProfile:'ملف السفر الخاص بك',
     yourTrips:'رحلاتك',
     nextTripTitle:'رحلتك القادمة تبدأ هنا',
-    nextTripSub:'أضف رحلتك الأولى وابدأ في بناء دليل سفرك الشخصي.',
+    nextTripSub:'لقد سافرت — والآن يستحق الأمر مشاركة ما أحببته وما لم يعجبك. اضغط «+ أضف رحلة» لتبدأ قصة سفرك.',
     addTripBtn:'إضافة رحلة',
     smartPhotoImport:'استيراد ذكي للصور',
     smartPhotoSub:'يقرأ التاريخ وGPS — ويطابق الصور بأيام الرحلة',
@@ -6706,6 +6924,7 @@ const S={
     coverReady:'الغلاف جاهز',
     uploadedLabel:'تم الرفع',
     photosAddedDay:'أُضيفت الصور إلى اليوم',
+    photosAddedAll:"صورة أُضيفت إلى ألبومك",
     msgComingSoon:'ميزة الرسائل قادمة قريبًا',
     storyPublished:'تم نشر القصة!',
     welcomePrefix:'مرحبًا،',
@@ -7421,7 +7640,7 @@ const S={
     yourTravelProfile:'Votre profil de voyage',
     yourTrips:'Vos voyages',
     nextTripTitle:'Votre prochain voyage commence ici',
-    nextTripSub:'Ajoutez votre premier voyage et créez votre guide de voyage personnel.',
+    nextTripSub:'Vous avez voyagé — il est temps de partager ce que vous avez aimé et moins aimé. Touchez « + Ajouter un voyage » pour commencer votre récit.',
     addTripBtn:'Ajouter un voyage',
     smartPhotoImport:'Import photo intelligent',
     smartPhotoSub:'Lit la date et le GPS — associe les photos aux jours du voyage',
@@ -7505,6 +7724,7 @@ const S={
     coverReady:'Couverture prête',
     uploadedLabel:'Téléversé',
     photosAddedDay:'Photos ajoutées au jour',
+    photosAddedAll:"photos ajoutées à votre album",
     msgComingSoon:'Messagerie bientôt disponible',
     storyPublished:'Récit publié !',
     welcomePrefix:'Bienvenue,',
@@ -8220,7 +8440,7 @@ const S={
     yourTravelProfile:'Tu perfil de viaje',
     yourTrips:'Tus viajes',
     nextTripTitle:'Tu próximo viaje empieza aquí',
-    nextTripSub:'Añade tu primer viaje y empieza a crear tu guía de viaje personal.',
+    nextTripSub:'Has viajado — ahora vale la pena compartir lo que te encantó y lo que no. Toca «+ Añadir un viaje» para empezar tu historia.',
     addTripBtn:'Añadir un viaje',
     smartPhotoImport:'Importación inteligente de fotos',
     smartPhotoSub:'Lee la fecha y el GPS — asocia las fotos a los días del viaje',
@@ -8304,6 +8524,7 @@ const S={
     coverReady:'Portada lista',
     uploadedLabel:'Subido',
     photosAddedDay:'Fotos añadidas al día',
+    photosAddedAll:"fotos añadidas a tu álbum",
     msgComingSoon:'Mensajería disponible pronto',
     storyPublished:'¡Historia publicada!',
     welcomePrefix:'Bienvenido,',
@@ -9019,7 +9240,7 @@ const S={
     yourTravelProfile:'Seyahat profiliniz',
     yourTrips:'Gezilerin',
     nextTripTitle:'Bir sonraki gezin burada başlıyor',
-    nextTripSub:'İlk gezini ekle ve kişisel seyahat rehberini oluşturmaya başla.',
+    nextTripSub:'Seyahat ettin — şimdi nelerden hoşlandığını ve nelerden hoşlanmadığını paylaşmanın zamanı. Başlamak için “+ Gezi ekle”ye dokun.',
     addTripBtn:'Gezi ekle',
     smartPhotoImport:'Akıllı fotoğraf içe aktarma',
     smartPhotoSub:'Tarih ve GPS okur — fotoğrafları gezi günleriyle eşleştirir',
@@ -9103,6 +9324,7 @@ const S={
     coverReady:'Kapak hazır',
     uploadedLabel:'Yüklendi',
     photosAddedDay:'Fotoğraflar şu güne eklendi:',
+    photosAddedAll:"fotoğraf albümünüze eklendi",
     msgComingSoon:'Mesajlaşma yakında geliyor',
     storyPublished:'Hikâye yayınlandı!',
     welcomePrefix:'Hoş geldin,',
@@ -9818,7 +10040,7 @@ const S={
     yourTravelProfile:'Il tuo profilo di viaggio',
     yourTrips:'I tuoi viaggi',
     nextTripTitle:'Il tuo prossimo viaggio inizia qui',
-    nextTripSub:'Aggiungi il tuo primo viaggio e inizia a creare la tua guida di viaggio personale.',
+    nextTripSub:'Hai viaggiato — ora vale la pena condividere ciò che hai amato e ciò che no. Tocca “+ Aggiungi un viaggio” per iniziare il tuo racconto.',
     addTripBtn:'Aggiungi un viaggio',
     smartPhotoImport:'Importazione foto intelligente',
     smartPhotoSub:'Legge data e GPS — abbina le foto ai giorni del viaggio',
@@ -9902,6 +10124,7 @@ const S={
     coverReady:'Copertina pronta',
     uploadedLabel:'Caricato',
     photosAddedDay:'Foto aggiunte al giorno',
+    photosAddedAll:"foto aggiunte al tuo album",
     msgComingSoon:'Messaggistica in arrivo',
     storyPublished:'Racconto pubblicato!',
     welcomePrefix:'Benvenuto,',
@@ -10617,7 +10840,7 @@ const S={
     yourTravelProfile:'您的旅行档案',
     yourTrips:'你的旅行',
     nextTripTitle:'你的下一段旅程从这里开始',
-    nextTripSub:'添加你的第一次旅行，开始打造你的专属旅行指南。',
+    nextTripSub:'你已经旅行过了——是时候分享你喜欢和不喜欢的地方了。点击“+ 添加旅行”，开启你的旅行故事。',
     addTripBtn:'添加旅行',
     smartPhotoImport:'智能照片导入',
     smartPhotoSub:'读取日期和 GPS — 将照片匹配到旅行日期',
@@ -10701,6 +10924,7 @@ const S={
     coverReady:'封面已就绪',
     uploadedLabel:'已上传',
     photosAddedDay:'照片已添加到第',
+    photosAddedAll:"张照片已添加到相册",
     msgComingSoon:'私信功能即将推出',
     storyPublished:'游记已发布！',
     welcomePrefix:'欢迎，',
@@ -11416,7 +11640,7 @@ const S={
     yourTravelProfile:'Dein Reiseprofil',
     yourTrips:'Deine Reisen',
     nextTripTitle:'Deine nächste Reise beginnt hier',
-    nextTripSub:'Füge deine erste Reise hinzu und beginne, deinen persönlichen Reiseführer zu erstellen.',
+    nextTripSub:'Du bist gereist — jetzt lohnt es sich zu teilen, was dir gefiel und was nicht. Tippe auf „+ Reise hinzufügen“, um deine Reisegeschichte zu beginnen.',
     addTripBtn:'Reise hinzufügen',
     smartPhotoImport:'Smarter Foto-Import',
     smartPhotoSub:'Liest Datum & GPS – ordnet Fotos den Reisetagen zu',
@@ -11500,6 +11724,7 @@ const S={
     coverReady:'Titelbild bereit',
     uploadedLabel:'Hochgeladen',
     photosAddedDay:'Fotos hinzugefügt zu Tag',
+    photosAddedAll:"Fotos zu deinem Album hinzugefügt",
     msgComingSoon:'Nachrichtenfunktion bald verfügbar',
     storyPublished:'Geschichte veröffentlicht!',
     welcomePrefix:'Willkommen,',
@@ -12215,7 +12440,7 @@ const S={
     yourTravelProfile:'Seu perfil de viagem',
     yourTrips:'Suas viagens',
     nextTripTitle:'Sua próxima viagem começa aqui',
-    nextTripSub:'Adicione sua primeira viagem e comece a montar seu guia de viagem pessoal.',
+    nextTripSub:'Você viajou — agora vale a pena compartilhar o que amou e o que não gostou. Toque em “+ Adicionar viagem” para começar sua história.',
     addTripBtn:'Adicionar viagem',
     smartPhotoImport:'Importação inteligente de fotos',
     smartPhotoSub:'Lê data e GPS — combina fotos aos dias da viagem',
@@ -12299,6 +12524,7 @@ const S={
     coverReady:'Capa pronta',
     uploadedLabel:'Enviado',
     photosAddedDay:'Fotos adicionadas ao Dia',
+    photosAddedAll:"fotos adicionadas ao seu álbum",
     msgComingSoon:'Recurso de mensagens em breve',
     storyPublished:'História publicada!',
     welcomePrefix:'Bem-vindo,',
@@ -13014,7 +13240,7 @@ const S={
     yourTravelProfile:'あなたの旅行プロフィール',
     yourTrips:'あなたの旅行',
     nextTripTitle:'次の旅はここから始まる',
-    nextTripSub:'最初の旅行を追加して、あなただけの旅行ガイド作りを始めましょう。',
+    nextTripSub:'旅をしたなら、よかったこと・いまひとつだったことを共有する番です。「+ 旅行を追加」をタップして、あなたの旅の物語を始めましょう。',
     addTripBtn:'旅行を追加',
     smartPhotoImport:'スマート写真取り込み',
     smartPhotoSub:'日付とGPSを読み取り、写真を旅行日に振り分け',
@@ -13098,6 +13324,7 @@ const S={
     coverReady:'カバーの準備完了',
     uploadedLabel:'アップロード済み',
     photosAddedDay:'写真を追加しました：',
+    photosAddedAll:"枚の写真をアルバムに追加しました",
     msgComingSoon:'メッセージ機能は近日公開',
     storyPublished:'ストーリーを公開しました！',
     welcomePrefix:'ようこそ、',
@@ -14748,9 +14975,15 @@ function socialAuthFallback(provider){
 function doSocialAuth(provider){
   if(!sb){ socialAuthFallback(provider); return; }
   var provName = provider === 'google' ? 'google' : 'facebook';
+  var opts = { redirectTo: window.location.origin };
+  // Facebook: explicitly request ONLY public_profile so we override Supabase/GoTrue's
+  // implicit default of `email` (Facebook rejects it with "Invalid Scopes: email"
+  // unless that permission is enabled & approved on the Facebook App). Google is left
+  // to its own default scopes.
+  if(provName === 'facebook'){ opts.scopes = 'public_profile'; }
   sb.auth.signInWithOAuth({
     provider: provName,
-    options: { redirectTo: window.location.origin }
+    options: opts
   }).then(function(res){
     if(res.error){ toast('Sign in failed: ' + res.error.message); }
   });
@@ -14791,7 +15024,7 @@ function doGooglePlaceSearch(q,res){
   // Guard: if Google never calls back (legacy Places API not enabled on the key),
   // fall back to Nominatim after a short wait and stop trying Google this session.
   var done=false;
-  var fallbackTimer=setTimeout(function(){ if(done)return; done=true; window._googlePlacesBroken=true; doNominatimSearch(q,res); },2200);
+  var fallbackTimer=setTimeout(function(){ if(done)return; done=true; window._googlePlacesBroken=true; doNominatimSearch(q,res); },1400);
   service.getPlacePredictions(req,function(predictions,status){
     if(done)return; done=true; clearTimeout(fallbackTimer);
     if(status!==google.maps.places.PlacesServiceStatus.OK||!predictions||!predictions.length){window._googlePlacesBroken=true;doNominatimSearch(q,res);return;}
@@ -14975,12 +15208,20 @@ async function dbSaveTrip(trip){
   }catch(e){console.error('dbSaveTrip error:',e);}
 }
 
+// Guarantee a trip exists in the cloud and return its real (UUID) id. Saves it first if needed.
+async function ensureTripDbId(tr){
+  if(!tr)return null;
+  if(tr.dbId)return tr.dbId;
+  if(typeof dbSaveTrip==='function'){ try{ await dbSaveTrip(tr); }catch(e){} }
+  return tr.dbId||null;
+}
 async function dbSavePlace(place, tripId){
   if(!sb||!userData.id){console.warn('dbSavePlace: no sb or userData.id');return;}
-  // Use the trip's DB id (dbId) not the local id
-  var realTripId = tripId;
+  // Always attach to the trip's REAL cloud id — never the local numeric id (which would orphan
+  // the row so it never re-attaches on reload). If the trip isn't in the cloud yet, save it first.
   var tr = trips.find(function(t){ return t.id===tripId || t.dbId===tripId; });
-  if(tr && tr.dbId) realTripId = tr.dbId;
+  var realTripId = (tr && tr.dbId) ? tr.dbId : (tr ? await ensureTripDbId(tr) : null);
+  if(!realTripId){ console.warn('dbSavePlace: trip not in cloud yet — kept locally, will sync later'); return; }
   try{
     var row={
       trip_id: realTripId,
@@ -15016,11 +15257,22 @@ async function dbDeletePlace(placeId){
 
 async function dbLoadUserTrips(){
   if(!sb||!userData.id)return;
+  // SAFETY: never destroy local data. Snapshot what we have, and only ever ADD cloud data
+  // or keep local — we never blank `trips` because the cloud was empty or errored.
+  var localTrips=(trips||[]).slice();
+  try{ if(localTrips.length) localStorage.setItem('trafolio_trips_recovery', JSON.stringify(localTrips)); }catch(e){}
   try{
     var res = await sb.from('trips').select('*').eq('user_id', userData.id).order('created_at',{ascending:false});
-    trips = [];
-    console.log('DB trips loaded:', (res.data||[]).length);
-    if(res.data && res.data.length > 0){
+    if(res.error){ console.error('dbLoadUserTrips DB error (keeping local trips):',res.error); return; }
+    var rows=res.data||[];
+    console.log('DB trips loaded:', rows.length);
+    if(!rows.length){
+      // Cloud has nothing yet — KEEP the local trips and push them up so they sync next time.
+      if(localTrips.length && typeof dbSyncLocalTrips==='function') dbSyncLocalTrips(localTrips);
+      return;
+    }
+    {
+      res = {data: rows};
       // Load ALL places for this user in one query
       var placesRes = await sb.from('places').select('*').eq('user_id', userData.id);
       var allPlaces = placesRes.data || [];
@@ -15052,10 +15304,35 @@ async function dbLoadUserTrips(){
           places: tripPlaces, photos: tripPhotos, itin:[], actualItin:[], expenses:[]
         };
       });
-      trips = dbTrips;
+      // Merge: cloud trips + any LOCAL trip that isn't in the cloud yet (so unsynced work
+      // created on this device is never dropped). Match by dbId or dest+startDate.
+      var cloudIds={}, cloudKeys={};
+      dbTrips.forEach(function(t){ if(t.dbId!=null)cloudIds[t.dbId]=1; cloudKeys[(String(t.dest||'').toLowerCase())+'|'+(t.startDate||'')]=1; });
+      var localOnly=localTrips.filter(function(t){
+        if(t.dbId!=null && cloudIds[t.dbId]) return false;
+        return !cloudKeys[(String(t.dest||'').toLowerCase())+'|'+(t.startDate||'')];
+      });
+      trips = dbTrips.concat(localOnly);
       renderDash();
+      if(localOnly.length && typeof dbSyncLocalTrips==='function') dbSyncLocalTrips(localOnly);
     }
-  }catch(e){console.error('dbLoadUserTrips error:',e);}
+  }catch(e){console.error('dbLoadUserTrips error (keeping local trips):',e);}
+}
+// Best-effort: push local trips (and their places/photos) up to Supabase so they sync
+// to other devices. Safe to call repeatedly — dbSaveTrip inserts; only unsynced ones lack a dbId.
+async function dbSyncLocalTrips(list){
+  if(!sb||!userData.id||!list||!list.length)return;
+  for(var i=0;i<list.length;i++){
+    var tr=list[i];
+    try{
+      if(!tr.dbId && typeof dbSaveTrip==='function'){ await dbSaveTrip(tr); }
+      if(tr.dbId){
+        (tr.places||[]).forEach(function(p){ if(!p.dbId && typeof dbSavePlace==='function') dbSavePlace(p, tr.dbId); });
+        (tr.photos||[]).forEach(function(ph){ if(!ph.dbId && typeof dbSavePhoto==='function') dbSavePhoto(ph, tr.dbId); });
+      }
+    }catch(e){ console.error('dbSyncLocalTrips error:',e); }
+  }
+  if(typeof persistSoon==='function')persistSoon();
 }
 
 async function dbSaveProfile(){
@@ -15227,9 +15504,9 @@ async function dbDeleteTrip(tripId){
 // ── Save a photo to DB ────────────────────────────────────────────────────
 async function dbSavePhoto(photoObj, tripId){
   if(!sb||!userData.id)return;
-  var realTripId=tripId;
   var tr=trips.find(function(t){return t.id===tripId||t.dbId===tripId;});
-  if(tr&&tr.dbId)realTripId=tr.dbId;
+  var realTripId=(tr&&tr.dbId)?tr.dbId:(tr?await ensureTripDbId(tr):null);
+  if(!realTripId){ console.warn('dbSavePhoto: trip not in cloud yet — kept locally, will sync later'); return; }
   try{
     var row={
       trip_id: realTripId,
@@ -16110,6 +16387,56 @@ function openCityGuide(idx){
 // Keep the user's data (trips, photos, notes, places, blogs, stories, profile, cart)
 // across refresh / sign-out by saving to localStorage and restoring on load.
 var _LS_KEY='trafolio_state_v1';
+var _ACCT_KEY='trafolio_current_account';
+// Which account's data we read/write. Each account (by email) gets its own
+// namespaced localStorage slot so signing in as a different person never shows
+// someone else's trips/profile. Empty = legacy/global slot (back-compat).
+var _currentAccount='';
+try{ _currentAccount=localStorage.getItem(_ACCT_KEY)||''; }catch(e){}
+function _acctSlug(s){ return String(s||'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,''); }
+function _lsKey(){ return _currentAccount ? (_LS_KEY+'::'+_currentAccount) : _LS_KEY; }
+function setCurrentAccount(email){
+  _currentAccount=_acctSlug(email);
+  try{ localStorage.setItem(_ACCT_KEY,_currentAccount); }catch(e){}
+}
+// ── Local credential store (demo-grade) ──────────────────────────────
+// NOTE: Real production auth must use Supabase Auth (signUp / signInWithPassword)
+// so passwords are verified server-side. This local store exists so the
+// no-backend/demo build still REQUIRES a correct password instead of letting
+// anyone in with any email. Passwords are salted+hashed (not plaintext), but a
+// browser hash is not a substitute for server auth.
+var _CREDS_KEY='trafolio_accounts';
+function _hashPass(pw,slug){
+  var s=String(pw)+'::'+String(slug)+'::trafolio';
+  var h=5381; for(var i=0;i<s.length;i++){ h=((h<<5)+h)+s.charCodeAt(i); h=h&0xffffffff; }
+  // second pass for a little more mixing
+  var h2=52711; for(var j=s.length-1;j>=0;j--){ h2=((h2<<5)+h2)^s.charCodeAt(j); h2=h2&0xffffffff; }
+  return (h>>>0).toString(36)+'.'+(h2>>>0).toString(36);
+}
+function _readCreds(){ try{ return JSON.parse(localStorage.getItem(_CREDS_KEY)||'{}')||{}; }catch(e){ return {}; } }
+function _writeCreds(o){ try{ localStorage.setItem(_CREDS_KEY,JSON.stringify(o)); }catch(e){} }
+function accountExists(email){ var slug=_acctSlug(email); return !!_readCreds()[slug]; }
+function registerAccount(email,pw,name,username){
+  var slug=_acctSlug(email); var c=_readCreds();
+  c[slug]={ph:_hashPass(pw,slug),name:name||'',username:username||'',email:email};
+  _writeCreds(c);
+}
+function verifyPassword(email,pw){
+  var slug=_acctSlug(email); var rec=_readCreds()[slug];
+  if(!rec) return null;                 // no such account
+  return rec.ph===_hashPass(pw,slug) ? rec : false;  // false = wrong password
+}
+// Wipe in-memory state to a clean slate (used when a brand-new account signs in).
+function _resetInMemoryState(){
+  trips=[];
+  if(typeof userStories!=='undefined')userStories=[];
+  if(typeof savedTrips!=='undefined')savedTrips=[];
+  if(typeof cart!=='undefined')cart=[];
+  if(typeof orders!=='undefined')orders=[];
+  userData.avatar=''; userData.cover=''; userData.bio=''; userData.from=''; userData.livesIn='';
+  userData.followers=[]; userData.following=[]; userData.pendingFollows=[];
+  userData.plan='free'; userData.subStatus=null; userData.tierIdx=0;
+}
 function _isData(u){ return typeof u==='string' && u.indexOf('data:')===0; }
 // level 0 = everything; 1 = drop trip/book data-URL photos; 2 = also drop avatar/cover/story data-URLs
 function _persistPayload(level){
@@ -16143,16 +16470,32 @@ function _persistPayload(level){
   };
 }
 function persistState(){
+  // Keep a lightweight recovery snapshot of the latest non-empty trips (metadata only —
+  // strip heavy data-URL photos so it can't blow the quota). Lets us recover if a slot
+  // ever ends up empty.
+  try{
+    if((trips||[]).length){
+      var slim=trips.map(function(t){ var c=JSON.parse(JSON.stringify(t)); if(Array.isArray(c.photos))c.photos=c.photos.filter(function(p){return p&&p.url&&p.url.indexOf('data:')!==0;}); return c; });
+      try{ localStorage.setItem('trafolio_trips_recovery', JSON.stringify(slim)); }catch(e){}
+    }
+  }catch(e){}
   for(var level=0; level<=2; level++){
-    try{ localStorage.setItem(_LS_KEY, JSON.stringify(_persistPayload(level))); return; }
+    try{ localStorage.setItem(_lsKey(), JSON.stringify(_persistPayload(level))); return; }
     catch(e){ /* quota — try a lighter payload */ }
   }
 }
 function restoreState(){
   try{
-    var raw=localStorage.getItem(_LS_KEY); if(!raw) return false;
+    var raw=localStorage.getItem(_lsKey());
+    if(!raw){
+      // Nothing in this slot — try the cross-slot recovery snapshot so a wiped/empty
+      // slot can still bring trips back instead of showing an empty profile.
+      try{ var rec=JSON.parse(localStorage.getItem('trafolio_trips_recovery')||'null'); if(Array.isArray(rec)&&rec.length){ trips=rec; return true; } }catch(e){}
+      return false;
+    }
     var d=JSON.parse(raw); if(!d) return false;
     if(Array.isArray(d.trips)&&d.trips.length) trips=d.trips;
+    else { try{ var rec2=JSON.parse(localStorage.getItem('trafolio_trips_recovery')||'null'); if(Array.isArray(rec2)&&rec2.length) trips=rec2; }catch(e){} }
     if(Array.isArray(d.userStories)) userStories=d.userStories;
     if(Array.isArray(d.cart)) cart=d.cart;
     if(Array.isArray(d.savedTrips)) savedTrips=d.savedTrips;
