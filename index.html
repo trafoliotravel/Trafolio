@@ -392,6 +392,8 @@ body.show-lbar .lbar{display:none}
 .trip-grid-dash-responsive{grid-template-columns:1fr 1fr}
 @media(min-width:768px){.trip-grid-dash-responsive{grid-template-columns:1fr 1fr 1fr}}
 .place-cat-mini{font-size:13px;margin-right:2px}
+/* Explore results: near edge-to-edge on phones (override the inline 20px side gutters). */
+@media(max-width:600px){ #explore-body > div{ padding-left:12px !important; padding-right:12px !important; } }
     .concierge-grid-responsive { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
     @media (min-width:700px){ .concierge-grid-responsive { grid-template-columns:1fr 1fr 1fr; gap:12px; } }
 </style>
@@ -889,8 +891,24 @@ body.show-lbar .lbar{display:none}
 <!-- INBOX (messages list) -->
 <div class="modal-sheet" id="sheet-inbox">
   <div class="modal-handle"></div>
-  <div class="modal-title" data-i18n="messagesTitle">Messages</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+    <div class="modal-title" style="margin:0" data-i18n="messagesTitle">Messages</div>
+    <button onclick="openNewChat()" class="btn btn-ember btn-sm" style="flex-shrink:0">✎ <span data-i18n="newMessage">New</span></button>
+  </div>
   <div id="inbox-list" style="margin-top:12px"></div>
+</div>
+
+<!-- NEW MESSAGE / GROUP composer -->
+<div class="modal-sheet" id="sheet-new-chat" style="max-height:88vh;overflow-y:auto">
+  <div class="modal-handle"></div>
+  <div class="modal-title" id="nc-title" data-i18n="newMessageTitle">New message</div>
+  <div style="position:relative;margin:6px 0 10px"><span style="position:absolute;left:13px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--ink-4)">&#128269;</span><input class="inp" id="nc-search" data-i18n-ph="searchTravellersPh" placeholder="Search travellers by name or @handle…" style="padding-left:38px" oninput="renderNewChatList(this.value)"></div>
+  <div id="nc-selected" style="display:none;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
+  <div id="nc-group-row" style="display:none;gap:8px;margin-bottom:12px">
+    <input class="inp" id="nc-group-name" data-i18n-ph="groupNamePh" placeholder="Group name…" style="flex:1">
+  </div>
+  <div id="nc-list" style="max-height:46vh;overflow-y:auto"></div>
+  <button id="nc-primary" onclick="ncPrimaryAction()" class="btn btn-ember btn-full" style="display:none;margin-top:12px"></button>
 </div>
 
 <div class="modal-sheet" id="sheet-bb-photos">
@@ -1014,7 +1032,8 @@ body.show-lbar .lbar{display:none}
 <div class="modal-sheet" id="sheet-chat">
   <div class="modal-handle"></div>
   <button type="button" onclick="backToInbox()" title="Back to messages" aria-label="Back" style="position:absolute;top:10px;left:14px;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink-2);font-size:17px;line-height:1;cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;padding:0">&#8592;</button>
-  <div id="chat-header" style="display:flex;align-items:center;gap:11px;margin-bottom:10px;padding-left:38px"></div>
+  <button type="button" id="chat-addpeople-btn" onclick="addPeopleToChat()" title="Add people" aria-label="Add people" style="position:absolute;top:10px;right:14px;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink-2);font-size:18px;line-height:1;cursor:pointer;z-index:40;display:flex;align-items:center;justify-content:center;padding:0">&#43;</button>
+  <div id="chat-header" style="display:flex;align-items:center;gap:11px;margin-bottom:10px;padding:0 40px"></div>
   <div id="chat-messages" style="height:46vh;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding:12px 4px;background:var(--paper-2);border-radius:var(--r-md);margin-bottom:10px"></div>
   <div style="display:flex;gap:8px;align-items:center;position:relative">
     <button type="button" id="emoji-btn" onclick="toggleEmojiPicker(event)" title="Emoji" style="flex-shrink:0;width:38px;height:38px;border-radius:50%;border:1px solid var(--paper-3);background:var(--paper-2);cursor:pointer;font-size:18px;line-height:1">😊</button>
@@ -1318,6 +1337,16 @@ body.show-lbar .lbar{display:none}
         </div>
         <div><div id="prefs-name-disp" style="font-size:14px;font-weight:600;color:var(--ink)">John K</div><div style="font-size:11px;color:var(--ink-3)" data-i18n="tapAddPhoto">Tap to add photo</div></div>
       </div>
+    </div>
+    <!-- Public profile basics — shown to other travellers -->
+    <div style="display:flex;align-items:flex-start;gap:7px;background:var(--ember-lt);border-radius:var(--r-md);padding:10px 12px;margin-bottom:16px">
+      <span style="flex-shrink:0">&#128064;</span>
+      <span style="font-size:12px;line-height:1.45;color:var(--ember-dk)" data-i18n="profileVisibleNote">Your bio, where you’re from and where you live are shown on your public profile — other travellers will see them.</span>
+    </div>
+    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="bio">Bio</div><textarea id="pref-bio" rows="2" class="inp" data-i18n-ph="bioPh" placeholder="Tell travellers about yourself..." style="resize:none"></textarea></div>
+    <div style="display:flex;gap:10px;margin-bottom:18px">
+      <div style="flex:1;position:relative"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="fromLabel">From</div><input type="text" id="ep-pfrom" class="inp" data-i18n-ph="fromPh" placeholder="Where you're from (city)" autocomplete="off" oninput="epPlaceSearch('pfrom',this.value)"><div id="ep-pfrom-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30"></div></div>
+      <div style="flex:1;position:relative"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="livesLabel">Lives in</div><input type="text" id="ep-plives" class="inp" data-i18n-ph="livesPh" placeholder="Where you live now (city)" autocomplete="off" oninput="epPlaceSearch('plives',this.value)"><div id="ep-plives-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30"></div></div>
     </div>
     <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="yourAge">Your age</div><input type="number" id="pref-age" value="30" class="inp" style="width:110px;padding:9px 12px"></div>
     <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px" data-i18n="homeCurrencyPref">Home currency</div>
@@ -1908,8 +1937,15 @@ body.show-lbar .lbar{display:none}
     <div style="position:relative;height:220px;overflow:hidden;background:var(--ink)">
       <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=95&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:1" id="profile-cover" alt="" loading="eager">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.06) 0%,transparent 38%,rgba(250,250,248,.22) 90%,rgba(250,250,248,1) 100%)"></div>
-      <button onclick="document.getElementById('profile-cover-input').click()" title="Change cover" data-i18n-title="changeCover" style="position:absolute;top:12px;left:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">📷 <span data-i18n="changeCover">Change cover</span></button>
-      <button onclick="editProfile()" title="Edit profile" data-i18n-title="editProfile" style="position:absolute;top:12px;right:14px;display:flex;align-items:center;gap:6px;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:30px;padding:7px 14px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;cursor:pointer">&#9998; <span data-i18n="editProfile">Edit profile</span></button>
+      <!-- Single ⋯ menu consolidating the cover/header actions -->
+      <button onclick="toggleProfileMenu(event)" aria-label="Profile actions" title="More" style="position:absolute;top:12px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;z-index:6">&#8943;</button>
+      <div id="profile-menu" style="display:none;position:fixed;top:58px;right:14px;background:#fff;border:1px solid var(--paper-3);border-radius:14px;box-shadow:0 10px 30px rgba(0,28,48,.18);overflow:hidden;width:210px;z-index:120">
+        <div onclick="closeProfileMenu();editProfile()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editProfile">Edit profile</span></div>
+        <div onclick="closeProfileMenu();document.getElementById('profile-cover-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">📷 <span data-i18n="changeCover">Change cover</span></div>
+        <div onclick="closeProfileMenu();document.getElementById('profile-av-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">🖼️ <span data-i18n="changePhoto">Change photo</span></div>
+        <div onclick="closeProfileMenu();copyProfileLink()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#128279; <span data-i18n="shareProfile">Share profile</span></div>
+        <div onclick="closeProfileMenu();deleteAccount()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:#E8334A">&#128465;&#65039; <span data-i18n="deleteAccount">Delete account</span></div>
+      </div>
       <!-- Subtle Trafolio brand mark, bottom-right of the cover (dark pill keeps it legible on any photo) -->
       <div style="position:absolute;bottom:52px;right:14px;background:rgba(0,28,48,.42);backdrop-filter:blur(5px);border-radius:20px;padding:4px 12px;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:600;color:rgba(255,255,255,.96);text-shadow:0 1px 6px rgba(0,0,0,.4);letter-spacing:.01em;pointer-events:none;z-index:3">Trafo<em style="font-style:italic;color:#5BB0F0">l</em>io</div>
     </div>
@@ -3866,6 +3902,16 @@ function renderProfileStories(){
 }
 function renderProfileGrid(){
   var grid=document.getElementById('profile-trip-grid');if(!grid)return;
+  // New user with no trips → show the encouraging prompt right here (not the dead #s-dash).
+  if(!trips.length){
+    grid.innerHTML='<div style="grid-column:1/-1;padding:42px 20px;text-align:center">'
+      +'<div style="font-size:34px;margin-bottom:12px">&#9992;&#65039;</div>'
+      +'<div style="font-family:Cormorant Garamond,serif;font-size:22px;font-weight:400;margin-bottom:8px">'+t('nextTripTitle')+'</div>'
+      +'<div style="font-size:13px;color:var(--ink-3);line-height:1.55;max-width:340px;margin:0 auto 18px">'+t('nextTripSub')+'</div>'
+      +'<button class="btn btn-ember" onclick="openAddTrip()" data-i18n="addTripBtn">'+t('addTripBtn')+'</button>'
+      +'</div>';
+    return;
+  }
   grid.innerHTML=trips.map(function(t){
     return '<div style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;border-radius:6px" onclick="openTrip('+t.id+')">'
     +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover">'
@@ -4156,18 +4202,46 @@ function epRenderLoc(which, items){
   dd.style.display='block';
 }
 function epPickLoc(which,el){
-  var inp=document.getElementById(which==='from'?'ep-from':'ep-lives');
-  if(inp)inp.value=el.getAttribute('data-label')||el.textContent.trim();
+  var label=el.getAttribute('data-label')||el.textContent.trim();
+  var inp=document.getElementById('ep-'+which);
+  if(inp)inp.value=label;
   var dd=document.getElementById('ep-'+which+'-dd'); if(dd){dd.style.display='none';dd.innerHTML='';}
+  // Capture structured city / state / country (for recommendations + states-visited later).
+  var parts=label.split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var city=parts[0]||label, country=parts.length>1?parts[parts.length-1]:'', state=parts.length>=3?parts[1]:'';
+  var isFrom=(which==='from'||which==='pfrom');
+  if(isFrom){ userData.from=label; userData.fromCity=city; userData.fromCountry=country; if(state)userData.fromState=state; }
+  else { userData.livesIn=label; userData.livesCity=city; userData.livesCountry=country; if(state)userData.livesState=state; }
+  if(typeof dbSaveProfile==='function')dbSaveProfile();
+  if(typeof persistSoon==='function')persistSoon();
 }
 // Hide the from/lives dropdowns when clicking elsewhere.
 document.addEventListener('click',function(e){
-  ['from','lives'].forEach(function(w){
+  ['from','lives','pfrom','plives'].forEach(function(w){
     var dd=document.getElementById('ep-'+w+'-dd'), inp=document.getElementById('ep-'+w);
     if(dd&&dd.style.display!=='none'&&e.target!==inp&&!dd.contains(e.target)){ dd.style.display='none'; }
   });
 });
 function copyProfileLink(){navigator.clipboard?.writeText('https://trafolio.travel/'+userData.username).then(function(){toast(t('profileLinkCopied'));});}
+function toggleProfileMenu(ev){ if(ev){ev.stopPropagation();} var m=document.getElementById('profile-menu'); if(!m)return; var open=m.style.display!=='none'; m.style.display=open?'none':'block'; if(!open){ setTimeout(function(){ document.addEventListener('click', _closeProfileMenuOnce); },0); } }
+function _closeProfileMenuOnce(){ closeProfileMenu(); document.removeEventListener('click', _closeProfileMenuOnce); }
+function closeProfileMenu(){ var m=document.getElementById('profile-menu'); if(m)m.style.display='none'; }
+function deleteAccount(){
+  if(!confirm(t('deleteAccountConfirm'))) return;
+  // Wipe THIS account's local data + credentials, then sign out to the landing page.
+  try{
+    if(typeof _currentAccount!=='undefined' && _currentAccount){
+      localStorage.removeItem('trafolio_state_v1::'+_currentAccount);
+      var creds=JSON.parse(localStorage.getItem('trafolio_accounts')||'{}'); delete creds[_currentAccount]; localStorage.setItem('trafolio_accounts',JSON.stringify(creds));
+    }
+    localStorage.removeItem('trafolio_current_account');
+    localStorage.removeItem('trafolio_trips_recovery');
+  }catch(e){}
+  if(typeof sb!=='undefined' && sb && sb.auth){ try{ sb.auth.signOut().catch(function(){}); }catch(e){} }
+  trips=[]; if(typeof userStories!=='undefined')userStories=[];
+  toast(t('accountDeleted'));
+  if(typeof exitApp==='function') exitApp(); else location.reload();
+}
 function editProfile(){
   var n=document.getElementById('ep-name');if(n)n.value=userData.name||'';
   var u=document.getElementById('ep-username');if(u)u.value=userData.username||'';
@@ -4493,6 +4567,46 @@ var IBGC={eat:'#DCF4FF',stay:'#DCF4FF',see:'#DCF4FF',do:'#DCF4FF',shop:'#DCF4FF'
 function switchItinView(btn){itinView=btn.dataset.view;document.querySelectorAll('#tab-plan .tab-btn').forEach(function(b){b.classList.toggle('active',b===btn);});var planBtn=document.getElementById('plan-add-btn');var actualBtn=document.getElementById('actual-add-btn');if(planBtn)planBtn.style.display=(btn.dataset.view==='planning')?'':' none';if(actualBtn)actualBtn.style.display=(btn.dataset.view==='actual')?'':' none';renderItin();}
 function renderItin(){if(!currentTrip)return;var arr=itinView==='actual'?(currentTrip.actualItin||[]):(currentTrip.itin||[]);var body=document.getElementById('itin-body');if(!body)return;if(!arr.length){body.innerHTML='<div style="padding:28px 0;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:9px">🗓</div><div style="font-size:13px">'+(itinView==='actual'?t('noActualItin'):t('noPlannedItin'))+'</div></div>';return;}body.innerHTML=arr.map(function(day){var items=(day.items||[]).map(function(item){return'<div class="itin-item"><div class="itin-time">'+(item.time||'—')+'</div><div class="itin-cat-dot" style="background:'+(IBGC[item.cat]||'#DCF4FF')+'">'+(ICAT[item.cat]||'📍')+'</div><div style="flex:1"><div class="itin-name">'+item.name+'</div>'+(item.note?'<div class="itin-note">'+item.note+'</div>':'')+'</div><button class="itin-del" data-iid="'+item.id+'" data-iday="'+day.day+'" onclick="delItinItem(this)">×</button></div>';}).join('');return'<div style="margin-bottom:16px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:8px;padding-top:10px;border-top:1px solid var(--paper-3)">'+t('dayLabel')+' '+day.day+'</div>'+(items||'<div style="font-size:12px;color:var(--ink-4);padding:6px 0;font-style:italic">'+t('nothingPlanned')+'</div>')+'</div>';}).join('');}
 function delItinItem(btn){if(!currentTrip)return;var id=parseInt(btn.dataset.iid);var day=parseInt(btn.dataset.iday);var arr=itinView==='actual'?(currentTrip.actualItin||[]):(currentTrip.itin||[]);var d=arr.find(function(x){return x.day===day;});if(d)d.items=d.items.filter(function(x){return x.id!==id;});renderItin();}
+// Itinerary category picker (Add-itinerary modal). Sets the selected category and toggles
+// the stay vs day/time rows. (Completes a previously-undefined handler.)
+function selItinCat(el){
+  if(!el)return;
+  selItinCatVal=el.dataset.cat||'eat';
+  document.querySelectorAll('#itin-cat-grid .cat-opt').forEach(function(c){c.classList.toggle('on',c===el);});
+  var stayRow=document.getElementById('itin-stay-row'); var dayRow=document.getElementById('itin-day-time-row');
+  if(selItinCatVal==='stay'){ if(stayRow)stayRow.style.display=''; if(dayRow)dayRow.style.display='none'; }
+  else { if(stayRow)stayRow.style.display='none'; if(dayRow)dayRow.style.display=''; }
+}
+// Pick a searched itinerary location into the name field. (Completes an undefined handler.)
+function selectItinLocation(el){
+  if(!el)return;
+  var nm=el.getAttribute('data-name')||el.textContent.trim();
+  var inp=document.getElementById('itin-name'); if(inp)inp.value=nm;
+  var dd=document.getElementById('itin-loc-dropdown'); if(dd){dd.innerHTML='';dd.classList.remove('open');}
+}
+// Delete an expense row from the Budget tab. (Completes an undefined handler.)
+function delExpItem(btn){
+  if(!currentTrip||!btn)return;
+  var id=btn.getAttribute('data-eid');
+  currentTrip.expenses=(currentTrip.expenses||[]).filter(function(e){return String(e.id)!==String(id);});
+  if(typeof renderBudget==='function')renderBudget();
+  if(typeof persistSoon==='function')persistSoon();
+}
+// Add a trip photo by URL (the "By URL" button in the Photos tab). (Completes an undefined handler.)
+function addPhoto(){
+  if(!currentTrip){toast(t('noTripSelected'));return;}
+  var url=(window.prompt(t('addPhotoUrlPrompt'))||'').trim();
+  if(!url)return;
+  if(url.indexOf('data:')!==0 && !/^https?:\/\/\S+/i.test(url)){ toast(t('invalidImageUrl')); return; }
+  if(!currentTrip.photos)currentTrip.photos=[];
+  var po={url:url,caption:'',wide:false};
+  currentTrip.photos.push(po);
+  if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
+  if(typeof renderPhotosTab==='function')renderPhotosTab();
+  if(typeof renderDash==='function')renderDash();
+  if(typeof persistSoon==='function')persistSoon();
+  toast('📷 '+t('photoAddedToast'));
+}
 function openAddItin(){
   var sel=document.getElementById('itin-day');
   if(sel){sel.innerHTML='';for(var d=1;d<=Math.max((currentTrip?currentTrip.days:7)||7,7);d++)sel.innerHTML+='<option value="'+d+'">'+t('dayLabel')+' '+d+'</option>';}
@@ -5395,7 +5509,15 @@ function sendWelcomeEmail(name,email){
 }
 function dismissWelcomeEmail(){closeModal();showScreen('s-prefs');initPPills();}
 function initPPills(){document.querySelectorAll('.ppill').forEach(function(pill){if(pill._init)return;pill._init=true;pill.addEventListener('click',function(){var g=this.dataset.g;var multi=this.classList.contains('ppm');var on=this.classList.contains('on');function clr(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';var d=p.querySelector('.pdot');if(d)d.style.background=p.dataset.c||'var(--ember)';}function sel(p){var c=p.dataset.c||'var(--ember)';p.classList.add('on');p.style.background=c;p.style.borderColor=c;p.style.color='white';var d=p.querySelector('.pdot');if(d)d.style.background='rgba(255,255,255,.4)';}if(!multi){document.querySelectorAll('.ppill[data-g="'+g+'"]').forEach(function(x){clr(x);});if(!on)sel(this);}else{if(on)clr(this);else sel(this);}});});}
-function savePrefs(){var c=document.querySelector('.ppill[data-g="currency"].on');if(c)userData.currency=c.dataset.v;enterApp();}
+function savePrefs(){
+  var c=document.querySelector('.ppill[data-g="currency"].on');if(c)userData.currency=c.dataset.v;
+  var bio=document.getElementById('pref-bio'); if(bio&&bio.value.trim())userData.bio=bio.value.trim();
+  var from=document.getElementById('ep-pfrom'); if(from&&from.value.trim())userData.from=from.value.trim();
+  var lives=document.getElementById('ep-plives'); if(lives&&lives.value.trim())userData.livesIn=lives.value.trim();
+  if(typeof dbSaveProfile==='function')dbSaveProfile();
+  if(typeof persistSoon==='function')persistSoon();
+  enterApp();
+}
 function setProfilePhoto(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){
   // Compress to a small JPEG data-URL so it persists in localStorage (uncompressed blobs/data-URLs blow the quota).
   bbCompressImage(e.target.result,{maxEdge:360,quality:.82},function(url){
@@ -5602,7 +5724,8 @@ function renderChat(){
   if(!msgs.length){box.innerHTML='<div style="margin:auto;text-align:center;color:var(--ink-4);font-size:12px;padding:20px">'+t('noMessagesYet')+'</div>';return;}
   box.innerHTML=msgs.map(function(m){
     var mine=m.from==='me';
-    return'<div style="align-self:'+(mine?'flex-end':'flex-start')+';max-width:78%;background:'+(mine?'var(--ember)':'#fff')+';color:'+(mine?'#fff':'var(--ink)')+';padding:9px 13px;border-radius:'+(mine?'16px 16px 4px 16px':'16px 16px 16px 4px')+';font-size:14px;line-height:1.4;box-shadow:0 1px 3px rgba(0,28,48,.08);margin:0 6px;word-break:break-word">'+escHtml(m.text)+'</div>';
+    var nameLbl=(!mine&&m.fromName)?'<div style="font-size:10px;color:var(--ink-4);font-family:DM Mono,monospace;margin:0 8px 1px;align-self:flex-start">'+escHtml(m.fromName)+'</div>':'';
+    return nameLbl+'<div style="align-self:'+(mine?'flex-end':'flex-start')+';max-width:78%;background:'+(mine?'var(--ember)':'#fff')+';color:'+(mine?'#fff':'var(--ink)')+';padding:9px 13px;border-radius:'+(mine?'16px 16px 4px 16px':'16px 16px 16px 4px')+';font-size:14px;line-height:1.4;box-shadow:0 1px 3px rgba(0,28,48,.08);margin:0 6px;word-break:break-word">'+escHtml(m.text)+'</div>';
   }).join('');
   box.scrollTop=box.scrollHeight;
 }
@@ -5616,7 +5739,14 @@ function sendChatMsg(){
   setTimeout(function(){
     if(!conversations[uid])return;
     var replies=[t('autoReply1'),t('autoReply2'),t('autoReply3')];
-    conversations[uid].push({from:'them',text:replies[Math.floor(Math.random()*replies.length)],time:t('justNow')});
+    var reply={from:'them',text:replies[Math.floor(Math.random()*replies.length)],time:t('justNow')};
+    // In a group, attribute the reply to a random member so bubbles show who's talking.
+    if(isGroupKey(uid)&&groups[uid]&&groups[uid].members.length){
+      var mid=groups[uid].members[Math.floor(Math.random()*groups[uid].members.length)];
+      var mu=allUsers.find(function(x){return x.id==mid;});
+      if(mu)reply.fromName=mu.name;
+    }
+    conversations[uid].push(reply);
     if(_chatUser===uid)renderChat();
   },1400);
 }
@@ -5655,17 +5785,109 @@ function openInbox(){
   var ids=Object.keys(conversations).filter(function(k){return (conversations[k]||[]).length;});
   if(!ids.length){list.innerHTML='<div style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px">'+t('noMessagesYet')+'</div>';}
   else list.innerHTML=ids.map(function(k){
-    var u=allUsers.find(function(x){return x.id==k;});if(!u)return'';
     var msgs=conversations[k];var last=msgs[msgs.length-1];
-    var prev=(last.from==='me'?t('youPrefix')+' ':'')+last.text;
-    return'<div onclick="openChat('+u.id+')" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer">'
-      +'<div style="width:46px;height:46px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>'
-      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">'+escHtml(u.name)+'</div><div style="font-size:12px;color:var(--ink-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(prev)+'</div></div>'
+    var prev=(last.from==='me'?t('youPrefix')+' ':(last.fromName?escHtml(last.fromName)+': ':''))+last.text;
+    var name, avatar, onclick;
+    if(isGroupKey(k)){
+      var g=groups[k]; if(!g)return'';
+      name=g.name; onclick="openGroupChat('"+k+"')";
+      avatar='<div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--ember),var(--gold));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:18px">&#128101;</div>';
+    } else {
+      var u=allUsers.find(function(x){return x.id==k;});if(!u)return'';
+      name=u.name; onclick="openChat("+u.id+")";
+      avatar='<div style="width:46px;height:46px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>';
+    }
+    return'<div onclick="'+onclick+'" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+      +avatar
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">'+escHtml(name)+'</div><div style="font-size:12px;color:var(--ink-4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(prev)+'</div></div>'
       +'<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);flex-shrink:0">'+escHtml(last.time||'')+'</div></div>';
   }).join('');
   openModal('sheet-inbox');
 }
 function showMsgToast(){openInbox();}
+
+// ── Group chats + people search / add (composer) ──────────────────────────────
+var groups={};
+var _ncSel={}, _ncMode='new', _ncTarget=null, _groupSeq=1;
+function isGroupKey(k){ return typeof k==='string' && k.charAt(0)==='g'; }
+function openNewChat(){
+  _ncMode='new'; _ncTarget=null; _ncSel={};
+  var s=document.getElementById('nc-search'); if(s)s.value='';
+  var gn=document.getElementById('nc-group-name'); if(gn)gn.value='';
+  var ti=document.getElementById('nc-title'); if(ti)ti.textContent=t('newMessageTitle');
+  closeModal(); openModal('sheet-new-chat'); renderNewChatList('');
+}
+function renderNewChatList(q){
+  q=(q||'').toLowerCase().trim();
+  var list=document.getElementById('nc-list'); if(!list)return;
+  var users=allUsers.filter(function(u){
+    if(_ncMode==='add'&&_ncTarget&&groups[_ncTarget]&&groups[_ncTarget].members.indexOf(u.id)>=0)return false;
+    if(!q)return true;
+    return (u.name||'').toLowerCase().indexOf(q)>=0 || (u.handle||'').toLowerCase().indexOf(q)>=0;
+  });
+  if(!users.length){ list.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+t('noResults')+'</div>'; }
+  else list.innerHTML=users.map(function(u){
+    var sel=!!_ncSel[u.id];
+    return '<div onclick="toggleNcSel('+u.id+')" style="display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+      +'<div style="width:40px;height:40px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">'+escHtml(u.name)+'</div><div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace">@'+escHtml(u.handle)+'</div></div>'
+      +'<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--ember)':'var(--paper-3)')+';background:'+(sel?'var(--ember)':'transparent')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">'+(sel?'✓':'')+'</div>'
+      +'</div>';
+  }).join('');
+  _ncRefreshControls();
+}
+function toggleNcSel(id){ if(_ncSel[id])delete _ncSel[id]; else _ncSel[id]=true; var s=document.getElementById('nc-search'); renderNewChatList(s?s.value:''); }
+function _ncRefreshControls(){
+  var ids=Object.keys(_ncSel); var n=ids.length;
+  var chips=document.getElementById('nc-selected'); var grow=document.getElementById('nc-group-row'); var prim=document.getElementById('nc-primary');
+  if(chips){
+    if(n){ chips.style.display='flex'; chips.innerHTML=ids.map(function(id){var u=allUsers.find(function(x){return x.id==id;});if(!u)return'';return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--paper-2);border-radius:20px;padding:4px 10px;font-size:12px">'+escHtml(u.name)+' <span onclick="event.stopPropagation();toggleNcSel('+u.id+')" style="cursor:pointer;color:var(--ink-4)">×</span></span>';}).join(''); }
+    else { chips.style.display='none'; chips.innerHTML=''; }
+  }
+  if(grow) grow.style.display = (_ncMode==='new' && n>=2) ? 'flex' : 'none';
+  if(prim){
+    if(_ncMode==='add'){ prim.style.display=n?'block':'none'; prim.textContent=t('addToGroupBtn'); }
+    else if(n===0){ prim.style.display='none'; }
+    else if(n===1){ prim.style.display='block'; prim.textContent=t('messageBtn'); }
+    else { prim.style.display='block'; prim.textContent=t('createGroupBtn'); }
+  }
+}
+function ncPrimaryAction(){
+  var ids=Object.keys(_ncSel).map(Number); if(!ids.length)return;
+  if(_ncMode==='add' && _ncTarget){ addMembersToConversation(_ncTarget, ids); closeModal(); openGroupChat(_ncTarget); return; }
+  if(ids.length===1){ closeModal(); openChat(ids[0]); return; }
+  var nameEl=document.getElementById('nc-group-name');
+  var nm=(nameEl&&nameEl.value.trim())||ids.map(function(id){var u=allUsers.find(function(x){return x.id==id;});return u?u.name.split(' ')[0]:'';}).filter(Boolean).slice(0,3).join(', ');
+  var key='g'+(_groupSeq++);
+  groups[key]={name:nm, members:ids.slice()};
+  conversations[key]=conversations[key]||[];
+  closeModal(); openGroupChat(key);
+}
+function openGroupChat(key){
+  var g=groups[key]; if(!g)return;
+  _chatUser=key; conversations[key]=conversations[key]||[];
+  var h=document.getElementById('chat-header');
+  if(h){
+    var avs=g.members.slice(0,3).map(function(id){var u=allUsers.find(function(x){return x.id==id;});if(!u)return'';return '<div style="width:30px;height:30px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;border:2px solid #fff;margin-left:-8px">'+(u.photo?'':u.initial)+'</div>';}).join('');
+    h.innerHTML='<div style="display:flex;align-items:center;flex-shrink:0;padding-left:8px">'+avs+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:500;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(g.name)+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+g.members.length+' '+t('membersWord')+'</div></div>';
+  }
+  renderChat();
+  closeModal(); openModal('sheet-chat');
+  setTimeout(function(){var i=document.getElementById('chat-input');if(i)i.focus();},260);
+}
+function addPeopleToChat(){
+  if(_chatUser==null)return;
+  if(isGroupKey(_chatUser)){ _ncMode='add'; _ncTarget=_chatUser; _ncSel={}; }
+  else { _ncMode='new'; _ncTarget=null; _ncSel={}; _ncSel[_chatUser]=true; }
+  var s=document.getElementById('nc-search'); if(s)s.value='';
+  var gn=document.getElementById('nc-group-name'); if(gn)gn.value='';
+  var ti=document.getElementById('nc-title'); if(ti)ti.textContent=isGroupKey(_chatUser)?t('addPeopleTitle'):t('newMessageTitle');
+  closeModal(); openModal('sheet-new-chat'); renderNewChatList('');
+}
+function addMembersToConversation(key, ids){
+  if(isGroupKey(key)){ var g=groups[key]; if(!g)return; ids.forEach(function(id){ if(g.members.indexOf(id)<0)g.members.push(id); }); }
+}
 function toggleFollowProfile(id,btn){
   var st=actFollow(id); // honours privacy: public → follow, private → request
   btn.textContent=followLabel(id);
@@ -5797,6 +6019,7 @@ const S={
     mapDownloaded:"Map image saved",
     fromLabel:"From",
     livesLabel:"Lives in",
+    profileVisibleNote:"Your bio, where you’re from and where you live are shown on your public profile — other travellers will see them.",
     fromPh:"Where you're from (city)",
     livesPh:"Where you live now (city)",
     livesInPrefix:"Lives in",
@@ -6101,6 +6324,10 @@ const S={
     starredToast:'★ Starred',
     unstarredToast:'Removed from starred',
     profileLinkCopied:'Profile link copied!',
+    shareProfile:"Share profile",
+    deleteAccount:"Delete account",
+    deleteAccountConfirm:"Delete your account? This removes your trips and profile from this device and signs you out.",
+    accountDeleted:"Account deleted",
     validUsername:'Please choose a valid username.',
     usernameTaken:'That username is already taken.',
     profilePublic:'Profile is now public',
@@ -6110,6 +6337,9 @@ const S={
     endDateBefore:'End date can\'t be before start date',
     placeAddedToast:'added',
     noTripSelected:'No trip selected',
+    addPhotoUrlPrompt:"Paste an image URL:",
+    invalidImageUrl:"Please paste a valid image link",
+    photoAddedToast:"Photo added",
     addedToPlan:'Added to plan',
     fillDescAmount:'Please fill description and amount',
     expenseAdded:'Expense added',
@@ -6474,6 +6704,14 @@ const S={
     sendBtn:'Send',
     messagesTitle:'Messages',
     noMessagesYet:'No messages yet',
+    newMessage:"New",
+    newMessageTitle:"New message",
+    searchTravellersPh:"Search travellers by name or @handle…",
+    groupNamePh:"Group name…",
+    addToGroupBtn:"Add to chat",
+    createGroupBtn:"Create group",
+    addPeopleTitle:"Add people",
+    membersWord:"members",
     justNow:'now',
     autoReply1:'That sounds amazing! 😍',
     autoReply2:'Thanks for sharing — adding it to my list!',
@@ -6595,6 +6833,7 @@ const S={
     mapDownloaded:"تم حفظ صورة الخريطة",
     fromLabel:"من",
     livesLabel:"يقيم في",
+    profileVisibleNote:"سيظهر نبذتك ومن أين أنت وأين تعيش على ملفك العام — وسيراها المسافرون الآخرون.",
     fromPh:"من أين أنت (المدينة)",
     livesPh:"أين تعيش الآن (المدينة)",
     livesInPrefix:"يقيم في",
@@ -6901,6 +7140,10 @@ const S={
     starredToast:'★ مميّزة',
     unstarredToast:'أُزيلت من المميّزة',
     profileLinkCopied:'تم نسخ رابط الملف الشخصي!',
+    shareProfile:"مشاركة الملف",
+    deleteAccount:"حذف الحساب",
+    deleteAccountConfirm:"هل تريد حذف حسابك؟ سيؤدي ذلك إلى إزالة رحلاتك وملفك من هذا الجهاز وتسجيل خروجك.",
+    accountDeleted:"تم حذف الحساب",
     validUsername:'يرجى اختيار اسم مستخدم صالح.',
     usernameTaken:'اسم المستخدم هذا مستخدم بالفعل.',
     profilePublic:'الملف الشخصي عام الآن',
@@ -6910,6 +7153,9 @@ const S={
     endDateBefore:'لا يمكن أن يكون تاريخ الانتهاء قبل البداية',
     placeAddedToast:'أُضيف',
     noTripSelected:'لم يتم تحديد رحلة',
+    addPhotoUrlPrompt:"الصق رابط صورة:",
+    invalidImageUrl:"الرجاء لصق رابط صورة صالح",
+    photoAddedToast:"تمت إضافة الصورة",
     addedToPlan:'أُضيف إلى الخطة',
     fillDescAmount:'يرجى إدخال الوصف والمبلغ',
     expenseAdded:'تمت إضافة المصروف',
@@ -7274,6 +7520,14 @@ const S={
     sendBtn:'إرسال',
     messagesTitle:'الرسائل',
     noMessagesYet:'لا توجد رسائل بعد',
+    newMessage:"جديد",
+    newMessageTitle:"رسالة جديدة",
+    searchTravellersPh:"ابحث عن المسافرين بالاسم أو @المعرّف…",
+    groupNamePh:"اسم المجموعة…",
+    addToGroupBtn:"أضف إلى المحادثة",
+    createGroupBtn:"إنشاء مجموعة",
+    addPeopleTitle:"إضافة أشخاص",
+    membersWord:"أعضاء",
     justNow:'الآن',
     autoReply1:'يبدو رائعًا! 😍',
     autoReply2:'شكرًا للمشاركة — سأضيفه إلى قائمتي!',
@@ -7395,6 +7649,7 @@ const S={
     mapDownloaded:"Image de la carte enregistrée",
     fromLabel:"Originaire de",
     livesLabel:"Vit à",
+    profileVisibleNote:"Votre bio, votre ville d’origine et votre ville de résidence apparaissent sur votre profil public — les autres voyageurs les verront.",
     fromPh:"D'où venez-vous (ville)",
     livesPh:"Où vivez-vous (ville)",
     livesInPrefix:"Vit à",
@@ -7701,6 +7956,10 @@ const S={
     starredToast:'★ Favori',
     unstarredToast:'Retiré des favoris',
     profileLinkCopied:'Lien du profil copié !',
+    shareProfile:"Partager le profil",
+    deleteAccount:"Supprimer le compte",
+    deleteAccountConfirm:"Supprimer votre compte ? Cela retire vos voyages et votre profil de cet appareil et vous déconnecte.",
+    accountDeleted:"Compte supprimé",
     validUsername:'Veuillez choisir un nom d\'utilisateur valide.',
     usernameTaken:'Ce nom d\'utilisateur est déjà pris.',
     profilePublic:'Le profil est maintenant public',
@@ -7710,6 +7969,9 @@ const S={
     endDateBefore:'La date de fin ne peut pas être avant le début',
     placeAddedToast:'ajouté',
     noTripSelected:'Aucun voyage sélectionné',
+    addPhotoUrlPrompt:"Collez l’URL d’une image :",
+    invalidImageUrl:"Veuillez coller un lien d’image valide",
+    photoAddedToast:"Photo ajoutée",
     addedToPlan:'Ajouté au plan',
     fillDescAmount:'Veuillez remplir la description et le montant',
     expenseAdded:'Dépense ajoutée',
@@ -8074,6 +8336,14 @@ const S={
     sendBtn:'Envoyer',
     messagesTitle:'Messages',
     noMessagesYet:'Pas encore de messages',
+    newMessage:"Nouveau",
+    newMessageTitle:"Nouveau message",
+    searchTravellersPh:"Rechercher des voyageurs par nom ou @pseudo…",
+    groupNamePh:"Nom du groupe…",
+    addToGroupBtn:"Ajouter à la discussion",
+    createGroupBtn:"Créer un groupe",
+    addPeopleTitle:"Ajouter des personnes",
+    membersWord:"membres",
     justNow:'maintenant',
     autoReply1:'Ça a l’air génial ! 😍',
     autoReply2:'Merci du partage — je l’ajoute à ma liste !',
@@ -8195,6 +8465,7 @@ const S={
     mapDownloaded:"Imagen del mapa guardada",
     fromLabel:"De",
     livesLabel:"Vive en",
+    profileVisibleNote:"Tu biografía, de dónde eres y dónde vives aparecen en tu perfil público: otros viajeros los verán.",
     fromPh:"De dónde eres (ciudad)",
     livesPh:"Dónde vives ahora (ciudad)",
     livesInPrefix:"Vive en",
@@ -8501,6 +8772,10 @@ const S={
     starredToast:'★ Destacado',
     unstarredToast:'Eliminado de destacados',
     profileLinkCopied:'¡Enlace del perfil copiado!',
+    shareProfile:"Compartir perfil",
+    deleteAccount:"Eliminar cuenta",
+    deleteAccountConfirm:"¿Eliminar tu cuenta? Esto quita tus viajes y perfil de este dispositivo y cierra tu sesión.",
+    accountDeleted:"Cuenta eliminada",
     validUsername:'Elige un nombre de usuario válido.',
     usernameTaken:'Ese nombre de usuario ya está en uso.',
     profilePublic:'El perfil ahora es público',
@@ -8510,6 +8785,9 @@ const S={
     endDateBefore:'La fecha de fin no puede ser anterior al inicio',
     placeAddedToast:'añadido',
     noTripSelected:'Ningún viaje seleccionado',
+    addPhotoUrlPrompt:"Pega la URL de una imagen:",
+    invalidImageUrl:"Pega un enlace de imagen válido",
+    photoAddedToast:"Foto añadida",
     addedToPlan:'Añadido al plan',
     fillDescAmount:'Completa la descripción y el importe',
     expenseAdded:'Gasto añadido',
@@ -8874,6 +9152,14 @@ const S={
     sendBtn:'Enviar',
     messagesTitle:'Mensajes',
     noMessagesYet:'Aún no hay mensajes',
+    newMessage:"Nuevo",
+    newMessageTitle:"Nuevo mensaje",
+    searchTravellersPh:"Busca viajeros por nombre o @usuario…",
+    groupNamePh:"Nombre del grupo…",
+    addToGroupBtn:"Añadir al chat",
+    createGroupBtn:"Crear grupo",
+    addPeopleTitle:"Añadir personas",
+    membersWord:"miembros",
     justNow:'ahora',
     autoReply1:'¡Suena increíble! 😍',
     autoReply2:'¡Gracias por compartir, lo añado a mi lista!',
@@ -8995,6 +9281,7 @@ const S={
     mapDownloaded:"Harita görseli kaydedildi",
     fromLabel:"Nereli",
     livesLabel:"Yaşadığı yer",
+    profileVisibleNote:"Biyografin, nereli olduğun ve nerede yaşadığın herkese açık profilinde görünür — diğer gezginler bunları görür.",
     fromPh:"Nerelisiniz (şehir)",
     livesPh:"Şu an nerede yaşıyorsunuz (şehir)",
     livesInPrefix:"Yaşadığı yer",
@@ -9301,6 +9588,10 @@ const S={
     starredToast:'★ Yıldızlı',
     unstarredToast:'Yıldızlılardan kaldırıldı',
     profileLinkCopied:'Profil bağlantısı kopyalandı!',
+    shareProfile:"Profili paylaş",
+    deleteAccount:"Hesabı sil",
+    deleteAccountConfirm:"Hesabınız silinsin mi? Bu, gezilerinizi ve profilinizi bu cihazdan kaldırır ve oturumunuzu kapatır.",
+    accountDeleted:"Hesap silindi",
     validUsername:'Lütfen geçerli bir kullanıcı adı seçin.',
     usernameTaken:'Bu kullanıcı adı zaten alınmış.',
     profilePublic:'Profil artık herkese açık',
@@ -9310,6 +9601,9 @@ const S={
     endDateBefore:'Bitiş tarihi başlangıçtan önce olamaz',
     placeAddedToast:'eklendi',
     noTripSelected:'Seçili gezi yok',
+    addPhotoUrlPrompt:"Bir görsel URL’si yapıştırın:",
+    invalidImageUrl:"Lütfen geçerli bir görsel bağlantısı yapıştırın",
+    photoAddedToast:"Fotoğraf eklendi",
     addedToPlan:'Plana eklendi',
     fillDescAmount:'Lütfen açıklama ve tutarı girin',
     expenseAdded:'Harcama eklendi',
@@ -9674,6 +9968,14 @@ const S={
     sendBtn:'Gönder',
     messagesTitle:'Mesajlar',
     noMessagesYet:'Henüz mesaj yok',
+    newMessage:"Yeni",
+    newMessageTitle:"Yeni mesaj",
+    searchTravellersPh:"Gezginleri ada veya @kullanıcıya göre ara…",
+    groupNamePh:"Grup adı…",
+    addToGroupBtn:"Sohbete ekle",
+    createGroupBtn:"Grup oluştur",
+    addPeopleTitle:"Kişi ekle",
+    membersWord:"üye",
     justNow:'şimdi',
     autoReply1:'Harika görünüyor! 😍',
     autoReply2:'Paylaştığın için teşekkürler — listeme ekliyorum!',
@@ -9795,6 +10097,7 @@ const S={
     mapDownloaded:"Immagine della mappa salvata",
     fromLabel:"Di",
     livesLabel:"Vive a",
+    profileVisibleNote:"La tua bio, da dove vieni e dove vivi appaiono sul tuo profilo pubblico: gli altri viaggiatori le vedranno.",
     fromPh:"Di dove sei (città)",
     livesPh:"Dove vivi ora (città)",
     livesInPrefix:"Vive a",
@@ -10101,6 +10404,10 @@ const S={
     starredToast:'★ Preferito',
     unstarredToast:'Rimosso dai preferiti',
     profileLinkCopied:'Link del profilo copiato!',
+    shareProfile:"Condividi profilo",
+    deleteAccount:"Elimina account",
+    deleteAccountConfirm:"Eliminare il tuo account? Rimuove i tuoi viaggi e il profilo da questo dispositivo e ti disconnette.",
+    accountDeleted:"Account eliminato",
     validUsername:'Scegli un nome utente valido.',
     usernameTaken:'Questo nome utente è già in uso.',
     profilePublic:'Il profilo è ora pubblico',
@@ -10110,6 +10417,9 @@ const S={
     endDateBefore:'La data di fine non può precedere l\'inizio',
     placeAddedToast:'aggiunto',
     noTripSelected:'Nessun viaggio selezionato',
+    addPhotoUrlPrompt:"Incolla l’URL di un’immagine:",
+    invalidImageUrl:"Incolla un link immagine valido",
+    photoAddedToast:"Foto aggiunta",
     addedToPlan:'Aggiunto al piano',
     fillDescAmount:'Inserisci descrizione e importo',
     expenseAdded:'Spesa aggiunta',
@@ -10474,6 +10784,14 @@ const S={
     sendBtn:'Invia',
     messagesTitle:'Messaggi',
     noMessagesYet:'Ancora nessun messaggio',
+    newMessage:"Nuovo",
+    newMessageTitle:"Nuovo messaggio",
+    searchTravellersPh:"Cerca viaggiatori per nome o @handle…",
+    groupNamePh:"Nome del gruppo…",
+    addToGroupBtn:"Aggiungi alla chat",
+    createGroupBtn:"Crea gruppo",
+    addPeopleTitle:"Aggiungi persone",
+    membersWord:"membri",
     justNow:'ora',
     autoReply1:'Sembra fantastico! 😍',
     autoReply2:'Grazie per la condivisione — lo aggiungo alla mia lista!',
@@ -10595,6 +10913,7 @@ const S={
     mapDownloaded:"地图图片已保存",
     fromLabel:"来自",
     livesLabel:"现居",
+    profileVisibleNote:"你的简介、来自哪里以及现居地会显示在你的公开资料中——其他旅行者都能看到。",
     fromPh:"你来自哪里（城市）",
     livesPh:"你现在住在哪里（城市）",
     livesInPrefix:"现居",
@@ -10901,6 +11220,10 @@ const S={
     starredToast:'★ 已加星标',
     unstarredToast:'已从星标移除',
     profileLinkCopied:'个人主页链接已复制！',
+    shareProfile:"分享主页",
+    deleteAccount:"删除账号",
+    deleteAccountConfirm:"删除你的账号？这将从此设备移除你的行程和资料并退出登录。",
+    accountDeleted:"账号已删除",
     validUsername:'请选择有效的用户名。',
     usernameTaken:'该用户名已被使用。',
     profilePublic:'主页现已公开',
@@ -10910,6 +11233,9 @@ const S={
     endDateBefore:'结束日期不能早于开始日期',
     placeAddedToast:'已添加',
     noTripSelected:'未选择行程',
+    addPhotoUrlPrompt:"粘贴图片链接：",
+    invalidImageUrl:"请粘贴有效的图片链接",
+    photoAddedToast:"照片已添加",
     addedToPlan:'已添加到计划',
     fillDescAmount:'请填写描述和金额',
     expenseAdded:'已添加支出',
@@ -11274,6 +11600,14 @@ const S={
     sendBtn:'发送',
     messagesTitle:'消息',
     noMessagesYet:'还没有消息',
+    newMessage:"新建",
+    newMessageTitle:"新消息",
+    searchTravellersPh:"按姓名或@用户名搜索旅行者…",
+    groupNamePh:"群组名称…",
+    addToGroupBtn:"加入聊天",
+    createGroupBtn:"创建群组",
+    addPeopleTitle:"添加成员",
+    membersWord:"成员",
     justNow:'刚刚',
     autoReply1:'听起来太棒了！😍',
     autoReply2:'谢谢分享——加入我的清单了！',
@@ -11395,6 +11729,7 @@ const S={
     mapDownloaded:"Kartenbild gespeichert",
     fromLabel:"Aus",
     livesLabel:"Wohnt in",
+    profileVisibleNote:"Deine Bio, deine Herkunft und dein Wohnort erscheinen in deinem öffentlichen Profil — andere Reisende sehen sie.",
     fromPh:"Woher du kommst (Stadt)",
     livesPh:"Wo du jetzt lebst (Stadt)",
     livesInPrefix:"Wohnt in",
@@ -11701,6 +12036,10 @@ const S={
     starredToast:'★ Markiert',
     unstarredToast:'Aus Favoriten entfernt',
     profileLinkCopied:'Profil-Link kopiert!',
+    shareProfile:"Profil teilen",
+    deleteAccount:"Konto löschen",
+    deleteAccountConfirm:"Konto löschen? Das entfernt deine Reisen und dein Profil von diesem Gerät und meldet dich ab.",
+    accountDeleted:"Konto gelöscht",
     validUsername:'Bitte wähle einen gültigen Benutzernamen.',
     usernameTaken:'Dieser Benutzername ist bereits vergeben.',
     profilePublic:'Profil ist jetzt öffentlich',
@@ -11710,6 +12049,9 @@ const S={
     endDateBefore:'Enddatum darf nicht vor dem Startdatum liegen',
     placeAddedToast:'hinzugefügt',
     noTripSelected:'Keine Reise ausgewählt',
+    addPhotoUrlPrompt:"Bild-URL einfügen:",
+    invalidImageUrl:"Bitte einen gültigen Bildlink einfügen",
+    photoAddedToast:"Foto hinzugefügt",
     addedToPlan:'Zum Plan hinzugefügt',
     fillDescAmount:'Bitte Beschreibung und Betrag ausfüllen',
     expenseAdded:'Ausgabe hinzugefügt',
@@ -12074,6 +12416,14 @@ const S={
     sendBtn:'Senden',
     messagesTitle:'Nachrichten',
     noMessagesYet:'Noch keine Nachrichten',
+    newMessage:"Neu",
+    newMessageTitle:"Neue Nachricht",
+    searchTravellersPh:"Reisende nach Name oder @Handle suchen…",
+    groupNamePh:"Gruppenname…",
+    addToGroupBtn:"Zum Chat hinzufügen",
+    createGroupBtn:"Gruppe erstellen",
+    addPeopleTitle:"Personen hinzufügen",
+    membersWord:"Mitglieder",
     justNow:'jetzt',
     autoReply1:'Das klingt fantastisch! 😍',
     autoReply2:'Danke fürs Teilen – ich setze es auf meine Liste!',
@@ -12195,6 +12545,7 @@ const S={
     mapDownloaded:"Imagem do mapa guardada",
     fromLabel:"De",
     livesLabel:"Mora em",
+    profileVisibleNote:"Sua bio, de onde você é e onde mora aparecem no seu perfil público — outros viajantes verão.",
     fromPh:"De onde você é (cidade)",
     livesPh:"Onde você mora agora (cidade)",
     livesInPrefix:"Mora em",
@@ -12501,6 +12852,10 @@ const S={
     starredToast:'★ Favoritado',
     unstarredToast:'Removido dos favoritos',
     profileLinkCopied:'Link do perfil copiado!',
+    shareProfile:"Compartilhar perfil",
+    deleteAccount:"Excluir conta",
+    deleteAccountConfirm:"Excluir sua conta? Isso remove suas viagens e perfil deste dispositivo e encerra sua sessão.",
+    accountDeleted:"Conta excluída",
     validUsername:'Escolha um nome de usuário válido.',
     usernameTaken:'Esse nome de usuário já está em uso.',
     profilePublic:'Perfil agora é público',
@@ -12510,6 +12865,9 @@ const S={
     endDateBefore:'A data final não pode ser anterior à inicial',
     placeAddedToast:'adicionado',
     noTripSelected:'Nenhuma viagem selecionada',
+    addPhotoUrlPrompt:"Cole a URL de uma imagem:",
+    invalidImageUrl:"Cole um link de imagem válido",
+    photoAddedToast:"Foto adicionada",
     addedToPlan:'Adicionado ao plano',
     fillDescAmount:'Preencha a descrição e o valor',
     expenseAdded:'Despesa adicionada',
@@ -12874,6 +13232,14 @@ const S={
     sendBtn:'Enviar',
     messagesTitle:'Mensagens',
     noMessagesYet:'Ainda sem mensagens',
+    newMessage:"Nova",
+    newMessageTitle:"Nova mensagem",
+    searchTravellersPh:"Busque viajantes por nome ou @usuário…",
+    groupNamePh:"Nome do grupo…",
+    addToGroupBtn:"Adicionar ao chat",
+    createGroupBtn:"Criar grupo",
+    addPeopleTitle:"Adicionar pessoas",
+    membersWord:"membros",
     justNow:'agora',
     autoReply1:'Isso parece incrível! 😍',
     autoReply2:'Obrigado por compartilhar — vou colocar na minha lista!',
@@ -12995,6 +13361,7 @@ const S={
     mapDownloaded:"マップ画像を保存しました",
     fromLabel:"出身",
     livesLabel:"居住地",
+    profileVisibleNote:"自己紹介・出身地・現在地は公開プロフィールに表示され、他の旅行者に見られます。",
     fromPh:"出身地（都市）",
     livesPh:"現在の居住地（都市）",
     livesInPrefix:"居住",
@@ -13301,6 +13668,10 @@ const S={
     starredToast:'★ お気に入り',
     unstarredToast:'お気に入りから削除',
     profileLinkCopied:'プロフィールのリンクをコピーしました！',
+    shareProfile:"プロフィールを共有",
+    deleteAccount:"アカウントを削除",
+    deleteAccountConfirm:"アカウントを削除しますか？この端末から旅行とプロフィールが削除され、ログアウトします。",
+    accountDeleted:"アカウントを削除しました",
     validUsername:'有効なユーザー名を選んでください。',
     usernameTaken:'そのユーザー名はすでに使われています。',
     profilePublic:'プロフィールを公開しました',
@@ -13310,6 +13681,9 @@ const S={
     endDateBefore:'終了日は開始日より前にできません',
     placeAddedToast:'を追加しました',
     noTripSelected:'旅行が選択されていません',
+    addPhotoUrlPrompt:"画像のURLを貼り付け：",
+    invalidImageUrl:"有効な画像リンクを貼り付けてください",
+    photoAddedToast:"写真を追加しました",
     addedToPlan:'プランに追加しました',
     fillDescAmount:'説明と金額を入力してください',
     expenseAdded:'支出を追加しました',
@@ -13674,6 +14048,14 @@ const S={
     sendBtn:'送信',
     messagesTitle:'メッセージ',
     noMessagesYet:'まだメッセージがありません',
+    newMessage:"新規",
+    newMessageTitle:"新しいメッセージ",
+    searchTravellersPh:"名前または@ハンドルで旅行者を検索…",
+    groupNamePh:"グループ名…",
+    addToGroupBtn:"チャットに追加",
+    createGroupBtn:"グループを作成",
+    addPeopleTitle:"メンバーを追加",
+    membersWord:"人",
     justNow:'たった今',
     autoReply1:'それは最高だね！😍',
     autoReply2:'シェアしてくれてありがとう — リストに追加するよ！',
@@ -13692,8 +14074,9 @@ function t(key){var s=S[currentLang]||S.en;return s[key]||S.en[key]||key;}
 function tt(key){var s=S[currentLang]||S.en;return s[key]||S.en[key]||key;}
 
 function buildLangDropdown(){
-  var dd=document.getElementById('lang-dropdown');if(!dd)return;
-  dd.innerHTML=Object.entries(LANGS_META).map(function(pair){
+  // Two language selectors share ids (landing top-nav + in-app profile) — fill EVERY one.
+  var dds=document.querySelectorAll('.lang-dropdown'); if(!dds.length)return;
+  var html=Object.entries(LANGS_META).map(function(pair){
     var code=pair[0];var meta=pair[1];
     return'<div class="lang-option'+(currentLang===code?' active':'')+'" onclick="setLang(\''+code+'\')">'
       +'<span class="lang-option-flag">'+meta.flag+'</span>'
@@ -13701,20 +14084,26 @@ function buildLangDropdown(){
       +'<span class="lang-option-code">'+meta.code+'</span>'
       +'</div>';
   }).join('');
+  dds.forEach(function(dd){ dd.innerHTML=html; });
 }
 
 function toggleLangDropdown(e){
   if(e)e.stopPropagation();
-  var sel=document.getElementById('lang-selector');
-  if(sel)sel.classList.toggle('open');
+  // Toggle the selector that was actually clicked (not just the first in the DOM).
+  var sel=(e&&e.target&&e.target.closest)?e.target.closest('.lang-selector'):null;
+  if(!sel)sel=document.querySelector('.lang-selector');
+  if(!sel)return;
+  var wasOpen=sel.classList.contains('open');
+  document.querySelectorAll('.lang-selector.open').forEach(function(s){s.classList.remove('open');});
+  if(!wasOpen)sel.classList.add('open');
 }
 
 function applyLang(){
   var meta=LANGS_META[currentLang]||LANGS_META.en;
   document.documentElement.setAttribute('dir',meta.dir);
   document.documentElement.setAttribute('lang',currentLang);
-  var fd=document.getElementById('lang-flag-disp');if(fd)fd.textContent=meta.flag;
-  var cd=document.getElementById('lang-code-disp');if(cd)cd.textContent=meta.code;
+  document.querySelectorAll('[id="lang-flag-disp"]').forEach(function(fd){fd.textContent=meta.flag;});
+  document.querySelectorAll('[id="lang-code-disp"]').forEach(function(cd){cd.textContent=meta.code;});
   document.querySelectorAll('.lang-native-select').forEach(function(s){s.value=currentLang;});
   document.querySelectorAll('[data-i18n]').forEach(function(el){
     var key=el.getAttribute('data-i18n');
@@ -15003,15 +15392,10 @@ function doPlaceSearch(q){
   var dest=currentTrip?currentTrip.dest:'';
   var country=currentTrip&&currentTrip.country?currentTrip.country:'';
   var searchQ=q+(country?' '+country:(dest?' '+dest:''));
-  // Try Google if available AND its autocomplete hasn't already proven broken
-  // (some keys lack the legacy Places API and the call silently hangs);
-  // otherwise use Nominatim (reliable, key-free).
-  if(window._googleMapsReady&&!window._googlePlacesBroken&&window.google&&google.maps&&google.maps.places){
-    try{ doGooglePlaceSearch(searchQ,res); }
-    catch(e){ window._googlePlacesBroken=true; doNominatimSearch(searchQ,res); }
-  }else{
-    doNominatimSearch(searchQ,res);
-  }
+  // PRIMARY: key-free Nominatim (OpenStreetMap). It returns results fast and never depends
+  // on the Google Places key (which was slow / returning nothing). Reliable results matter
+  // more than Google's photo suggestions, so we always use Nominatim for the autocomplete.
+  doNominatimSearch(searchQ,res);
 }
 
 function doGooglePlaceSearch(q,res){
@@ -16184,7 +16568,7 @@ function conciergeThings(city){
 var _conciergeCity=null;
 // Curated featured set shown on the landing grid (Euromonitor 2025 visitor ranking order).
 // Search still covers the FULL CONCIERGE_CITIES list — no city/guide is removed.
-var FEATURED_CITIES=["Bangkok","Hong Kong","London","Istanbul","Dubai","Paris","Kuala Lumpur","Tokyo","Singapore","New York","Rome","Madrid","Milan","Barcelona","Amsterdam","Seoul","Osaka","Vienna","Venice","Prague","Los Angeles","Miami","Berlin","Lisbon","Athens","Cairo","Mumbai","Delhi","Shanghai","Beijing","Marrakech","Cape Town","Mexico City","Toronto","San Francisco","Chicago","Sydney","Melbourne","Kyoto","Abu Dhabi","Doha","Rio de Janeiro","Buenos Aires","Bali","Phuket","Hanoi","Ho Chi Minh City","Florence","Budapest","Dublin","Tel Aviv"];
+var FEATURED_CITIES=["Bangkok","Hong Kong","London","Istanbul","Dubai","Paris","Kuala Lumpur","Tokyo","Singapore","New York","Rome","Madrid","Milan","Barcelona","Amsterdam","Seoul","Osaka","Vienna","Venice","Prague","Los Angeles","Miami","Berlin","Lisbon","Athens","Cairo","Mumbai","Delhi","Shanghai","Beijing","Marrakech","Cape Town","Mexico City","Toronto","San Francisco","Chicago","Sydney","Melbourne","Kyoto","Abu Dhabi","Doha","Rio de Janeiro","Buenos Aires","Bali","Phuket","Hanoi","Ho Chi Minh City","Florence","Budapest","Dublin"];
 function renderConcierge(q){
   var grid=document.getElementById('concierge-grid');
   if(!grid)return;
