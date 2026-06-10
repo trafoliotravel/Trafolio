@@ -51,7 +51,7 @@ html, body {
 .screen { display: none; min-height: 100vh; background: var(--paper); animation: fadeUp .35s cubic-bezier(.22,.68,0,1) both; }
 .screen.active { display: block; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-.topnav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(250,250,248,.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,.04); }
+.topnav { position: fixed; top: 0; left: 0; right: 0; z-index: 50; box-sizing: border-box; height: calc(56px + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px); padding-left: calc(20px + env(safe-area-inset-left, 0px)); padding-right: calc(20px + env(safe-area-inset-right, 0px)); display: flex; align-items: center; justify-content: space-between; background: rgba(250,250,248,.92); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid rgba(0,0,0,.04); }
 .nav-logo { font-family: 'Cormorant Garamond', serif; font-weight: 500; font-size: 25px; letter-spacing: -0.02em; color: var(--ink); cursor: pointer; }
 .nav-logo em { font-style: italic; color: var(--ember); }
 .nav-right { display: flex; align-items: center; gap: 12px; }
@@ -166,9 +166,13 @@ a.place-name-link:hover { text-decoration: underline; }
 .memory-book-place-name { font-family: 'Cormorant Garamond', serif; font-size: 15px; font-weight: 500; }
 .memory-book-place-note { font-size: 11px; color: var(--ink-3); font-style: italic; }
 .page-pad { padding: 0 20px; }
-.pt-nav { padding-top: 56px; }
+.pt-nav { padding-top: calc(56px + env(safe-area-inset-top, 0px)); }
 .pb-nav { padding-bottom: 64px; }
 .pb-safe { padding-bottom: calc(env(safe-area-inset-bottom,0px) + 72px); }
+/* iOS native edges: never let content hide under the status bar (top), home indicator
+   (bottom) or the rounded/notch sides. Also stop any stray horizontal overflow (right cut-off). */
+html, body { max-width: 100%; overflow-x: hidden; }
+.screen { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
 .auth-inp{width:100%;padding:13px 15px;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:white;outline:none;box-sizing:border-box;-webkit-appearance:none;transition:border-color .15s}
 .auth-inp:focus{border-color:var(--ember)}.auth-inp::placeholder{color:rgba(255,255,255,.28)}
 .ppill{display:inline-flex;align-items:center;gap:6px;padding:8px 13px;border-radius:40px;border:1.5px solid var(--paper-3);background:var(--white);cursor:pointer;font-size:12.5px;color:var(--ink-3);transition:all .15s;margin:0 5px 6px 0;-webkit-tap-highlight-color:transparent}
@@ -573,7 +577,7 @@ body.show-lbar .lbar{display:none}
       <div style="font-size:11px;color:var(--ink-4);margin-bottom:6px" data-i18n="suggestedFromGoogle">Suggested from Google — tap to use</div>
       <div id="pl-photo-suggest-row" style="display:flex;gap:8px"></div>
     </div>
-    <label style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--paper-3);border-radius:12px;cursor:pointer;color:var(--ink-3);font-size:13px"><span style="font-size:17px">📷</span> <span id="pl-photo-label">Add a photo</span><input type="file" accept="image/*" onchange="addPlacePhoto(this)" style="display:none"></label>
+    <label onclick="return placePhotoTap(event)" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border:1.5px dashed var(--paper-3);border-radius:12px;cursor:pointer;color:var(--ink-3);font-size:13px"><span style="font-size:17px">📷</span> <span id="pl-photo-label">Add a photo</span><input type="file" accept="image/*" onchange="addPlacePhoto(this)" style="display:none"></label>
   </div>
   <div class="add-form-field">
     <label class="add-form-label" data-i18n="rating">Rating</label>
@@ -885,6 +889,7 @@ body.show-lbar .lbar{display:none}
     <a id="invite-wa" target="_blank" rel="noopener" class="btn btn-ghost" style="flex:1;min-width:120px;text-decoration:none;text-align:center">💬 <span data-i18n="inviteWhatsApp">WhatsApp</span></a>
     <a id="invite-email" class="btn btn-ghost" style="flex:1;min-width:120px;text-decoration:none;text-align:center">✉️ <span data-i18n="inviteEmail">Email</span></a>
     <button id="invite-share" class="btn btn-ghost" style="flex:1;min-width:120px;display:none" onclick="inviteNativeShare()">🔗 <span data-i18n="inviteMore">More…</span></button>
+    <button id="invite-contacts" class="btn btn-ghost" style="flex:1;min-width:120px;display:none" onclick="inviteFromContacts()">👥 <span data-i18n="inviteFromContacts">From contacts</span></button>
   </div>
 </div>
 
@@ -1428,12 +1433,16 @@ body.show-lbar .lbar{display:none}
       <div class="trip-hero-overlay"></div>
       <div class="trip-hero-actions">
         <button class="btn-icon" onclick="showScreen('s-dash');setActiveNav('bnav-profile')">&#8592;</button>
-        <div style="display:flex;gap:8px">
-          <button class="btn-icon" onclick="openEditTrip()" title="Edit trip" data-i18n-title="editTrip">&#9998;</button>
-          <label class="btn-icon" title="Change cover photo" style="cursor:pointer;display:inline-flex;align-items:center;justify-content:center">&#128247;<input type="file" accept="image/*" style="display:none" onchange="editTripCover(this)"></label>
-          <button class="btn-icon" onclick="openShareSheet()" title="Share">&#8599;</button>
-          <button class="btn-icon" onclick="toggleStar()" id="star-btn" title="Star">&#9734;</button>
-          <button class="btn-icon" onclick="confirmDeleteTrip()" title="Delete trip" style="color:#fff">&#128465;&#65039;</button>
+        <div style="position:relative">
+          <input type="file" id="trip-cover-input" accept="image/*" style="display:none" onchange="editTripCover(this)">
+          <button class="btn-icon" onclick="toggleTripMenu(event)" title="Options" aria-label="Trip options">&#8943;</button>
+          <div id="trip-menu" style="display:none;position:absolute;top:46px;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;box-shadow:0 10px 28px rgba(0,28,48,.18);overflow:hidden;width:210px;z-index:42;text-align:left">
+            <div onclick="closeTripMenu();openEditTrip()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editTrip">Edit trip</span></div>
+            <div onclick="closeTripMenu();document.getElementById('trip-cover-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#128247; <span data-i18n="changeCover">Change cover</span></div>
+            <div onclick="closeTripMenu();openShareSheet()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#8599; <span data-i18n="shareLabel">Share</span></div>
+            <div onclick="closeTripMenu();toggleStar()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)"><span id="star-btn">&#9734;</span> <span data-i18n="starLabel">Star</span></div>
+            <div onclick="closeTripMenu();confirmDeleteTrip()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:#E8334A">&#128465;&#65039; <span data-i18n="deleteTrip">Delete trip</span></div>
+          </div>
         </div>
       </div>
       <div class="trip-hero-content">
@@ -4400,8 +4409,8 @@ function setTripType(tt){
     if(inp)inp.placeholder=t('destExamplePh');
   }
 }
-function openAddTrip(){
-  if(!canAddTrip()){ openPaywall(t('paywallTripLimit')); return; }
+// Reset every Add-Trip field to its empty/default state (used on open AND by the ⋯ "Clear form").
+function resetAddTripForm(){
   setTimeout(function(){if(typeof renderRangeCal==="function"){resetRangeCal();}},50);
   ['at-loc-search','at-cover-url','at-from','at-to'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
   ['at-dest','at-country','at-flag','at-lat','at-lng'].forEach(function(id){var el=document.getElementById(id);if(el)el.value='';});
@@ -4412,7 +4421,21 @@ function openAddTrip(){
   var adultsInp=document.getElementById('at-adults');var kidsInp=document.getElementById('at-kids');
   if(adultsInp)adultsInp.value=1;if(kidsInp)kidsInp.value=0;
   document.querySelectorAll('#at-with-pills .fpill').forEach(function(p){p.classList.toggle('active',p.dataset.w==='solo');});
+  var sh=document.getElementById('sheet-add-trip'); if(sh)sh.scrollTop=0;
+}
+// Trip cover ⋯ menu (Edit / Change cover / Share / Star / Delete) — declutters the cover photo.
+function toggleTripMenu(ev){ if(ev){ev.stopPropagation();} var m=document.getElementById('trip-menu'); if(!m)return; var open=m.style.display!=='none'; m.style.display=open?'none':'block'; if(!open){ setTimeout(function(){ document.addEventListener('click',_closeTripMenuOnce); },0); } }
+function _closeTripMenuOnce(){ closeTripMenu(); document.removeEventListener('click',_closeTripMenuOnce); }
+function closeTripMenu(){ var m=document.getElementById('trip-menu'); if(m)m.style.display='none'; }
+function openAddTrip(){
+  if(!canAddTrip()){ openPaywall(t('paywallTripLimit')); return; }
+  resetAddTripForm();
   openModal('sheet-add-trip');
+  // Always open scrolled to the TOP (it was sometimes showing scrolled down).
+  setTimeout(function(){
+    var sh=document.getElementById('sheet-add-trip'); if(sh)sh.scrollTop=0;
+    sh&&sh.querySelectorAll('*').forEach&&[].forEach.call(sh.querySelectorAll('[style*="overflow"]'),function(el){el.scrollTop=0;});
+  },60);
 }
 function createTrip(){
   if(!canAddTrip()){ closeModal(); openPaywall(t('paywallTripLimit')); return; }
@@ -4460,20 +4483,38 @@ function selectCat(el){selectedCat=el.dataset.cat;document.querySelectorAll('.ca
 function setRating(el){selectedRating=parseInt(el.dataset.r);document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=selectedRating);});}
 
 var _placePhoto=null;
+// ── Native (Capacitor) bridges — only active inside the iOS/Android app. On the web
+//    build _isNative() is false, so every existing file-input / share path runs unchanged.
+function _isNative(){ return !!(window.Capacitor && Capacitor.isNativePlatform && Capacitor.isNativePlatform()); }
+function nativeGetPhoto(){
+  var Cam = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Camera;
+  if(!_isNative() || !Cam) return Promise.resolve(null);
+  return Cam.getPhoto({quality:85, allowEditing:false, resultType:'dataUrl', source:'PROMPT', saveToGallery:false})
+    .then(function(p){ return p && p.dataUrl ? p.dataUrl : null; })
+    .catch(function(){ return null; });   // cancelled / denied → no-op
+}
+// Center-crop a dataURL to a square + show it in the place-photo preview (shared by web + native).
+function applyPlacePhotoDataUrl(dataUrl){
+  squareCropImage(dataUrl,640,function(sq){
+    _placePhoto=sq;
+    var prev=document.getElementById('pl-photo-preview');
+    var img=document.getElementById('pl-photo-img');
+    if(img)img.src=_placePhoto;
+    if(prev)prev.style.display='block';
+    var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent='Change photo';
+  });
+}
+// Tapping "Add a photo": web → normal file picker; native → camera/library chooser.
+function placePhotoTap(ev){
+  if(!_isNative()) return true;
+  if(ev&&ev.preventDefault)ev.preventDefault();
+  nativeGetPhoto().then(function(durl){ if(durl) applyPlacePhotoDataUrl(durl); });
+  return false;
+}
 function addPlacePhoto(input){
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
-  reader.onload=function(e){
-    // Center-crop to a square so the photo is never stretched in the place card / guide.
-    squareCropImage(e.target.result,640,function(sq){
-      _placePhoto=sq;
-      var prev=document.getElementById('pl-photo-preview');
-      var img=document.getElementById('pl-photo-img');
-      if(img)img.src=_placePhoto;
-      if(prev)prev.style.display='block';
-      var lbl=document.getElementById('pl-photo-label');if(lbl)lbl.textContent='Change photo';
-    });
-  };
+  reader.onload=function(e){ applyPlacePhotoDataUrl(e.target.result); };
   reader.readAsDataURL(file);
 }
 function removePlacePhoto(){
@@ -5940,12 +5981,18 @@ const S={
     tabBlogs:"Blogs",
     feedFollowing:"Following",
     noBlogsYet:"No blogs yet",
+    saveLabel:"Save",
+    savedLabel:"Saved",
+    blogSaved:"Blog saved",
+    blogUnsaved:"Removed from saved",
     readBlog:"Read blog",
     myTravelMap:"My travel map",
     shareMap:"Share map",
     citiesWord:"cities",
     tripTypeCity:"One city",
     tripTypeCountry:"Multi-city",
+    clearFormBtn:"Clear form",
+    cancelBtn:"Cancel",
     searchCountry:"Search country",
     searchCountryPh:"e.g. Italy, Japan, Spain…",
     addCity:"Add a city",
@@ -6301,6 +6348,9 @@ const S={
     peopleFollowYou:'People who follow you',
     peopleYouFollow:'People you follow',
     changeCover:'Change cover',
+    shareLabel:"Share",
+    starLabel:"Star",
+    deleteTrip:"Delete trip",
     changePhoto:'Change photo',
     profilePicture:'Profile picture',
     navFeed:'Feed',
@@ -6754,12 +6804,18 @@ const S={
     tabBlogs:"المدونات",
     feedFollowing:"أتابع",
     noBlogsYet:"لا مدونات بعد",
+    saveLabel:"حفظ",
+    savedLabel:"محفوظ",
+    blogSaved:"تم حفظ المدوّنة",
+    blogUnsaved:"أُزيل من المحفوظات",
     readBlog:"اقرأ المدونة",
     myTravelMap:"خريطة رحلاتي",
     shareMap:"مشاركة الخريطة",
     citiesWord:"مدن",
     tripTypeCity:"مدينة واحدة",
     tripTypeCountry:"عدة مدن",
+    clearFormBtn:"مسح النموذج",
+    cancelBtn:"إلغاء",
     searchCountry:"ابحث عن دولة",
     searchCountryPh:"مثل إيطاليا، اليابان، إسبانيا…",
     addCity:"إضافة مدينة",
@@ -7117,6 +7173,9 @@ const S={
     peopleFollowYou:'الأشخاص الذين يتابعونك',
     peopleYouFollow:'الأشخاص الذين تتابعهم',
     changeCover:'تغيير الغلاف',
+    shareLabel:"مشاركة",
+    starLabel:"تمييز",
+    deleteTrip:"حذف الرحلة",
     changePhoto:'تغيير الصورة',
     profilePicture:'صورة الملف الشخصي',
     navFeed:'الموجز',
@@ -7570,12 +7629,18 @@ const S={
     tabBlogs:"Blogs",
     feedFollowing:"Abonnements",
     noBlogsYet:"Pas encore de blogs",
+    saveLabel:"Enregistrer",
+    savedLabel:"Enregistré",
+    blogSaved:"Blog enregistré",
+    blogUnsaved:"Retiré des enregistrés",
     readBlog:"Lire le blog",
     myTravelMap:"Ma carte de voyage",
     shareMap:"Partager la carte",
     citiesWord:"villes",
     tripTypeCity:"Une ville",
     tripTypeCountry:"Plusieurs villes",
+    clearFormBtn:"Effacer",
+    cancelBtn:"Annuler",
     searchCountry:"Rechercher un pays",
     searchCountryPh:"ex. Italie, Japon, Espagne…",
     addCity:"Ajouter une ville",
@@ -7933,6 +7998,9 @@ const S={
     peopleFollowYou:'Les personnes qui vous suivent',
     peopleYouFollow:'Les personnes que vous suivez',
     changeCover:'Changer la couverture',
+    shareLabel:"Partager",
+    starLabel:"Favori",
+    deleteTrip:"Supprimer le voyage",
     changePhoto:'Changer la photo',
     profilePicture:'Photo de profil',
     navFeed:'Fil',
@@ -8386,12 +8454,18 @@ const S={
     tabBlogs:"Blogs",
     feedFollowing:"Siguiendo",
     noBlogsYet:"Aún no hay blogs",
+    saveLabel:"Guardar",
+    savedLabel:"Guardado",
+    blogSaved:"Blog guardado",
+    blogUnsaved:"Eliminado de guardados",
     readBlog:"Leer blog",
     myTravelMap:"Mi mapa de viajes",
     shareMap:"Compartir mapa",
     citiesWord:"ciudades",
     tripTypeCity:"Una ciudad",
     tripTypeCountry:"Varias ciudades",
+    clearFormBtn:"Borrar",
+    cancelBtn:"Cancelar",
     searchCountry:"Buscar país",
     searchCountryPh:"p. ej. Italia, Japón, España…",
     addCity:"Añadir ciudad",
@@ -8749,6 +8823,9 @@ const S={
     peopleFollowYou:'Personas que te siguen',
     peopleYouFollow:'Personas que sigues',
     changeCover:'Cambiar portada',
+    shareLabel:"Compartir",
+    starLabel:"Destacar",
+    deleteTrip:"Eliminar viaje",
     changePhoto:'Cambiar foto',
     profilePicture:'Foto de perfil',
     navFeed:'Inicio',
@@ -9202,12 +9279,18 @@ const S={
     tabBlogs:"Bloglar",
     feedFollowing:"Takip",
     noBlogsYet:"Henüz blog yok",
+    saveLabel:"Kaydet",
+    savedLabel:"Kaydedildi",
+    blogSaved:"Blog kaydedildi",
+    blogUnsaved:"Kayıtlılardan kaldırıldı",
     readBlog:"Blogu oku",
     myTravelMap:"Seyahat haritam",
     shareMap:"Haritayı paylaş",
     citiesWord:"şehir",
     tripTypeCity:"Tek şehir",
     tripTypeCountry:"Çok şehir",
+    clearFormBtn:"Formu temizle",
+    cancelBtn:"İptal",
     searchCountry:"Ülke ara",
     searchCountryPh:"örn. İtalya, Japonya, İspanya…",
     addCity:"Şehir ekle",
@@ -9565,6 +9648,9 @@ const S={
     peopleFollowYou:'Seni takip edenler',
     peopleYouFollow:'Takip ettiklerin',
     changeCover:'Kapağı değiştir',
+    shareLabel:"Paylaş",
+    starLabel:"Yıldızla",
+    deleteTrip:"Geziyi sil",
     changePhoto:'Fotoğrafı değiştir',
     profilePicture:'Profil fotoğrafı',
     navFeed:'Akış',
@@ -10018,12 +10104,18 @@ const S={
     tabBlogs:"Blog",
     feedFollowing:"Seguiti",
     noBlogsYet:"Ancora nessun blog",
+    saveLabel:"Salva",
+    savedLabel:"Salvato",
+    blogSaved:"Blog salvato",
+    blogUnsaved:"Rimosso dai salvati",
     readBlog:"Leggi il blog",
     myTravelMap:"La mia mappa di viaggio",
     shareMap:"Condividi mappa",
     citiesWord:"città",
     tripTypeCity:"Una città",
     tripTypeCountry:"Più città",
+    clearFormBtn:"Svuota",
+    cancelBtn:"Annulla",
     searchCountry:"Cerca un paese",
     searchCountryPh:"es. Italia, Giappone, Spagna…",
     addCity:"Aggiungi città",
@@ -10381,6 +10473,9 @@ const S={
     peopleFollowYou:'Le persone che ti seguono',
     peopleYouFollow:'Le persone che segui',
     changeCover:'Cambia copertina',
+    shareLabel:"Condividi",
+    starLabel:"Preferito",
+    deleteTrip:"Elimina viaggio",
     changePhoto:'Cambia foto',
     profilePicture:'Foto del profilo',
     navFeed:'Feed',
@@ -10834,12 +10929,18 @@ const S={
     tabBlogs:"博客",
     feedFollowing:"关注",
     noBlogsYet:"暂无博客",
+    saveLabel:"收藏",
+    savedLabel:"已收藏",
+    blogSaved:"博客已收藏",
+    blogUnsaved:"已从收藏移除",
     readBlog:"阅读博客",
     myTravelMap:"我的旅行地图",
     shareMap:"分享地图",
     citiesWord:"城市",
     tripTypeCity:"单个城市",
     tripTypeCountry:"多个城市",
+    clearFormBtn:"清空",
+    cancelBtn:"取消",
     searchCountry:"搜索国家",
     searchCountryPh:"例如 意大利、日本、西班牙…",
     addCity:"添加城市",
@@ -11197,6 +11298,9 @@ const S={
     peopleFollowYou:'关注你的人',
     peopleYouFollow:'你关注的人',
     changeCover:'更换封面',
+    shareLabel:"分享",
+    starLabel:"收藏",
+    deleteTrip:"删除行程",
     changePhoto:'更换照片',
     profilePicture:'头像',
     navFeed:'动态',
@@ -11650,12 +11754,18 @@ const S={
     tabBlogs:"Blogs",
     feedFollowing:"Folge ich",
     noBlogsYet:"Noch keine Blogs",
+    saveLabel:"Speichern",
+    savedLabel:"Gespeichert",
+    blogSaved:"Blog gespeichert",
+    blogUnsaved:"Aus Gespeicherten entfernt",
     readBlog:"Blog lesen",
     myTravelMap:"Meine Reisekarte",
     shareMap:"Karte teilen",
     citiesWord:"Städte",
     tripTypeCity:"Eine Stadt",
     tripTypeCountry:"Mehrere Städte",
+    clearFormBtn:"Leeren",
+    cancelBtn:"Abbrechen",
     searchCountry:"Land suchen",
     searchCountryPh:"z. B. Italien, Japan, Spanien…",
     addCity:"Stadt hinzufügen",
@@ -12013,6 +12123,9 @@ const S={
     peopleFollowYou:'Leute, die dir folgen',
     peopleYouFollow:'Leute, denen du folgst',
     changeCover:'Titelbild ändern',
+    shareLabel:"Teilen",
+    starLabel:"Markieren",
+    deleteTrip:"Reise löschen",
     changePhoto:'Foto ändern',
     profilePicture:'Profilbild',
     navFeed:'Feed',
@@ -12466,12 +12579,18 @@ const S={
     tabBlogs:"Blogs",
     feedFollowing:"A seguir",
     noBlogsYet:"Ainda sem blogs",
+    saveLabel:"Salvar",
+    savedLabel:"Salvo",
+    blogSaved:"Blog salvo",
+    blogUnsaved:"Removido dos salvos",
     readBlog:"Ler blog",
     myTravelMap:"Meu mapa de viagens",
     shareMap:"Partilhar mapa",
     citiesWord:"cidades",
     tripTypeCity:"Uma cidade",
     tripTypeCountry:"Várias cidades",
+    clearFormBtn:"Limpar",
+    cancelBtn:"Cancelar",
     searchCountry:"Buscar país",
     searchCountryPh:"ex. Itália, Japão, Espanha…",
     addCity:"Adicionar cidade",
@@ -12829,6 +12948,9 @@ const S={
     peopleFollowYou:'Pessoas que seguem você',
     peopleYouFollow:'Pessoas que você segue',
     changeCover:'Mudar capa',
+    shareLabel:"Compartilhar",
+    starLabel:"Favoritar",
+    deleteTrip:"Excluir viagem",
     changePhoto:'Mudar foto',
     profilePicture:'Foto de perfil',
     navFeed:'Feed',
@@ -13282,12 +13404,18 @@ const S={
     tabBlogs:"ブログ",
     feedFollowing:"フォロー中",
     noBlogsYet:"まだブログがありません",
+    saveLabel:"保存",
+    savedLabel:"保存済み",
+    blogSaved:"ブログを保存しました",
+    blogUnsaved:"保存から削除しました",
     readBlog:"ブログを読む",
     myTravelMap:"私の旅マップ",
     shareMap:"マップを共有",
     citiesWord:"都市",
     tripTypeCity:"1都市",
     tripTypeCountry:"複数都市",
+    clearFormBtn:"クリア",
+    cancelBtn:"キャンセル",
     searchCountry:"国を検索",
     searchCountryPh:"例：イタリア、日本、スペイン…",
     addCity:"都市を追加",
@@ -13645,6 +13773,9 @@ const S={
     peopleFollowYou:'あなたをフォローしている人',
     peopleYouFollow:'あなたがフォローしている人',
     changeCover:'カバーを変更',
+    shareLabel:"共有",
+    starLabel:"スター",
+    deleteTrip:"旅行を削除",
     changePhoto:'写真を変更',
     profilePicture:'プロフィール画像',
     navFeed:'フィード',
@@ -14773,7 +14904,7 @@ function cityGradient(name){
 var WIKI_IMG_QUERY={'Zanzibar':'Stone Town Zanzibar','Muscat':'Muscat, Oman',
  'Cambodia':'Angkor Wat','Nepal':'Boudhanath stupa Kathmandu','Sri Lanka':'Sigiriya','Armenia':'Tatev Monastery',
  'Mauritius':'Le Morne Brabant Mauritius','Seychelles':'La Digue Anse Source d\'Argent','Costa Rica':'Arenal Volcano Costa Rica',
- 'Bahamas':'Exuma Bahamas beach','Fiji':'Mamanuca Islands Fiji','Tel Aviv':'Tel Aviv beach skyline'};
+ 'Bahamas':'Exuma Bahamas beach','Fiji':'Mamanuca Islands Fiji','Tel Aviv':'Tel Aviv beach skyline','Cape Town':'Table Mountain Cape Town'};
 function imgFallback(img,name,extra){
   if(img.dataset.fbStage==='done')return;
   if(img.dataset.fbStage!=='wiki'){
@@ -15202,6 +15333,22 @@ function ownTripBlogs(){
 }
 function allBlogs(){ return ownTripBlogs().concat(cityBlogs); }
 function getBlogById(id){ return allBlogs().find(function(b){return String(b.id)===String(id);})||null; }
+// ── Blog likes + saves (self-contained, persisted in their own localStorage key) ──
+var _blogMeta={};
+try{ _blogMeta=JSON.parse(localStorage.getItem('trafolio_blog_meta')||'{}')||{}; }catch(e){ _blogMeta={}; }
+function _saveBlogMeta(){ try{ localStorage.setItem('trafolio_blog_meta', JSON.stringify(_blogMeta)); }catch(e){} }
+function _blogSeedLikes(id){ var s=String(id),h=0; for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return h%40+6; } // stable 6..45
+function blogState(id){ var m=_blogMeta[id]||{}; return { liked:!!m.liked, likes:(m.likes!=null?m.likes:_blogSeedLikes(id)), saved:!!m.saved }; }
+function toggleBlogLike(id,ev){ if(ev&&ev.stopPropagation)ev.stopPropagation(); var st=blogState(id); var liked=!st.liked; _blogMeta[id]=Object.assign({},_blogMeta[id],{liked:liked,likes:st.likes+(liked?1:-1)}); _saveBlogMeta(); _refreshBlogCard(id); }
+function toggleSaveBlog(id,ev){ if(ev&&ev.stopPropagation)ev.stopPropagation(); var st=blogState(id); var saved=!st.saved; _blogMeta[id]=Object.assign({},_blogMeta[id],{saved:saved}); _saveBlogMeta(); _refreshBlogCard(id); if(typeof toast==='function')toast(saved?('🔖 '+t('blogSaved')):t('blogUnsaved')); }
+function _refreshBlogCard(id){
+  var st=blogState(id);
+  document.querySelectorAll('.blog-card').forEach(function(card){
+    if(card.getAttribute('data-blogid')!==String(id))return;
+    var lk=card.querySelector('.blog-like'); if(lk){ lk.style.color=st.liked?'#E8334A':'var(--ink-4)'; var li=lk.querySelector('.bl-icon'),lc=lk.querySelector('.bl-count'); if(li)li.textContent=st.liked?'♥':'♡'; if(lc)lc.textContent=st.likes; }
+    var sv=card.querySelector('.blog-save'); if(sv){ sv.style.color=st.saved?'var(--ember)':'var(--ink-4)'; var sl=sv.querySelector('.bs-label'); if(sl)sl.textContent=st.saved?t('savedLabel'):t('saveLabel'); }
+  });
+}
 // Visibility: own always; public always; friends only if following the author; private hidden.
 function blogVisibleToMe(b){
   if(!b)return false;
@@ -15232,6 +15379,10 @@ function buildBlogsHTML(cityFilter, opts){
           + '<div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:5px">'+escHtml(b.title)+'</div>'
           + '<div style="font-size:13px;color:var(--ink-3);line-height:1.6">'+escHtml((b.html?stripTags(b.body):(b.body||'')).substring(0,150))+'…</div>'
           + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ember);font-weight:600;margin-top:8px">'+t('readBlog')+' →</div>'
+          + (function(){var st=blogState(b.id);return '<div class="blog-actions" style="display:flex;align-items:center;gap:16px;margin-top:10px;padding-top:9px;border-top:1px solid var(--paper-3)">'
+              + '<button class="blog-like" onclick="toggleBlogLike(\''+b.id+'\',event)" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;padding:0;color:'+(st.liked?'#E8334A':'var(--ink-4)')+'"><span class="bl-icon" style="font-size:15px;line-height:1">'+(st.liked?'♥':'♡')+'</span><span class="bl-count">'+st.likes+'</span></button>'
+              + '<button class="blog-save" onclick="toggleSaveBlog(\''+b.id+'\',event)" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;font-size:13px;padding:0;margin-left:auto;color:'+(st.saved?'var(--ember)':'var(--ink-4)')+'"><span class="bs-icon" style="font-size:14px;line-height:1">🔖</span><span class="bs-label">'+(st.saved?t('savedLabel'):t('saveLabel'))+'</span></button>'
+              + '</div>';})()
           + '</div></div>';
       }).join('')
     + '</div>';
@@ -16259,7 +16410,22 @@ function inviteFriends(){
   var wa=document.getElementById('invite-wa'); if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(msg);
   var em=document.getElementById('invite-email'); if(em)em.href='mailto:?subject='+encodeURIComponent('Join me on Trafolio')+'&body='+encodeURIComponent(msg);
   var sh=document.getElementById('invite-share'); if(sh)sh.style.display=(navigator.share?'':'none');
+  var ct=document.getElementById('invite-contacts'); if(ct)ct.style.display=_isNative()?'':'none';
   openModal('sheet-invite');
+}
+// Native only: pick a contact and pre-fill an SMS/email invite (web build never shows this button).
+function inviteFromContacts(){
+  var C = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Contacts;
+  if(!_isNative() || !C){ return; }
+  C.pickContact({projection:{name:true, phones:true, emails:true}}).then(function(res){
+    var c=res && res.contact; if(!c) return;
+    var msg=inviteMsg();
+    var phone=(c.phones&&c.phones[0]&&c.phones[0].number)||'';
+    var email=(c.emails&&c.emails[0]&&c.emails[0].address)||'';
+    if(phone) window.open('sms:'+phone.replace(/\s/g,'')+'&body='+encodeURIComponent(msg),'_system');
+    else if(email) window.open('mailto:'+email+'?subject='+encodeURIComponent('Join me on Trafolio')+'&body='+encodeURIComponent(msg),'_system');
+    else toast('No phone or email for that contact');
+  }).catch(function(){});
 }
 function copyInviteLink(){
   var link=inviteLink();
@@ -16303,7 +16469,7 @@ var CONCIERGE_CITIES=[
 {n:'Melbourne',c:'Australia',f:'🇦🇺',p:'photo-1514395462725-fb4566210144'},
 {n:'Marrakech',c:'Morocco',f:'🇲🇦',p:'photo-1489749798305-4fea3ae63d43'},
 {n:'Cairo',c:'Egypt',f:'🇪🇬',p:'photo-1572252009286-268acec5ca0a'},
-{n:'Cape Town',c:'South Africa',f:'🇿🇦',p:'photo-1580060839134-75a5edca2e99'},
+{n:'Cape Town',c:'South Africa',f:'🇿🇦',p:'force-wiki'},
 {n:'Rio de Janeiro',c:'Brazil',f:'🇧🇷',p:'photo-1483729558449-99ef09a8c325'},
 {n:'Buenos Aires',c:'Argentina',f:'🇦🇷',p:'photo-1612294037637-ec328d0e075e'},
 {n:'Mexico City',c:'Mexico',f:'🇲🇽',p:'photo-1518105779142-d975f22f1b0a'},
