@@ -2032,12 +2032,15 @@ body.show-lbar .lbar{display:none}
         <div id="profile-search-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:60;background:white;border:1px solid var(--paper-3);border-radius:12px;overflow:hidden;text-align:left;max-height:50vh;overflow-y:auto;box-shadow:var(--sh-2)"></div>
       </div>
       <!-- Trips / Stories tabs -->
-      <div style="display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid var(--paper-3);margin:0 -20px 4px">
+      <div style="position:relative;margin:0 -20px 4px">
+      <div class="prof-tabbar" style="display:flex;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;border-bottom:1px solid var(--paper-3)">
         <button class="prof-tab active" data-ptab="trips" onclick="switchProfileTab('trips')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid var(--ink);cursor:pointer;font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px">📅 <span data-i18n="trips">Trips</span></button>
         <button class="prof-tab" data-ptab="stories" onclick="switchProfileTab('stories')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">✍️ <span data-i18n="tabStories">Stories</span></button>
         <button class="prof-tab" data-ptab="wishlist" onclick="switchProfileTab('wishlist')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">🔖 <span data-i18n="wishlistTab">Wishlist</span></button>
         <button class="prof-tab" data-ptab="favorites" onclick="switchProfileTab('favorites')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">⭐ <span data-i18n="favoritesTab">Favorites</span></button>
         <button class="prof-tab" data-ptab="book" onclick="switchProfileTab('book')" style="flex:1;padding:13px 0;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--ink-4);display:flex;align-items:center;justify-content:center;gap:6px">📖 <span data-i18n="tabBook">Memory Book</span></button>
+      </div>
+      <div aria-hidden="true" style="position:absolute;right:0;top:0;bottom:1px;width:42px;display:flex;align-items:center;justify-content:flex-end;padding-right:3px;pointer-events:none;background:linear-gradient(to right,rgba(250,250,248,0),var(--paper) 70%);color:var(--ink-3);font-size:17px;font-weight:700">&#8250;</div>
       </div>
     <div id="ptab-trips">
       <!-- Travel map: world map with visited cities marked in red -->
@@ -4075,7 +4078,7 @@ function renderProfileGrid(){
     return '<div style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;border-radius:6px" onclick="openTrip('+t.id+')">'
     +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover'+(locked?';filter:grayscale(.35)':'')+'">'
     +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
-    +(locked?'<div title="'+t('lockedTripHint')+'" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,28,48,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:12px">🔒</div>':'')
+    +(locked?'<div title="'+tt('lockedTripHint')+'" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,28,48,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:12px">🔒</div>':'')
     +'<div style="position:absolute;bottom:6px;left:8px;right:8px">'
     +'<div style="font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500;line-height:1.1">'+escHtml(t.flag)+' '+escHtml(t.dest)+'</div>'
     +(t.dates?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.85);margin-top:1px">'+escHtml(t.dates)+'</div>':'')
@@ -4423,18 +4426,8 @@ function earnedBadges(){
 }
 function renderProfileExtras(){
   var box=document.getElementById('profile-extras'); if(!box) return;
-  var now=userData.statusNow||'', next=userData.statusNext||'', vibes=userData.vibes||[];
+  // Status hashtags + badges removed per request; trip highlight circles kept.
   var html='';
-  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 14px">';
-  html+=vibes.map(function(v){ return '<span style="background:linear-gradient(135deg,var(--ember-lt),#F3E8FF);color:var(--ember-dk);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600">#'+escHtml(v)+'</span>'; }).join('');
-  html+='<button onclick="openVibePicker()" style="background:none;border:1.5px dashed var(--paper-3);color:var(--ink-4);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">＋ vibes</button>';
-  html+='</div>';
-  var badges=earnedBadges();
-  if(badges.length){
-    html+='<div style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:0 0 16px">';
-    html+=badges.map(function(b){ return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:20px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--ink-2)">'+b.e+' '+b.l+'</span>'; }).join('');
-    html+='</div>';
-  }
   if((trips||[]).length){
     html+='<div style="display:flex;gap:14px;overflow-x:auto;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;'+((trips.length<4)?'justify-content:center':'')+'">';
     html+=trips.map(function(tr){
@@ -4499,7 +4492,12 @@ function shareWrapped(){
   var y2=890;
   function mini(num,label,x){ ctx.fillStyle='#fff'; ctx.font='800 66px Georgia, serif'; ctx.fillText(String(num),x,y2); ctx.font='500 24px monospace'; ctx.fillStyle='rgba(255,255,255,.82)'; ctx.fillText(label,x,y2+40); }
   mini(nCities,'CITIES',W*0.25); mini(nPlaces,'PLACES',W*0.5); mini(nPhotos,'PHOTOS',W*0.75);
-  if(uflags.length){ ctx.font='72px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif'; try{ctx.fillText(uflags.slice(0,8).join('  '), W/2, 1055);}catch(e){} }
+  if(uflags.length){
+    var _ff=uflags.slice(0,24); ctx.font='56px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+    var _per=8, _rows=[]; for(var _fi=0;_fi<_ff.length;_fi+=_per)_rows.push(_ff.slice(_fi,_fi+_per));
+    var _sy=1045-(_rows.length-1)*32;
+    _rows.forEach(function(r,ri){ try{ctx.fillText(r.join(' '), W/2, _sy+ri*64);}catch(e){} });
+  }
   var _pct=nC>0?Math.max(1,Math.round(nC/195*100)):0;
   if(_pct){ ctx.fillStyle='#fff'; ctx.font='600 32px monospace'; ctx.fillText('🌍 '+_pct+'% of the world explored', W/2, 1180); }
   ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='600 30px monospace'; ctx.fillText('trafolio.travel', W/2, 1285);
@@ -16317,13 +16315,23 @@ function doSocialAuth(provider){
       var url = (ev && ev.url) || '';
       if(url.indexOf('login-callback') < 0) return;
       var done = function(){ try{ if(Capacitor.Plugins.Browser) Capacitor.Plugins.Browser.close(); }catch(e){} };
+      // Don't rely on onAuthStateChange firing after a manual exchange on native — enter the
+      // app explicitly from the returned session so the UI always leaves the sign-in screen.
+      var enterFrom = function(res){
+        try{
+          var u = res && res.data && res.data.session && res.data.session.user;
+          if(u && typeof applySession==='function'){ applySession(u, true); return; }
+        }catch(e){}
+        // Fallback: pull the freshly-stored session.
+        try{ sb.auth.getSession().then(function(g){ var uu=g&&g.data&&g.data.session&&g.data.session.user; if(uu&&typeof applySession==='function')applySession(uu,true); }); }catch(e){}
+      };
       if(!sb){ done(); return; }
       if(url.indexOf('code=') >= 0){
-        sb.auth.exchangeCodeForSession(url).then(done).catch(function(){ toast('Sign in failed'); done(); });
+        sb.auth.exchangeCodeForSession(url).then(function(res){ done(); enterFrom(res); }).catch(function(e){ done(); toast('Sign in failed: '+((e&&e.message)||'')); });
       } else {
         var hash = url.split('#')[1] || ''; var pr = new URLSearchParams(hash);
         var at = pr.get('access_token'), rt = pr.get('refresh_token');
-        if(at && rt){ sb.auth.setSession({ access_token: at, refresh_token: rt }).then(done).catch(function(){ toast('Sign in failed'); done(); }); }
+        if(at && rt){ sb.auth.setSession({ access_token: at, refresh_token: rt }).then(function(res){ done(); enterFrom(res); }).catch(function(e){ done(); toast('Sign in failed: '+((e&&e.message)||'')); }); }
         else { done(); }
       }
     });
@@ -16521,6 +16529,15 @@ function onStoryCitySearch(val) {
 
 async function dbSaveTrip(trip){
   if(!sb||!userData.id){console.warn('dbSaveTrip: no sb or userData.id',!!sb,userData.id);return;}
+  if(typeof sbUploadImage==='function' && trip && trip.cover){ try{ var _cu=await sbUploadImage(trip.cover,'cover'); if(_cu&&_cu!==trip.cover){ trip.cover=_cu; } }catch(e){} }
+  if(trip.dbId) return; // already in the cloud
+  // Reuse an existing cloud row for this dest+start (prevents duplicate trips from save races / re-syncs).
+  try{
+    var _q=sb.from('trips').select('id').eq('user_id',userData.id).eq('dest',trip.dest||'');
+    _q = trip.startDate ? _q.eq('date_from',trip.startDate) : _q.is('date_from',null);
+    var _ex=await _q.limit(1);
+    if(_ex && _ex.data && _ex.data[0]){ trip.dbId=_ex.data[0].id; console.log('dbSaveTrip: reused existing cloud row'); return; }
+  }catch(e){}
   var base={
     user_id: userData.id,
     dest: trip.dest,
@@ -16545,10 +16562,15 @@ async function dbSaveTrip(trip){
 }
 
 // Guarantee a trip exists in the cloud and return its real (UUID) id. Saves it first if needed.
+var _tripIdLocks={};
 async function ensureTripDbId(tr){
   if(!tr)return null;
   if(tr.dbId)return tr.dbId;
-  if(typeof dbSaveTrip==='function'){ try{ await dbSaveTrip(tr); }catch(e){} }
+  var key='t'+(tr.id||tr.dest||'');
+  // Serialize concurrent callers (photos+places saved at once) so we never double-insert the trip.
+  if(_tripIdLocks[key]){ try{ await _tripIdLocks[key]; }catch(e){} return tr.dbId||null; }
+  _tripIdLocks[key]=(async function(){ if(typeof dbSaveTrip==='function'){ try{ await dbSaveTrip(tr); }catch(e){} } })();
+  try{ await _tripIdLocks[key]; } finally { delete _tripIdLocks[key]; }
   return tr.dbId||null;
 }
 async function dbSavePlace(place, tripId){
@@ -16558,6 +16580,7 @@ async function dbSavePlace(place, tripId){
   var tr = trips.find(function(t){ return t.id===tripId || t.dbId===tripId; });
   var realTripId = (tr && tr.dbId) ? tr.dbId : (tr ? await ensureTripDbId(tr) : null);
   if(!realTripId){ console.warn('dbSavePlace: trip not in cloud yet — kept locally, will sync later'); return; }
+  if(typeof sbUploadImage==='function' && place && place.photo){ try{ var _pu=await sbUploadImage(place.photo,'place'); if(_pu&&_pu!==place.photo){ place.photo=_pu; if(typeof persistSoon==='function')persistSoon(); } }catch(e){} }
   try{
     var row={
       trip_id: realTripId,
@@ -16640,6 +16663,18 @@ async function dbLoadUserTrips(){
           places: tripPlaces, photos: tripPhotos, itin:[], actualItin:[], expenses:[]
         };
       });
+      // Collapse any duplicate cloud rows (from earlier save-race bugs) by dest|startDate,
+      // merging their photos/places so a trip never appears twice.
+      var _seen={}, _dedup=[];
+      dbTrips.forEach(function(t){
+        var k=(String(t.dest||'').toLowerCase())+'|'+(t.startDate||'');
+        if(!_seen[k]){ _seen[k]=t; _dedup.push(t); }
+        else { var keep=_seen[k];
+          (t.photos||[]).forEach(function(ph){ if(!keep.photos.some(function(x){return x.dbId===ph.dbId;}))keep.photos.push(ph); });
+          (t.places||[]).forEach(function(pl){ if(!keep.places.some(function(x){return x.dbId===pl.dbId;}))keep.places.push(pl); });
+        }
+      });
+      dbTrips=_dedup;
       // Merge: cloud trips + any LOCAL trip that isn't in the cloud yet (so unsynced work
       // created on this device is never dropped). Match by dbId or dest+startDate.
       var cloudIds={}, cloudKeys={};
@@ -16690,19 +16725,26 @@ async function dbSaveProfile(){
 }
 // Upload a data-URL image to Supabase Storage ('media' bucket) → returns a public URL.
 // Falls back to the original string if there's no session / not a data URL / upload fails.
-async function sbUploadImage(dataUrl, prefix){
-  if(!sb||!userData.id||typeof dataUrl!=='string'||dataUrl.indexOf('data:')!==0) return dataUrl;
+async function sbUploadImage(srcUrl, prefix){
+  if(!sb||!userData.id||typeof srcUrl!=='string') return srcUrl;
+  if(srcUrl.indexOf('data:')!==0 && srcUrl.indexOf('blob:')!==0) return srcUrl; // already a durable URL
   try{
-    var m=dataUrl.match(/^data:([^;]+);base64,(.*)$/); if(!m) return dataUrl;
-    var mime=m[1], bin=atob(m[2]), len=bin.length, bytes=new Uint8Array(len);
-    for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+    var bytes, mime;
+    if(srcUrl.indexOf('blob:')===0){
+      var resp=await fetch(srcUrl); var blob=await resp.blob(); mime=blob.type||'image/jpeg';
+      bytes=new Uint8Array(await blob.arrayBuffer());
+    } else {
+      var m=srcUrl.match(/^data:([^;]+);base64,(.*)$/); if(!m) return srcUrl;
+      mime=m[1]; var bin=atob(m[2]), len=bin.length; bytes=new Uint8Array(len);
+      for(var i=0;i<len;i++) bytes[i]=bin.charCodeAt(i);
+    }
     var ext=((mime.split('/')[1])||'jpg').replace('jpeg','jpg');
     var path=userData.id+'/'+(prefix||'img')+'-'+Date.now()+'-'+Math.floor(Math.random()*1e9)+'.'+ext;
     var up=await sb.storage.from('media').upload(path, bytes, {contentType:mime, upsert:true});
-    if(up.error){ console.error('sbUploadImage upload:',up.error); return dataUrl; }
+    if(up.error){ console.error('sbUploadImage upload:',up.error); if(!window._stWarned){ window._stWarned=true; if(typeof toast==='function')toast('Cloud photo save failed: '+((up.error&&up.error.message)||'storage policy')); } return srcUrl; }
     var pub=sb.storage.from('media').getPublicUrl(path);
-    return (pub&&pub.data&&pub.data.publicUrl)||dataUrl;
-  }catch(e){ console.error('sbUploadImage:',e); return dataUrl; }
+    return (pub&&pub.data&&pub.data.publicUrl)||srcUrl;
+  }catch(e){ console.error('sbUploadImage:',e); return srcUrl; }
 }
 // Generic trip-field update by DB id.
 async function dbUpdateTrip(trip, fields){
@@ -16839,18 +16881,21 @@ async function dbDeleteTrip(tripId){
 
 // ── Save a photo to DB ────────────────────────────────────────────────────
 async function dbSavePhoto(photoObj, tripId){
-  if(!sb||!userData.id)return;
+  if(!sb||!userData.id||!photoObj)return;
+  // 1) Upload the image to Storage FIRST so photoObj.url becomes a durable https URL. This
+  //    survives the localStorage data:-URL strip AND reloads — even if the trip isn't in the
+  //    cloud yet (it then syncs later with a real URL instead of a doomed base64 blob).
+  if(typeof sbUploadImage==='function'){
+    try{ var u=await sbUploadImage(photoObj.url,'photo'); if(u && u!==photoObj.url){ photoObj.url=u; if(typeof persistSoon==='function')persistSoon(); } }
+    catch(e){ console.error('dbSavePhoto upload:',e); }
+  }
+  // 2) Attach to the trip's cloud row.
   var tr=trips.find(function(t){return t.id===tripId||t.dbId===tripId;});
   var realTripId=(tr&&tr.dbId)?tr.dbId:(tr?await ensureTripDbId(tr):null);
-  if(!realTripId){ console.warn('dbSavePhoto: trip not in cloud yet — kept locally, will sync later'); return; }
+  if(!realTripId){ console.warn('dbSavePhoto: trip not in cloud yet — kept locally (durable url), will sync later'); return; }
+  if(photoObj.dbId) return; // already saved
   try{
-    var row={
-      trip_id: realTripId,
-      user_id: userData.id,
-      url: photoObj.url,
-      caption: photoObj.caption||'',
-      day: photoObj.day||null
-    };
+    var row={ trip_id: realTripId, user_id: userData.id, url: photoObj.url, caption: photoObj.caption||'', day: photoObj.day||null };
     var res=await sb.from('photos').insert(row).select();
     if(res.error){console.error('dbSavePhoto error:',res.error);}
     else if(res.data&&res.data[0]){photoObj.dbId=res.data[0].id;console.log('Photo saved to DB');}
@@ -18040,7 +18085,7 @@ function _persistPayload(level){
   function clean(t){
     if(!level) return t;
     var c; try{ c=JSON.parse(JSON.stringify(t)); }catch(e){ return t; }
-    if(Array.isArray(c.photos)) c.photos=c.photos.filter(function(p){return p&&typeof p.url==='string'&&!_isData(p.url);});
+    if(Array.isArray(c.photos)) c.photos=c.photos.filter(function(p){return p&&typeof p.url==='string'&&!_isData(p.url)&&p.url.indexOf('blob:')!==0;});
     (c.book||[]).forEach(function(pg){ if(Array.isArray(pg.photos)) pg.photos=pg.photos.map(function(u){return _isData(u)?'':u;}); });
     return c;
   }
@@ -18093,7 +18138,6 @@ function _restoreView(){
       showScreen(v.screen);
       var map={'s-feed':'bnav-feed','s-explore':'bnav-explore','s-concierge':'bnav-concierge','s-profile':'bnav-profile'};
       if(map[v.screen]&&typeof setActiveNav==='function')setActiveNav(map[v.screen]);
-      if(v.screen==='s-profile'&&v.ptab&&typeof switchProfileTab==='function')switchProfileTab(v.ptab);
       setTimeout(go,320);
     }
   }catch(e){}
