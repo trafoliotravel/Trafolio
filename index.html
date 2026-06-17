@@ -173,6 +173,9 @@ a.place-name-link:hover { text-decoration: underline; }
    (bottom) or the rounded/notch sides. Also stop any stray horizontal overflow (right cut-off). */
 html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 .prof-tab{flex:0 0 auto!important;white-space:nowrap;padding-left:15px!important;padding-right:15px!important}
+.vibe-chip{border-radius:20px;padding:7px 13px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--paper-3);background:#fff;color:var(--ink-2);transition:all .15s}
+.vibe-chip.on{border-color:var(--ember);background:var(--ember-lt);color:var(--ember-dk)}
+#profile-extras{padding:0 16px}
 @media (max-width:600px){ input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]),textarea,select,.inp,.auth-inp{font-size:16px!important} }
 .screen { padding-left: env(safe-area-inset-left, 0px); padding-right: env(safe-area-inset-right, 0px); }
 .auth-inp{width:100%;padding:13px 15px;background:rgba(255,255,255,.09);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;color:white;outline:none;box-sizing:border-box;-webkit-appearance:none;transition:border-color .15s}
@@ -922,7 +925,7 @@ body.show-lbar .lbar{display:none}
   <div class="modal-handle"></div>
   <div class="modal-title" data-i18n="bbChoosePhotoTitle">Choose a photo</div>
   <div style="font-size:12px;color:var(--ink-4);margin-bottom:14px" data-i18n="bbChoosePhotoSub">Pick from your imported photos</div>
-  <button class="bb-import-btn" onclick="document.getElementById('bb-import-input').click()">&#128247; <span data-i18n="bbImportNew">Import new photos</span></button>
+  <button class="bb-import-btn" onclick="bbImportClick()">&#128247; <span data-i18n="bbImportNew">Import new photos</span></button>
   <input type="file" id="bb-import-input" accept="image/*" multiple style="display:none" onchange="bbImportNew(this)">
   <div id="bb-photo-picker" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:54vh;overflow:auto;margin-top:12px"></div>
 </div>
@@ -1065,6 +1068,14 @@ body.show-lbar .lbar{display:none}
   window.addEventListener('scroll',window._lpScrollHandler);
   if(window._lpSlideTimer)clearInterval(window._lpSlideTimer);
   window._lpSlideIdx=0;
+  // Preload every hero image up front so switching never reveals the navy backdrop
+  // while the next slide's background downloads (especially on mobile data).
+  setTimeout(function(){
+    document.querySelectorAll('#s-home .lp-hero-slide').forEach(function(sl){
+      var mm=(sl.style.backgroundImage||'').match(/url\(["']?([^"')]+)/);
+      if(mm){ var im=new Image(); im.src=mm[1]; }
+    });
+  }, 150);
   window._lpSlideTimer=setInterval(function(){
     var slides=document.querySelectorAll('#s-home .lp-hero-slide');
     if(slides.length<2)return;
@@ -1076,11 +1087,11 @@ body.show-lbar .lbar{display:none}
 </script>
 <div class="lp-hero" style="padding-top:0">
   <div class="lp-hero-bg">
-    <div class="lp-hero-slide active" style="background-image:url('https://images.unsplash.com/photo-1512100356356-de1b84283e18?w=2560&q=85&auto=format&fit=crop')"></div>
-    <div class="lp-hero-slide" style="background-image:url('https://images.unsplash.com/photo-1771654951481-ba5da3cee27d?w=2560&q=85&auto=format&fit=crop')"></div>
-    <div class="lp-hero-slide" style="background-image:url('https://images.unsplash.com/photo-1700268921080-b5d03699a65e?w=2560&q=85&auto=format&fit=crop')"></div>
-    <div class="lp-hero-slide" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Times%20Square%2C%20New%20York%20City%20(HDR).jpg?width=2560')"></div>
-    <div class="lp-hero-slide" style="background-image:url('https://images.unsplash.com/photo-1681210994962-f1483b0b569d?w=2560&q=85&auto=format&fit=crop')"></div>
+    <div class="lp-hero-slide active" style="background-image:url('https://images.unsplash.com/photo-1512100356356-de1b84283e18?w=1440&q=80&auto=format&fit=crop')"></div>
+    <div class="lp-hero-slide" style="background-image:url('https://images.unsplash.com/photo-1771654951481-ba5da3cee27d?w=1440&q=80&auto=format&fit=crop')"></div>
+    <div class="lp-hero-slide" style="background-image:url('https://images.unsplash.com/photo-1700268921080-b5d03699a65e?w=1440&q=80&auto=format&fit=crop')"></div>
+    <div class="lp-hero-slide" style="background-image:url('https://commons.wikimedia.org/wiki/Special:FilePath/Times%20Square%2C%20New%20York%20City%20(HDR).jpg?width=1440')"></div>
+    <div class="lp-hero-slide" style="background-image:url('https://images.unsplash.com/photo-1681210994962-f1483b0b569d?w=1440&q=80&auto=format&fit=crop')"></div>
   </div>
   <div class="lp-hero-gradient"></div>
   <div class="lp-hero-content">
@@ -1949,8 +1960,8 @@ body.show-lbar .lbar{display:none}
       <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=95&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:1" id="profile-cover" alt="" loading="eager">
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.06) 0%,transparent 38%,rgba(250,250,248,.22) 90%,rgba(250,250,248,1) 100%)"></div>
       <!-- Single ⋯ menu consolidating the cover/header actions -->
-      <button onclick="copyProfileLink()" aria-label="Share profile" title="Share profile" data-i18n-title="shareProfile" style="position:absolute;top:12px;right:58px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;z-index:6">&#8599;</button>
-      <button onclick="toggleProfileMenu(event)" aria-label="Profile actions" title="More" style="position:absolute;top:12px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;z-index:6">&#8943;</button>
+      <button onclick="copyProfileLink()" aria-label="Share profile" title="Share profile" data-i18n-title="shareProfile" style="position:absolute;top:26px;right:58px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;z-index:6">&#8599;</button>
+      <button onclick="toggleProfileMenu(event)" aria-label="Profile actions" title="More" style="position:absolute;top:26px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;z-index:6">&#8943;</button>
       <div id="profile-menu" style="display:none;position:fixed;top:58px;right:14px;background:#fff;border:1px solid var(--paper-3);border-radius:14px;box-shadow:0 10px 30px rgba(0,28,48,.18);overflow:hidden;width:210px;z-index:120">
         <div onclick="closeProfileMenu();editProfile()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editProfile">Edit profile</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-cover-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">📷 <span data-i18n="changeCover">Change cover</span></div>
@@ -2011,7 +2022,9 @@ body.show-lbar .lbar{display:none}
       </div>
       <!-- Bio centered -->
       <div style="font-size:13px;color:var(--ink-3);margin-bottom:8px;line-height:1.55;max-width:380px;margin-left:auto;margin-right:auto" id="profile-bio">Dubai-based traveller. Always planning the next trip. Food-first explorer.</div>
-      <div id="profile-location" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-4);letter-spacing:.03em;margin-bottom:16px"></div>
+      <div id="profile-location" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink-4);letter-spacing:.03em;margin-bottom:12px"></div>
+      <div id="follow-requests" style="padding:0 20px"></div>
+      <div id="profile-extras"></div>
       <!-- Search profile bar -->
       <div style="position:relative;margin-bottom:18px">
         <span style="position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4)">🔍</span>
@@ -2031,7 +2044,10 @@ body.show-lbar .lbar{display:none}
       <div style="padding:16px 16px 4px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px 10px">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="myTravelMap">My travel map</div>
-          <button onclick="shareTravelMap()" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ember);font-weight:600">&#11157; <span data-i18n="shareMap">SHARE MAP</span></button>
+          <div style="display:flex;align-items:center;gap:14px">
+            <button onclick="toggleMapPins()" id="map-pins-toggle" title="Show / hide pins" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ink-3);font-weight:600">📍 PINS</button>
+            <button onclick="shareTravelMap()" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ember);font-weight:600">&#11157; <span data-i18n="shareMap">SHARE MAP</span></button>
+          </div>
         </div>
         <!-- Name ABOVE the map, with breathing room -->
         <div id="tm-titleband" style="text-align:center;padding:6px 12px 14px;font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:600;line-height:1.1;color:var(--ink)"><span id="tm-name">My</span> Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io <span data-i18n="mapWord">Map</span></div>
@@ -2231,8 +2247,8 @@ function localResume(){
 }
 // Chat persistence (per account)
 function _chatKey(){ return 'trafolio_chats::'+(typeof _currentAccount!=='undefined'?_currentAccount:''); }
-function _saveChats(){ try{ localStorage.setItem(_chatKey(), JSON.stringify({c:conversations,g:(typeof groups!=='undefined'?groups:{})})); }catch(e){} }
-function _loadChats(){ try{ var r=JSON.parse(localStorage.getItem(_chatKey())||'null'); if(r&&r.c){ conversations=r.c; if(r.g&&typeof groups!=='undefined')groups=r.g; } }catch(e){} }
+function _saveChats(){ try{ localStorage.setItem(_chatKey(), JSON.stringify({c:conversations,g:(typeof groups!=='undefined'?groups:{}),u:(typeof _chatUsers!=='undefined'?_chatUsers:{})})); }catch(e){} }
+function _loadChats(){ try{ var r=JSON.parse(localStorage.getItem(_chatKey())||'null'); if(r&&r.c){ conversations=r.c; if(r.g&&typeof groups!=='undefined')groups=r.g; if(r.u&&typeof _chatUsers!=='undefined')_chatUsers=r.u; } }catch(e){} }
 // If Supabase isn't available at all, still resume a local session on load.
 if(!sb){ setTimeout(function(){ try{ localResume(); }catch(e){} }, 0); }
 
@@ -2322,6 +2338,7 @@ function showScreen(id,_fromBack){
   if(id==='s-dash'&&typeof renderDash==='function')renderDash();
   if(id==='s-profile'&&typeof renderProfile==='function')renderProfile();
   if(id==='s-share'&&typeof renderSharePage==='function')renderSharePage();
+  if(typeof _saveView==='function')_saveView();
   var nav=document.getElementById('topnav');if(nav){
     if(id==='s-home'){nav.classList.add('lp-topnav-transparent');window.addEventListener('scroll',window._lpScrollHandler||function(){});}
     else{nav.classList.remove('lp-topnav-transparent');if(window._lpScrollHandler)window.removeEventListener('scroll',window._lpScrollHandler);}
@@ -2378,6 +2395,7 @@ function enterApp(){
   if(typeof renderConcierge==='function')renderConcierge();
   showScreen('s-profile');setActiveNav('bnav-profile');
   buildLangBar();
+  if(typeof _restoreView==='function')setTimeout(_restoreView,60);
 }
 function exitApp(){
   window._deliberateSignOut=true; // mark this as a user-initiated sign-out (see onAuthStateChange)
@@ -2456,6 +2474,7 @@ function openShareSheet(){
 }
 function switchTab(btn){
   var tab=btn.dataset.tab;currentTab=tab;
+  if(typeof _saveView==='function')_saveView();
   document.querySelectorAll('.tab-btn').forEach(function(b){b.classList.toggle('active',b===btn);});
   document.querySelectorAll('.tab-content').forEach(function(c){c.style.display='none';});
   var target=document.getElementById('tab-'+tab);if(target)target.style.display='';
@@ -2610,7 +2629,7 @@ async function doCitySearch(q){
   var dd=document.getElementById('ac-dropdown');if(!dd)return;
   dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3)">'+t('searching')+'</div>';dd.classList.add('open');
   try{
-    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}});
+    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language='+currentLang,{headers:{'User-Agent':'Trafolio/1.0'}});
     var data=await r.json();
     if(!data.length){dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-4)">'+t('noResults')+'</div>';return;}
     var _lock = currentTrip ? (currentTrip.country || ((currentTrip.cities||[])[0]||{}).country || '') : '';
@@ -3364,6 +3383,35 @@ function bbChoosePhoto(i){
   currentTrip.book[_bbPick.idx].photos[_bbPick.slot]=photos[i].url;
   bbRefresh(_bbPick.idx);closeModal();
 }
+// Import button → native photo picker on the app, file input on web.
+function bbImportClick(){
+  var Cam = (typeof _isNative==='function'&&_isNative()) && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Camera;
+  if(!Cam){ var el=document.getElementById('bb-import-input'); if(el)el.click(); return; }
+  if(!currentTrip)return;
+  Cam.pickImages({quality:85, limit:0}).then(function(res){
+    var photos=(res&&res.photos)||[]; if(!photos.length)return;
+    if(!currentTrip.photos)currentTrip.photos=[];
+    var total=photos.length,done=0,firstIdx=currentTrip.photos.length,pend=_bbPick;
+    toast(t('bbImporting'));
+    photos.forEach(function(ph){
+      var src=ph.webPath||ph.path||(ph.base64String?('data:image/'+(ph.format||'jpeg')+';base64,'+ph.base64String):'');
+      if(!src){ done++; return; }
+      bbCompressImage(src,{},function(dataUrl){
+        var photoObj={url:dataUrl,caption:'',wide:false};
+        currentTrip.photos.push(photoObj);
+        if(typeof dbSavePhoto==='function')dbSavePhoto(photoObj,currentTrip.id);
+        done++;
+        if(done===total){
+          bbPickRefreshGrid();
+          if(pend&&currentTrip.photos[firstIdx]){currentTrip.book[pend.idx].photos[pend.slot]=currentTrip.photos[firstIdx].url;bbRefresh(pend.idx);}
+          try{if(typeof renderPhotosTab==='function')renderPhotosTab();}catch(e){}
+          if(typeof persistSoon==='function')persistSoon();
+          toast(t('bbImported'));
+        }
+      });
+    });
+  }).catch(function(){});
+}
 // Import new photos directly from the picker; compress to print-quality JPEG dataURLs.
 function bbImportNew(input){
   if(!currentTrip||!input||!input.files||!input.files.length)return;
@@ -3965,6 +4013,8 @@ function renderProfile(){
   var bioEl=document.getElementById('profile-bio');if(bioEl)bioEl.textContent=userData.bio;
   var locEl=document.getElementById('profile-location');
   if(locEl){var bits=[];if(userData.livesIn)bits.push('📍 '+t('livesInPrefix')+' '+userData.livesIn);if(userData.from)bits.push(t('fromPrefix')+' '+userData.from);locEl.textContent=bits.join('  ·  ');}
+  if(typeof renderProfileExtras==='function')renderProfileExtras();
+  if(typeof renderFollowRequests==='function')renderFollowRequests();
   var frs=document.getElementById('p-stat-followers');if(frs)frs.textContent=(userData.followers||[]).length;
   var fig=document.getElementById('p-stat-following');if(fig)fig.textContent=(userData.following||[]).length;
   var ps=document.getElementById('p-stat-trips');if(ps)ps.textContent=trips.length;
@@ -3991,13 +4041,17 @@ function renderProfileStories(){
   }
   wrap.innerHTML=userStories.map(function(s,i){
     var vm=storyVisMeta(s.visibility||'public');
-    return '<div class="profile-story-card" data-sidx="'+i+'" style="padding:13px 0;border-bottom:1px solid var(--paper-3);cursor:pointer">'
-      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'
+    var sph=s.photo||((typeof USER_CITY_IMG!=='undefined'&&USER_CITY_IMG[s.city])||'');
+    var sthumb=sph?'<div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:'+((typeof cityGradient==='function')?cityGradient(s.city):'var(--paper-3)')+'"><img src="'+escHtml(sph)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'"></div>':'';
+    return '<div class="profile-story-card" data-sidx="'+i+'" style="padding:13px 0;border-bottom:1px solid var(--paper-3);cursor:pointer;display:flex;gap:12px;align-items:flex-start">'
+      +'<div style="flex:1;min-width:0">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
       +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+cityFlag(s.city)+' '+escHtml((s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div>'
       +'<span class="story-vis-badge">'+vm.icon+' '+escHtml(vm.label)+'</span>'
       +'<span style="margin-left:auto;font-size:11px;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</span></div>'
       +'<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:4px">'+escHtml(s.title||'')+'</div>'
-      +'<div style="font-size:12.5px;color:var(--ink-3);line-height:1.5;font-style:italic">'+escHtml((s.body||'').substring(0,120))+'…</div>'
+      +'<div style="font-size:12.5px;color:var(--ink-3);line-height:1.5;font-style:italic">'+escHtml((s.body||'').substring(0,110))+'…</div>'
+      +'</div>'+sthumb
       +'</div>';
   }).join('');
   wrap.querySelectorAll('.profile-story-card').forEach(function(el){
@@ -4016,10 +4070,12 @@ function renderProfileGrid(){
       +'</div>';
     return;
   }
-  grid.innerHTML=trips.map(function(t){
+  grid.innerHTML=trips.slice().sort(function(a,b){return String(b.startDate||b.dates||'').localeCompare(String(a.startDate||a.dates||''))||((b.id||0)-(a.id||0));}).map(function(t){
+    var locked=(typeof canShareTrip==='function')&&!canShareTrip(t);
     return '<div style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;border-radius:6px" onclick="openTrip('+t.id+')">'
-    +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover">'
+    +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover'+(locked?';filter:grayscale(.35)':'')+'">'
     +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
+    +(locked?'<div title="'+t('lockedTripHint')+'" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,28,48,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:12px">🔒</div>':'')
     +'<div style="position:absolute;bottom:6px;left:8px;right:8px">'
     +'<div style="font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500;line-height:1.1">'+escHtml(t.flag)+' '+escHtml(t.dest)+'</div>'
     +(t.dates?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.85);margin-top:1px">'+escHtml(t.dates)+'</div>':'')
@@ -4277,7 +4333,7 @@ function renderTravelMap(){
   [].slice.call(map.querySelectorAll('.tm-dot,.tm-pin')).forEach(function(d){d.remove();});
   var pts=travelMapPoints(trips||[]);
   var cities=pts.cities;
-  Object.keys(cities).forEach(function(dest){
+  if(!window._hideMapPins) Object.keys(cities).forEach(function(dest){
     var c=cities[dest], pos=mapXY(c.co[0],c.co[1]);
     // Pin = a circular country flag head over a red pointer; the tip sits on the coordinate.
     var pin=document.createElement('div');
@@ -4319,10 +4375,9 @@ function shareTravelMap(){
         var hx=x, hy=y-24*scale, r=12*scale;
         ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-7*scale,hy+5*scale);ctx.lineTo(hx+7*scale,hy+5*scale);ctx.closePath();ctx.fillStyle='#E0633A';ctx.fill();
         ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#E0633A';ctx.stroke();
-        ctx.save();ctx.beginPath();ctx.arc(hx,hy,r-1.5,0,7);ctx.clip();
-        ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=(15*scale)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';ctx.fillStyle='#0a1a26';
+        ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.font=Math.round(r*1.45)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';ctx.fillStyle='#0a1a26';
         try{ctx.fillText(c.flag||'📍',hx,hy);}catch(e){}
-        ctx.restore();
       });
       ctx.textBaseline='alphabetic';
       // Title (top band)
@@ -4351,6 +4406,75 @@ function shareTravelMap(){
   };
   mapImg.src=svgUrl;
 }
+// ── Gen-Z profile extras: status line, vibe tags, auto badges, story highlights ──
+var VIBE_OPTIONS=['solo','foodie','budget','luxe','beach','mountains','culture','nightlife','road trip','backpacker','digital nomad','family','adventure','photography','slow travel','city break'];
+function earnedBadges(){
+  var b=[]; var nC=(typeof countCountries==='function')?countCountries(trips):0;
+  var nPhotos=(trips||[]).reduce(function(a,t){return a+((t.photos||[]).length);},0);
+  var cats={}; (trips||[]).forEach(function(t){(t.places||[]).forEach(function(p){cats[p.cat]=(cats[p.cat]||0)+1;});});
+  if(nC>=1)b.push({e:'🧭',l:'Explorer'});
+  if(nC>=5)b.push({e:'🌍',l:'Globetrotter'});
+  if(nC>=10)b.push({e:'🛫',l:'Jet-setter'});
+  if(nPhotos>=10)b.push({e:'📸',l:'Memory Maker'});
+  if((cats.eat||0)>=4)b.push({e:'🍜',l:'Foodie'});
+  if((cats.see||0)>=4)b.push({e:'🏛️',l:'Sightseer'});
+  if((cats.stay||0)>=3)b.push({e:'🏨',l:'Hotel Hopper'});
+  return b;
+}
+function renderProfileExtras(){
+  var box=document.getElementById('profile-extras'); if(!box) return;
+  var now=userData.statusNow||'', next=userData.statusNext||'', vibes=userData.vibes||[];
+  var html='';
+  html+='<div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 14px">';
+  html+=vibes.map(function(v){ return '<span style="background:linear-gradient(135deg,var(--ember-lt),#F3E8FF);color:var(--ember-dk);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600">#'+escHtml(v)+'</span>'; }).join('');
+  html+='<button onclick="openVibePicker()" style="background:none;border:1.5px dashed var(--paper-3);color:var(--ink-4);border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">＋ vibes</button>';
+  html+='</div>';
+  var badges=earnedBadges();
+  if(badges.length){
+    html+='<div style="display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:0 0 16px">';
+    html+=badges.map(function(b){ return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:20px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--ink-2)">'+b.e+' '+b.l+'</span>'; }).join('');
+    html+='</div>';
+  }
+  if((trips||[]).length){
+    html+='<div style="display:flex;gap:14px;overflow-x:auto;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;'+((trips.length<4)?'justify-content:center':'')+'">';
+    html+=trips.map(function(tr){
+      var cov=(tr.cover && tr.cover.indexOf('blob:')!==0)?tr.cover:'';
+      var fl=(typeof flagForCountry==='function'&&flagForCountry(tr.country))||tr.flag||'📍';
+      return '<div onclick="openTrip('+tr.id+')" style="flex:0 0 auto;text-align:center;cursor:pointer;width:64px">'
+        +'<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#7B2FBE,#E0633A);padding:3px;box-sizing:border-box">'
+        +'<div style="position:relative;width:100%;height:100%;border-radius:50%;border:2px solid var(--paper);overflow:hidden;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:24px">'+fl
+        +(cov?'<img src="'+escHtml(cov)+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">':'')
+        +'</div></div>'
+        +'<div style="font-size:10px;color:var(--ink-3);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(tr.dest||'')+'</div></div>';
+    }).join('');
+    html+='</div>';
+  }
+  box.innerHTML=html;
+}
+function openVibePicker(){
+  var nowI=document.getElementById('sv-now'); if(nowI)nowI.value=userData.statusNow||'';
+  var nxI=document.getElementById('sv-next'); if(nxI)nxI.value=userData.statusNext||'';
+  var box=document.getElementById('sv-chips');
+  if(box){ var cur=userData.vibes||[];
+    box.innerHTML=VIBE_OPTIONS.map(function(v){ var on=cur.indexOf(v)>=0;
+      return '<button type="button" class="vibe-chip'+(on?' on':'')+'" data-vibe="'+v+'" onclick="this.classList.toggle(\'on\')">#'+v+'</button>'; }).join('');
+  }
+  openModal('sheet-vibe');
+}
+function saveVibes(){
+  userData.statusNow=((document.getElementById('sv-now')||{}).value||'').trim();
+  userData.statusNext=((document.getElementById('sv-next')||{}).value||'').trim();
+  var chips=document.querySelectorAll('#sv-chips .vibe-chip.on');
+  userData.vibes=Array.prototype.map.call(chips,function(c){return c.getAttribute('data-vibe');});
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof renderProfile==='function')renderProfile();
+  closeModal(); toast('✨ '+t('savedLabel'));
+}
+function toggleMapPins(){
+  window._hideMapPins=!window._hideMapPins;
+  var b=document.getElementById('map-pins-toggle'); if(b)b.style.opacity=window._hideMapPins?'.4':'1';
+  if(typeof renderTravelMap==='function')renderTravelMap();
+}
 // ✨ Travel Wrapped — a shareable, Gen-Z, Spotify-Wrapped-style stats card (PNG).
 function shareWrapped(){
   var pts=(typeof travelMapPoints==='function')?travelMapPoints(trips||[]):{countryCount:0,cityCount:0,cities:{}};
@@ -4375,8 +4499,10 @@ function shareWrapped(){
   var y2=890;
   function mini(num,label,x){ ctx.fillStyle='#fff'; ctx.font='800 66px Georgia, serif'; ctx.fillText(String(num),x,y2); ctx.font='500 24px monospace'; ctx.fillStyle='rgba(255,255,255,.82)'; ctx.fillText(label,x,y2+40); }
   mini(nCities,'CITIES',W*0.25); mini(nPlaces,'PLACES',W*0.5); mini(nPhotos,'PHOTOS',W*0.75);
-  if(uflags.length){ ctx.font='54px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif'; try{ctx.fillText(uflags.slice(0,9).join(' '), W/2, 1070);}catch(e){} }
-  ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='600 30px monospace'; ctx.fillText('trafolio.travel', W/2, 1285);
+  if(uflags.length){ ctx.font='72px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif'; try{ctx.fillText(uflags.slice(0,8).join('  '), W/2, 1055);}catch(e){} }
+  var _pct=nC>0?Math.max(1,Math.round(nC/195*100)):0;
+  if(_pct){ ctx.fillStyle='#fff'; ctx.font='600 32px monospace'; ctx.fillText('🌍 '+_pct+'% of the world explored', W/2, 1180); }
+  ctx.fillStyle='rgba(255,255,255,.9)'; ctx.font='600 30px monospace'; ctx.fillText('trafolio.travel', W/2, 1285);
   cv.toBlob(function(blob){
     if(!blob){ toast(t('mapShareFail')); return; }
     var file=new File([blob],'trafolio-wrapped.png',{type:'image/png'});
@@ -4403,7 +4529,7 @@ function epDoLoc(which,q){
   if(window._googleMapsReady && !window._googlePlacesBroken && window.google && google.maps && google.maps.places){
     try{
       var svc=new google.maps.places.AutocompleteService();
-      svc.getPlacePredictions({input:q, types:['(cities)']}, function(preds,status){
+      svc.getPlacePredictions({input:q, types:['(cities)'], language:currentLang}, function(preds,status){
         if(status!==google.maps.places.PlacesServiceStatus.OK || !preds || !preds.length){ epNominatim(which,q); return; }
         epRenderLoc(which, preds.map(function(p){return p.description;}));
       });
@@ -4413,7 +4539,7 @@ function epDoLoc(which,q){
   epNominatim(which,q);
 }
 function epNominatim(which,q){
-  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}})
+  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language='+currentLang,{headers:{'User-Agent':'Trafolio/1.0'}})
     .then(function(r){return r.json();})
     .then(function(data){
       epRenderLoc(which,(data||[]).map(function(it){var a=it.address||{};var city=a.city||a.town||a.village||a.county||a.state||it.name;var country=a.country||'';return city+(country?', '+country:'');}));
@@ -5235,7 +5361,7 @@ async function doLocSearch(q){
   dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3)">Searching…</div>';
   dd.classList.add('open');
   try{
-    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}});
+    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language='+currentLang,{headers:{'User-Agent':'Trafolio/1.0'}});
     var data=await r.json();
     if(!data.length){dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-4)">'+t('noResults')+'</div>';return;}
     dd.innerHTML=data.map(function(item){
@@ -5439,10 +5565,10 @@ async function doItinLocSearch(q){
   dd.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-3)">Searching…</div>';
   dd.classList.add('open');
   try{
-    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(ctx)+'&format=json&limit=5&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}});
+    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(ctx)+'&format=json&limit=5&addressdetails=1&accept-language='+currentLang,{headers:{'User-Agent':'Trafolio/1.0'}});
     var data=await r.json();
     if(!data.length){
-      r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=5&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}});
+      r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=5&addressdetails=1&accept-language='+currentLang,{headers:{'User-Agent':'Trafolio/1.0'}});
       data=await r.json();
     }
     if(!data.length){dd.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">'+t('noResultsFullName')+'</div>';return;}
@@ -6080,10 +6206,17 @@ var conversations={
   5:[{from:'them',text:'Loved your shots from the last trip!',time:'1w'}]
 };
 var _chatUser=null;
+// Registry of people you've actually messaged (incl. REAL Trafolio members), so chats
+// survive reloads even though `allUsers` only holds the demo/seed accounts.
+var _chatUsers={}, _ncRealUsers=[], _ncSearchT=null;
+function _resolveUser(id){ var k=String(id);
+  return allUsers.find(function(x){return String(x.id)===k;}) || _chatUsers[k] || (_ncRealUsers||[]).find(function(x){return String(x.id)===k;}) || null; }
+function _rememberChatUser(u){ if(u&&u.id!=null){ _chatUsers[String(u.id)]={id:u.id,name:u.name||'',handle:u.handle||'',initial:u.initial||((u.name||'T').trim()[0]||'T').toUpperCase(),photo:u.photo||'',color:u.color||'',_real:!!u._real}; if(typeof _saveChats==='function')_saveChats(); } }
 function openChat(id){
-  var u=allUsers.find(function(x){return x.id===id;});if(!u)return;
-  _chatUser=id;
-  if(!conversations[id])conversations[id]=[];
+  var u=_resolveUser(id);if(!u)return;
+  _rememberChatUser(u);
+  _chatUser=String(id);
+  if(!conversations[_chatUser])conversations[_chatUser]=[];
   var h=document.getElementById('chat-header');
   if(h)h.innerHTML='<div style="width:42px;height:42px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>'
     +'<div style="flex:1"><div style="font-family:Cormorant Garamond,serif;font-size:21px;font-weight:500;line-height:1.1">'+escHtml(u.name)+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+escHtml(u.handle)+'</div></div>';
@@ -6168,8 +6301,8 @@ function openInbox(){
       name=g.name; onclick="openGroupChat('"+k+"')";
       avatar='<div style="width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,var(--ember),var(--gold));display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:18px">&#128101;</div>';
     } else {
-      var u=allUsers.find(function(x){return x.id==k;});if(!u)return'';
-      name=u.name; onclick="openChat("+u.id+")";
+      var u=_resolveUser(k);if(!u)return'';
+      name=u.name; onclick="openChat('"+escHtml(String(k))+"')";
       avatar='<div style="width:46px;height:46px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>';
     }
     return'<div onclick="'+onclick+'" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer">'
@@ -6192,31 +6325,52 @@ function openNewChat(){
   var ti=document.getElementById('nc-title'); if(ti)ti.textContent=t('newMessageTitle');
   closeModal(); openModal('sheet-new-chat'); renderNewChatList('');
 }
-function renderNewChatList(q){
-  q=(q||'').toLowerCase().trim();
-  var list=document.getElementById('nc-list'); if(!list)return;
-  var users=allUsers.filter(function(u){
+function _ncLocalMatches(q){
+  return allUsers.filter(function(u){
     if(_ncMode==='add'&&_ncTarget&&groups[_ncTarget]&&groups[_ncTarget].members.indexOf(u.id)>=0)return false;
     if(!q)return true;
     return (u.name||'').toLowerCase().indexOf(q)>=0 || (u.handle||'').toLowerCase().indexOf(q)>=0;
   });
-  if(!users.length){ list.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+t('noResults')+'</div>'; }
-  else list.innerHTML=users.map(function(u){
+}
+function _ncRenderRows(list,users){
+  if(!users.length){ list.innerHTML='<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+t('noResults')+'</div>'; _ncRefreshControls(); return; }
+  list.innerHTML=users.map(function(u){
     var sel=!!_ncSel[u.id];
-    return '<div onclick="toggleNcSel('+u.id+')" style="display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--paper-3);cursor:pointer">'
-      +'<div style="width:40px;height:40px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>'
-      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">'+escHtml(u.name)+'</div><div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace">@'+escHtml(u.handle)+'</div></div>'
+    return '<div onclick="toggleNcSel(\''+escHtml(String(u.id))+'\')" style="display:flex;align-items:center;gap:11px;padding:10px 2px;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+      +'<div style="width:40px;height:40px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0">'+(u.photo?'':escHtml(u.initial||''))+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:14px;color:var(--ink)">'+escHtml(u.name)+(u._real?' <span style=\'font-size:9px;color:var(--ember-dk);background:var(--ember-lt);border-radius:8px;padding:1px 6px;margin-left:4px;vertical-align:middle\'>Trafolio</span>':'')+'</div><div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace">@'+escHtml(u.handle)+'</div></div>'
       +'<div style="width:22px;height:22px;border-radius:50%;border:2px solid '+(sel?'var(--ember)':'var(--paper-3)')+';background:'+(sel?'var(--ember)':'transparent')+';color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">'+(sel?'✓':'')+'</div>'
       +'</div>';
   }).join('');
   _ncRefreshControls();
+}
+function _ncCombined(q){
+  var local=_ncLocalMatches(q);
+  return local.concat((_ncRealUsers||[]).filter(function(ru){ return !local.some(function(l){return String(l.id)===String(ru.id);}); }));
+}
+function renderNewChatList(q){
+  q=(q||'').toLowerCase().trim();
+  var list=document.getElementById('nc-list'); if(!list)return;
+  _ncRenderRows(list,_ncCombined(q));
+  // Look up REAL Trafolio members from Supabase and merge them in.
+  if(q && q.length>=2 && window.sb){
+    clearTimeout(_ncSearchT);
+    _ncSearchT=setTimeout(function(){
+      dbSearchUsers(q).then(function(users){
+        _ncRealUsers=users||[];
+        var cur=document.getElementById('nc-search'); var qq=(cur?cur.value:'').toLowerCase().trim();
+        if(qq!==q) return; // user kept typing — drop stale results
+        _ncRenderRows(list,_ncCombined(q));
+      }).catch(function(){});
+    },360);
+  } else { _ncRealUsers=[]; }
 }
 function toggleNcSel(id){ if(_ncSel[id])delete _ncSel[id]; else _ncSel[id]=true; var s=document.getElementById('nc-search'); renderNewChatList(s?s.value:''); }
 function _ncRefreshControls(){
   var ids=Object.keys(_ncSel); var n=ids.length;
   var chips=document.getElementById('nc-selected'); var grow=document.getElementById('nc-group-row'); var prim=document.getElementById('nc-primary');
   if(chips){
-    if(n){ chips.style.display='flex'; chips.innerHTML=ids.map(function(id){var u=allUsers.find(function(x){return x.id==id;});if(!u)return'';return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--paper-2);border-radius:20px;padding:4px 10px;font-size:12px">'+escHtml(u.name)+' <span onclick="event.stopPropagation();toggleNcSel('+u.id+')" style="cursor:pointer;color:var(--ink-4)">×</span></span>';}).join(''); }
+    if(n){ chips.style.display='flex'; chips.innerHTML=ids.map(function(id){var u=_resolveUser(id);if(!u)return'';return '<span style="display:inline-flex;align-items:center;gap:5px;background:var(--paper-2);border-radius:20px;padding:4px 10px;font-size:12px">'+escHtml(u.name)+' <span onclick="event.stopPropagation();toggleNcSel(\''+escHtml(String(u.id))+'\')" style="cursor:pointer;color:var(--ink-4)">×</span></span>';}).join(''); }
     else { chips.style.display='none'; chips.innerHTML=''; }
   }
   if(grow) grow.style.display = (_ncMode==='new' && n>=2) ? 'flex' : 'none';
@@ -6228,11 +6382,12 @@ function _ncRefreshControls(){
   }
 }
 function ncPrimaryAction(){
-  var ids=Object.keys(_ncSel).map(Number); if(!ids.length)return;
+  var ids=Object.keys(_ncSel); if(!ids.length)return;
+  ids.forEach(function(id){ var u=_resolveUser(id); if(u)_rememberChatUser(u); });
   if(_ncMode==='add' && _ncTarget){ addMembersToConversation(_ncTarget, ids); closeModal(); openGroupChat(_ncTarget); return; }
   if(ids.length===1){ closeModal(); openChat(ids[0]); return; }
   var nameEl=document.getElementById('nc-group-name');
-  var nm=(nameEl&&nameEl.value.trim())||ids.map(function(id){var u=allUsers.find(function(x){return x.id==id;});return u?u.name.split(' ')[0]:'';}).filter(Boolean).slice(0,3).join(', ');
+  var nm=(nameEl&&nameEl.value.trim())||ids.map(function(id){var u=_resolveUser(id);return u?u.name.split(' ')[0]:'';}).filter(Boolean).slice(0,3).join(', ');
   var key='g'+(_groupSeq++);
   groups[key]={name:nm, members:ids.slice()};
   conversations[key]=conversations[key]||[];
@@ -6243,7 +6398,7 @@ function openGroupChat(key){
   _chatUser=key; conversations[key]=conversations[key]||[];
   var h=document.getElementById('chat-header');
   if(h){
-    var avs=g.members.slice(0,3).map(function(id){var u=allUsers.find(function(x){return x.id==id;});if(!u)return'';return '<div style="width:30px;height:30px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;border:2px solid #fff;margin-left:-8px">'+(u.photo?'':u.initial)+'</div>';}).join('');
+    var avs=g.members.slice(0,3).map(function(id){var u=_resolveUser(id);if(!u)return'';return '<div style="width:30px;height:30px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:11px;border:2px solid #fff;margin-left:-8px">'+(u.photo?'':u.initial)+'</div>';}).join('');
     h.innerHTML='<div style="display:flex;align-items:center;flex-shrink:0;padding-left:8px">'+avs+'</div>'
       +'<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:500;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(g.name)+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+g.members.length+' '+t('membersWord')+'</div></div>';
   }
@@ -6443,6 +6598,7 @@ const S={
     privateProfileNote:"Private — your follow needs approval",
     placesRatedHint:"Search a place to see how the people you follow rated it.",
     placeSearchEmpty:"No places match your search",
+    followRequests:"Follow requests",accept:"Accept",decline:"Decline",requestAccepted:"Request accepted",requestDeclined:"Request declined",lockedTripHint:"Subscribe to Pro to share this trip",
     notRatedYet:"Not rated yet",
     followerRated1:"follower rated",
     followerRatedN:"followers rated",
@@ -15591,6 +15747,29 @@ function hydratePlaceThumbs(scope){
     googlePlacePhotoUrl(q,function(url){ if(url){ setPlaceThumb(img,url); } else { wikiPlaceThumb(img,q); } });
   })(imgs[i]);}
 }
+// ── Follow requests (private profiles) ── backed by Supabase table `follow_requests`.
+async function dbSendFollowReq(toId){ if(!window.sb||!userData.id)return; try{ await sb.from('follow_requests').upsert({from_id:userData.id,to_id:toId,from_name:userData.name||'',from_username:userData.username||'',status:'pending'},{onConflict:'from_id,to_id'}); }catch(e){} }
+async function loadFollowRequests(){ if(!window.sb||!userData.id)return []; try{ var r=await sb.from('follow_requests').select('*').eq('to_id',userData.id).eq('status','pending').order('created_at',{ascending:false}); return (r&&r.data)||[]; }catch(e){ return []; } }
+async function renderFollowRequests(){
+  var wrap=document.getElementById('follow-requests'); if(!wrap)return; wrap.innerHTML='';
+  if(!window.sb||!userData||!userData.id) return;
+  var reqs=await loadFollowRequests(); if(!reqs.length)return;
+  wrap.innerHTML='<div style="background:var(--paper-2);border-radius:14px;padding:14px;margin:6px 0 16px">'
+    +'<div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">'+t('followRequests')+' \u00b7 '+reqs.length+'</div>'
+    +reqs.map(function(r){ var nm=r.from_name||r.from_username||'?';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--paper-3)">'
+        +'<div style="width:36px;height:36px;border-radius:50%;background:var(--ember-lt);display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--ember-dk);flex-shrink:0">'+escHtml(nm.charAt(0).toUpperCase())+'</div>'
+        +'<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(r.from_name||'')+'</div><div style="font-size:11px;color:var(--ink-4)">@'+escHtml(r.from_username||'')+'</div></div>'
+        +'<button onclick="respondFollowReq(\''+escHtml(String(r.from_id))+'\',true)" style="background:var(--ember);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer">'+t('accept')+'</button>'
+        +'<button onclick="respondFollowReq(\''+escHtml(String(r.from_id))+'\',false)" style="background:var(--paper-3);color:var(--ink-2);border:none;border-radius:20px;padding:6px 12px;font-size:12px;cursor:pointer;margin-left:6px">'+t('decline')+'</button>'
+        +'</div>'; }).join('')+'</div>';
+}
+async function respondFollowReq(fromId,accept){
+  try{ if(window.sb&&userData.id) await sb.from('follow_requests').update({status:accept?'accepted':'declined'}).eq('from_id',fromId).eq('to_id',userData.id); }catch(e){}
+  if(accept){ userData.followers=userData.followers||[]; if(userData.followers.indexOf(fromId)<0)userData.followers.push(fromId); if(typeof persistSoon==='function')persistSoon(); var frs=document.getElementById('p-stat-followers'); if(frs)frs.textContent=(userData.followers||[]).length; }
+  toast(accept?t('requestAccepted'):t('requestDeclined'));
+  renderFollowRequests();
+}
 // Follow state honouring profile privacy. Public → follow instantly; private → send a request.
 function userIsPrivate(u){ return !!(u&&u.priv); }
 // Whether the current user may see another user's cities/trips/stories.
@@ -15622,6 +15801,7 @@ function actFollow(id){
     toast(t('requestCancelled'));
   }else if(u&&userIsPrivate(u)){
     userData.pendingFollows.push(id);
+    if(typeof dbSendFollowReq==='function')dbSendFollowReq(id);
     toast(t('requestSent'));
   }else if(u){
     userData.following.push(u);
@@ -16176,7 +16356,7 @@ function doGooglePlaceSearch(q,res){
   var country=currentTrip&&currentTrip.country?currentTrip.country:'';
   var searchInput=q;
   // If query already has the city, keep it; otherwise bias to country
-  var req={input:searchInput,types:['establishment','geocode']};
+  var req={input:searchInput,types:['establishment','geocode'],language:currentLang};
   // Guard: if Google never calls back (legacy Places API not enabled on the key),
   // fall back to Nominatim after a short wait and stop trying Google this session.
   var done=false;
@@ -16230,7 +16410,7 @@ function doGooglePlaceSearch(q,res){
 }
 
 function doNominatimSearch(q,res){
-  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=8&accept-language=en&q='+encodeURIComponent(q))
+  fetch('https://nominatim.openstreetmap.org/search?format=json&limit=8&accept-language='+currentLang+'&q='+encodeURIComponent(q))
     .then(function(r){return r.json();})
     .then(function(data){
       if(!data.length){res.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">No results found</div>';return;}
@@ -17058,6 +17238,8 @@ function inviteFriends(){
   var inp=document.getElementById('invite-link-inp'); if(inp)inp.value=link;
   var wa=document.getElementById('invite-wa'); if(wa)wa.href='https://wa.me/?text='+encodeURIComponent(msg);
   var em=document.getElementById('invite-email'); if(em)em.href='mailto:?subject='+encodeURIComponent('Join me on Trafolio')+'&body='+encodeURIComponent(msg);
+  if(wa)wa.onclick=function(e){ if(typeof _isNative==='function'&&_isNative()){ e.preventDefault(); try{window.open(this.href,'_system');}catch(_e){location.href=this.href;} } };
+  if(em)em.onclick=function(e){ if(typeof _isNative==='function'&&_isNative()){ e.preventDefault(); try{window.open(this.href,'_system');}catch(_e){location.href=this.href;} } };
   var sh=document.getElementById('invite-share'); if(sh)sh.style.display=(navigator.share?'':'none');
   var ct=document.getElementById('invite-contacts'); if(ct)ct.style.display=(_isNative() && window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.Contacts)?'':'none';
   openModal('sheet-invite');
@@ -17879,11 +18061,53 @@ function _persistPayload(level){
       name:userData.name,username:userData.username,bio:userData.bio,from:userData.from,livesIn:userData.livesIn,
       avatar:avatar,cover:cover,currency:userData.currency,isPublic:userData.isPublic,
       plan:userData.plan,subStatus:userData.subStatus,tierIdx:userData.tierIdx,
+      vibes:userData.vibes||[], statusNow:userData.statusNow||'', statusNext:userData.statusNext||'',
       following:(userData.following||[]).map(function(f){return f&&f.id;}).filter(function(x){return x!=null;}),
       pendingFollows:userData.pendingFollows||[]
     }
   };
 }
+// ── Resume where you left off: remember the active screen / trip tab / scroll. ──
+function _viewKey(){ return 'traf_view::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+function _saveView(){
+  if(typeof appMode==='undefined'||!appMode)return;
+  try{
+    var scr=document.querySelector('.screen.active'); var sid=scr?scr.id:'';
+    if(!sid||sid==='s-home')return;
+    var pe=document.querySelector('.prof-tab.active');
+    var v={screen:sid, tab:(typeof currentTab!=='undefined'?currentTab:''), ptab:pe?pe.getAttribute('data-ptab'):'',
+           tripId:(sid==='s-trip'&&currentTrip)?currentTrip.id:null, y:(window.scrollY||window.pageYOffset||0)};
+    localStorage.setItem(_viewKey(), JSON.stringify(v));
+  }catch(e){}
+}
+function _restoreView(){
+  try{
+    var v=JSON.parse(localStorage.getItem(_viewKey())||'null'); if(!v||!v.screen)return;
+    var go=function(){ try{ if(v.y) window.scrollTo(0,v.y); }catch(e){} };
+    if(v.screen==='s-trip' && v.tripId!=null && (trips||[]).some(function(t){return t.id===v.tripId;})){
+      openTrip(v.tripId);
+      if(v.tab && v.tab!=='places'){ var b=document.querySelector('#s-trip .tab-btn[data-tab="'+v.tab+'"]'); if(b)switchTab(b); }
+      setTimeout(go,320); return;
+    }
+    if(v.screen!=='s-trip' && document.getElementById(v.screen)){
+      showScreen(v.screen);
+      var map={'s-feed':'bnav-feed','s-explore':'bnav-explore','s-concierge':'bnav-concierge','s-profile':'bnav-profile'};
+      if(map[v.screen]&&typeof setActiveNav==='function')setActiveNav(map[v.screen]);
+      if(v.screen==='s-profile'&&v.ptab&&typeof switchProfileTab==='function')switchProfileTab(v.ptab);
+      setTimeout(go,320);
+    }
+  }catch(e){}
+}
+// Persist the view when the app is backgrounded or hidden (covers iOS killing the webview).
+(function(){
+  try{
+    document.addEventListener('visibilitychange',function(){ if(document.visibilityState==='hidden')_saveView(); });
+    window.addEventListener('pagehide',_saveView);
+    if(window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.App && Capacitor.Plugins.App.addListener){
+      Capacitor.Plugins.App.addListener('appStateChange',function(st){ if(st && st.isActive===false)_saveView(); });
+    }
+  }catch(e){}
+})();
 function persistState(){
   // Keep a lightweight recovery snapshot of the latest non-empty trips (metadata only —
   // strip heavy data-URL photos so it can't blow the quota). Lets us recover if a slot
@@ -17917,7 +18141,8 @@ function restoreState(){
     if(Array.isArray(d.orders)) orders=d.orders;
     if(d.user){
       var u=d.user;
-      ['name','username','bio','from','livesIn','avatar','cover','currency','plan','subStatus','tierIdx'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
+      ['name','username','bio','from','livesIn','avatar','cover','currency','plan','subStatus','tierIdx','statusNow','statusNext'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
+      if(Array.isArray(u.vibes)) userData.vibes=u.vibes;
       if(typeof u.isPublic!=='undefined') userData.isPublic=u.isPublic;
       if(Array.isArray(u.following)) userData.following=u.following.map(function(id){return allUsers.find(function(x){return x.id===id;});}).filter(Boolean);
       if(Array.isArray(u.pendingFollows)) userData.pendingFollows=u.pendingFollows;
@@ -18020,6 +18245,17 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
     <div style="padding:18px 20px 6px;font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="topThingsToDo">Top things to do</div>
     <div id="city-guide-things" style="padding:4px 16px 24px"></div>
   </div>
+</div>
+
+<div class="modal-sheet" id="sheet-vibe">
+  <div style="width:40px;height:4px;background:var(--paper-3);border-radius:3px;margin:2px auto 14px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:500;text-align:center">Your travel vibe ✨</div>
+  <div style="font-size:12px;color:var(--ink-4);text-align:center;margin-bottom:18px">Show the world your travel personality</div>
+  <div style="margin-bottom:12px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">📍 Currently in</div><input class="inp" id="sv-now" placeholder="e.g. Tokyo"></div>
+  <div style="margin-bottom:16px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">✈️ Next stop</div><input class="inp" id="sv-next" placeholder="e.g. Bali"></div>
+  <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);margin-bottom:8px">Pick your vibes</div>
+  <div id="sv-chips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px"></div>
+  <button class="btn btn-ember btn-full" onclick="saveVibes()">Save</button>
 </div>
 
 <!-- ════ Doc / info overlay (Terms, Privacy, Help, About, etc.) ════ -->
