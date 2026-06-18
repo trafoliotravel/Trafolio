@@ -1962,7 +1962,7 @@ body.show-lbar .lbar{display:none}
       <!-- Single ⋯ menu consolidating the cover/header actions -->
       <button onclick="copyProfileLink()" aria-label="Share profile" title="Share profile" data-i18n-title="shareProfile" style="position:absolute;top:26px;right:58px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;z-index:6">&#8599;</button>
       <button onclick="toggleProfileMenu(event)" aria-label="Profile actions" title="More" style="position:absolute;top:26px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;z-index:6">&#8943;</button>
-      <div id="profile-menu" style="display:none;position:fixed;top:58px;right:14px;background:#fff;border:1px solid var(--paper-3);border-radius:14px;box-shadow:0 10px 30px rgba(0,28,48,.18);overflow:hidden;width:210px;z-index:120">
+      <div id="profile-menu" style="display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 62px);right:14px;background:#fff;border:1px solid var(--paper-3);border-radius:14px;box-shadow:0 10px 30px rgba(0,28,48,.18);overflow:hidden;width:210px;z-index:1000">
         <div onclick="closeProfileMenu();editProfile()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editProfile">Edit profile</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-cover-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">📷 <span data-i18n="changeCover">Change cover</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-av-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">🖼️ <span data-i18n="changePhoto">Change photo</span></div>
@@ -2048,7 +2048,7 @@ body.show-lbar .lbar{display:none}
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 4px 10px">
           <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="myTravelMap">My travel map</div>
           <div style="display:flex;align-items:center;gap:14px">
-            <button onclick="toggleMapPins()" id="map-pins-toggle" title="Show / hide pins" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ink-3);font-weight:600">📍 PINS</button>
+            <button onclick="toggleMapPins()" id="map-pins-toggle" title="Show / hide pins" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ink-3);font-weight:600">📍 Remove pins</button>
             <button onclick="shareTravelMap()" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ember);font-weight:600">&#11157; <span data-i18n="shareMap">SHARE MAP</span></button>
           </div>
         </div>
@@ -2143,6 +2143,7 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
       // Restore THIS account's local trips as a baseline (so nothing is lost while the
       // cloud loads). dbLoadUserTrips() then merges cloud data on top — never blanks it.
       if(typeof setCurrentAccount==='function') setCurrentAccount(user.email||user.id);
+      if(typeof _resetInMemoryState==='function') _resetInMemoryState(); // never inherit the previous account's cover/avatar/data
       trips = [];
       if(typeof restoreState==='function') restoreState();
       enterApp();
@@ -2251,7 +2252,7 @@ function localResume(){
 // Chat persistence (per account)
 function _chatKey(){ return 'trafolio_chats::'+(typeof _currentAccount!=='undefined'?_currentAccount:''); }
 function _saveChats(){ try{ localStorage.setItem(_chatKey(), JSON.stringify({c:conversations,g:(typeof groups!=='undefined'?groups:{}),u:(typeof _chatUsers!=='undefined'?_chatUsers:{})})); }catch(e){} }
-function _loadChats(){ try{ var r=JSON.parse(localStorage.getItem(_chatKey())||'null'); if(r&&r.c){ conversations=r.c; if(r.g&&typeof groups!=='undefined')groups=r.g; if(r.u&&typeof _chatUsers!=='undefined')_chatUsers=r.u; } }catch(e){} }
+function _loadChats(){ conversations={}; if(typeof groups!=='undefined')groups={}; if(typeof _chatUsers!=='undefined')_chatUsers={}; try{ var r=JSON.parse(localStorage.getItem(_chatKey())||'null'); if(r&&r.c){ conversations=r.c; if(r.g&&typeof groups!=='undefined')groups=r.g; if(r.u&&typeof _chatUsers!=='undefined')_chatUsers=r.u; } }catch(e){} }
 // If Supabase isn't available at all, still resume a local session on load.
 if(!sb){ setTimeout(function(){ try{ localResume(); }catch(e){} }, 0); }
 
@@ -4028,8 +4029,8 @@ function renderProfile(){
   if(stWrap){ if(isUSUser()){ stWrap.style.display=''; var stEl=document.getElementById('p-stat-states'); if(stEl)stEl.textContent=countUSStates(trips); } else { stWrap.style.display='none'; } }
   var pill=document.getElementById('profile-privacy-pill');
   if(pill){pill.className='privacy-pill '+(userData.isPublic?'public':'private');pill.innerHTML=userData.isPublic?t('publicLabel'):t('privateLabel');}
-  if(userData.cover){var pc=document.getElementById('profile-cover');if(pc){pc.src=userData.cover;pc.style.opacity='1';}}
-  if(userData.avatar){['profile-av','dash-av','top-av'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.backgroundImage='url('+userData.avatar+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}});}
+  {var pc=document.getElementById('profile-cover');if(pc){pc.src=(userData.cover||DEFAULT_PROFILE_COVER);pc.style.opacity='1';}}
+  ['profile-av','dash-av','top-av'].forEach(function(id){var el=document.getElementById(id);if(!el)return;if(userData.avatar){el.style.backgroundImage='url('+userData.avatar+')';el.style.backgroundSize='cover';el.style.backgroundPosition='center';el.textContent='';}else{el.style.backgroundImage='';el.textContent=(userData.name||'?').charAt(0).toUpperCase();}});
   renderProfileGrid();
   renderTravelMap();
   renderProfileStories();
@@ -4347,7 +4348,7 @@ function renderTravelMap(){
     map.appendChild(pin);
   });
   var nc=pts.cityCount;
-  var ncc=pts.countryCount;
+  var ncc=(typeof countCountries==='function')?countCountries(trips):pts.countryCount;
   var ec=document.getElementById('tm-cities'); if(ec)ec.textContent=nc;
   var ecc=document.getElementById('tm-countries'); if(ecc)ecc.textContent=ncc;
   var nm=document.getElementById('tm-name'); if(nm)nm.textContent=(userData.name?userData.name+'’s':'My');
@@ -4378,9 +4379,10 @@ function shareTravelMap(){
         var hx=x, hy=y-24*scale, r=12*scale;
         ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-7*scale,hy+5*scale);ctx.lineTo(hx+7*scale,hy+5*scale);ctx.closePath();ctx.fillStyle='#E0633A';ctx.fill();
         ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#E0633A';ctx.stroke();
-        ctx.textAlign='center';ctx.textBaseline='middle';
-        ctx.font=Math.round(r*1.45)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';ctx.fillStyle='#0a1a26';
-        try{ctx.fillText(c.flag||'📍',hx,hy);}catch(e){}
+        ctx.textBaseline='middle';ctx.textAlign='left';
+        ctx.font=Math.round(r*1.5)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';ctx.fillStyle='#0a1a26';
+        var _fl=c.flag||'📍'; var _fw=ctx.measureText(_fl).width; if(!_fw||_fw>r*4.5)_fw=r*1.7;
+        try{ctx.fillText(_fl,hx-_fw/2,hy);}catch(e){}
       });
       ctx.textBaseline='alphabetic';
       // Title (top band)
@@ -4433,7 +4435,7 @@ function renderProfileExtras(){
     html+=trips.map(function(tr){
       var cov=(tr.cover && tr.cover.indexOf('blob:')!==0)?tr.cover:'';
       var fl=(typeof flagForCountry==='function'&&flagForCountry(tr.country))||tr.flag||'📍';
-      return '<div onclick="openTrip('+tr.id+')" style="flex:0 0 auto;text-align:center;cursor:pointer;width:64px">'
+      return '<div onclick="openTripStory('+tr.id+')" style="flex:0 0 auto;text-align:center;cursor:pointer;width:64px">'
         +'<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#7B2FBE,#E0633A);padding:3px;box-sizing:border-box">'
         +'<div style="position:relative;width:100%;height:100%;border-radius:50%;border:2px solid var(--paper);overflow:hidden;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:24px">'+fl
         +(cov?'<img src="'+escHtml(cov)+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">':'')
@@ -4465,7 +4467,7 @@ function saveVibes(){
 }
 function toggleMapPins(){
   window._hideMapPins=!window._hideMapPins;
-  var b=document.getElementById('map-pins-toggle'); if(b)b.style.opacity=window._hideMapPins?'.4':'1';
+  var b=document.getElementById('map-pins-toggle'); if(b){ b.style.opacity='1'; b.innerHTML=window._hideMapPins?'📍 Add pins':'📍 Remove pins'; }
   if(typeof renderTravelMap==='function')renderTravelMap();
 }
 // ✨ Travel Wrapped — a shareable, Gen-Z, Spotify-Wrapped-style stats card (PNG).
@@ -4587,7 +4589,7 @@ function deleteAccount(){
       var creds=JSON.parse(localStorage.getItem('trafolio_accounts')||'{}'); delete creds[_currentAccount]; localStorage.setItem('trafolio_accounts',JSON.stringify(creds));
     }
     localStorage.removeItem('trafolio_current_account');
-    localStorage.removeItem('trafolio_trips_recovery');
+    localStorage.removeItem(_recoveryKey());
   }catch(e){}
   if(typeof sb!=='undefined' && sb && sb.auth){ try{ sb.auth.signOut().catch(function(){}); }catch(e){} }
   trips=[]; if(typeof userStories!=='undefined')userStories=[];
@@ -5826,7 +5828,13 @@ function applyIdentity(){
     else { el.style.backgroundImage='';el.textContent=initial; }
   });
 }
+function _setAuthLoading(on){
+  var b=document.getElementById('auth-submit-btn')||document.getElementById('auth-submit'); if(!b)return;
+  if(on){ if(!b.getAttribute('data-label'))b.setAttribute('data-label',b.textContent); b.disabled=true; b.style.opacity='.65'; b.style.cursor='wait'; b.textContent=((typeof _amode!=='undefined'&&_amode==='login')?'Signing in…':'Creating account…'); }
+  else { b.disabled=false; b.style.opacity='1'; b.style.cursor='pointer'; var l=b.getAttribute('data-label'); if(l)b.textContent=l; }
+}
 function setAuthErr(msg, ok){
+  if(typeof _setAuthLoading==='function')_setAuthLoading(false);
   var e=document.getElementById('auth-err');
   if(e){ e.textContent=msg||''; e.style.display=msg?'block':'none'; e.style.color=ok?'#2f7d4f':''; e.style.lineHeight='1.5'; }
   else if(msg&&typeof toast==='function'){ toast(msg); }
@@ -5876,7 +5884,7 @@ function doAuth(){
     if(hasSb){
       // Cloud signup → creates a Supabase session so the account (and its trips/photos)
       // syncs across every device the user logs in from.
-      setAuthErr('');
+      setAuthErr(''); _setAuthLoading(true);
       sb.auth.signUp({email:email,password:pass,options:{data:{full_name:name,preferred_username:clean}}}).then(function(res){
         if(res.error){
           var m=String(res.error.message||'');
@@ -5904,7 +5912,7 @@ function doAuth(){
     if(hasSb){
       // Cloud login → onAuthStateChange(SIGNED_IN) loads this user's trips/photos from Supabase
       // (same data on phone and desktop).
-      setAuthErr('');
+      setAuthErr(''); _setAuthLoading(true);
       sb.auth.signInWithPassword({email:email,password:pass}).then(function(res){
         if(res.error){
           var m=String(res.error.message||'');
@@ -6003,6 +6011,118 @@ var USER_CITY_IMG={Tokyo:'https://images.unsplash.com/photo-1540959733332-eab4de
 var _profileReturn=null,_profileReturnActive=null;
 function openUserProfileWithBack(id,fn){ _profileReturn=fn; openUserProfile(id); }
 function profileBack(){ var f=_profileReturnActive; _profileReturnActive=null; closeModal(); if(f)setTimeout(f,260); }
+// ── Instagram-style story viewer (shared by your profile + viewed profiles) ──
+function imgErr(el){ if(el)el.style.display='none'; }
+var _sv={items:[],i:0,timer:null};
+function openStoryViewer(items, start){
+  // items: [{url,title}]  (legacy: array of url strings is accepted too)
+  items=(items||[]).map(function(it){ return (typeof it==='string')?{url:it,title:''}:it; }).filter(function(it){ return it&&it.url; });
+  if(!items.length){ if(typeof toast==='function')toast('No photos yet'); return; }
+  _sv.items=items; _sv.i=Math.max(0,Math.min(start||0,items.length-1));
+  var v=document.getElementById('story-viewer'); if(!v)return;
+  v.style.display='block'; svRender();
+}
+function svRender(){
+  var v=document.getElementById('story-viewer'); if(!v||v.style.display==='none')return;
+  var it=_sv.items[_sv.i]||{};
+  var im=document.getElementById('sv-img'); if(im){ im.style.display='block'; im.src=it.url; }
+  var hd=document.getElementById('sv-head'); if(hd)hd.innerHTML='<span style="font-size:15px">📸</span> <span>'+escHtml(it.title||'')+'</span> <span style="opacity:.7">· '+(_sv.i+1)+'/'+_sv.items.length+'</span>';
+  var bars=document.getElementById('sv-bars');
+  if(bars){
+    if(_sv.items.length<=18){ bars.innerHTML=_sv.items.map(function(_,k){ return '<div style="flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,'+((k<=_sv.i)?'0.95':'0.32')+')"></div>'; }).join(''); }
+    else { bars.innerHTML='<div style="flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.32);overflow:hidden"><div style="height:100%;width:'+Math.round((_sv.i+1)/_sv.items.length*100)+'%;background:#fff"></div></div>'; }
+  }
+  clearTimeout(_sv.timer); _sv.timer=setTimeout(svNext, 4200);
+}
+function svNext(){ if(_sv.i<_sv.items.length-1){ _sv.i++; svRender(); } else { svClose(); } }
+function svPrev(){ if(_sv.i>0){ _sv.i--; svRender(); } }
+function svClose(){ clearTimeout(_sv.timer); var v=document.getElementById('story-viewer'); if(v)v.style.display='none'; }
+// Your own trip circle → story of that trip's photos (or its cover image if none uploaded).
+function _tripStoryImgs(tr){
+  var imgs=(tr.photos||[]).map(function(p){return p.url;}).filter(function(u){return u && u.indexOf('blob:')!==0;});
+  if(!imgs.length){ var c=(tr.cover&&tr.cover.indexOf('blob:')!==0&&tr.cover.indexOf('data:')!==0)?tr.cover:((typeof USER_CITY_IMG!=='undefined'&&USER_CITY_IMG[tr.dest])||''); if(c)imgs=[c]; }
+  return imgs;
+}
+function openTripStory(tripId){
+  // Build ONE continuous playlist across all trips (newest→oldest) and start at the tapped trip,
+  // so the story flows from country to country. Photos come from each trip's Photos section.
+  var list=(trips||[]).slice().sort(function(a,b){ return String(b.startDate||b.dates||'').localeCompare(String(a.startDate||a.dates||''))||((b.id||0)-(a.id||0)); });
+  var items=[], start=0;
+  list.forEach(function(tr){ if(tr.id===tripId||tr.dbId===tripId) start=items.length; _tripStoryImgs(tr).forEach(function(u){ items.push({url:u,title:tr.dest}); }); });
+  if(!items.length){ openTrip(tripId); return; }
+  openStoryViewer(items, start);
+}
+
+// ── Viewed-traveller profile: same look as your own profile ──
+var _viewedTrips=[], _viewedUserId=null, _viewedUserObj=null, _lastViewedOpts=null;
+function openStoryViewerIdx(i){
+  var items=[], start=0;
+  (_viewedTrips||[]).forEach(function(tp,idx){ if(idx===i) start=items.length; var imgs=(tp.images&&tp.images.length?tp.images:(tp.img?[tp.img]:[])); imgs.forEach(function(u){ items.push({url:u,title:tp.title}); }); });
+  if(!items.length){ if(typeof toast==='function')toast('No photos yet'); return; }
+  openStoryViewer(items, start);
+}
+function openViewedTrip(i){ var t=_viewedTrips[i]; if(!t)return; if(t.navCity){ openUserCity(t.navId,t.navCity); } else { _viewTripDetail(i); } }
+function _viewTripDetail(i){
+  var tp=_viewedTrips[i]; var body=document.getElementById('upm-body'); if(!tp||!body)return;
+  var places=tp.places||[]; var CAT=(typeof CAT_ICONS!=='undefined')?CAT_ICONS:{};
+  var html='<button onclick="renderViewedProfile(_lastViewedOpts)" title="Back" style="position:absolute;top:12px;left:12px;z-index:40;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);color:#fff;font-size:18px;cursor:pointer">←</button>';
+  html+='<div style="position:relative;height:170px;overflow:hidden;background:var(--ink);margin:0 -20px"><img src="'+escHtml(tp.img||'')+'" style="width:100%;height:100%;object-fit:cover" onerror="imgErr(this)"><div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent 60%)"></div><div style="position:absolute;bottom:12px;left:16px;right:16px;color:#fff;font-family:Cormorant Garamond,serif;font-size:24px;font-weight:600">'+escHtml(tp.title||'')+'</div></div>';
+  html+='<div style="padding:16px 20px 24px">';
+  if(tp.images&&tp.images.length){ html+='<button onclick="openStoryViewerIdx('+i+')" class="btn btn-ember btn-full" style="margin-bottom:16px">📸 '+t('viewPhotos')+' ('+tp.images.length+')</button>'; }
+  html+='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">'+t('tabPlaces')+(places.length?' · '+places.length:'')+'</div>';
+  if(places.length){
+    html+=places.map(function(pl){ return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--paper-3)"><span style="font-size:18px;flex-shrink:0">'+((CAT[pl.cat]||'📍'))+'</span><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--ink)">'+escHtml(pl.name||'')+'</div>'+(pl.note?'<div style="font-size:12px;color:var(--ink-4)">'+escHtml(pl.note)+'</div>':'')+'</div>'+(pl.rating?'<span style="font-size:11px;color:var(--ink-4)">'+('★'.repeat(Math.max(0,Math.min(5,pl.rating))))+'</span>':'')+'</div>'; }).join('');
+  } else {
+    html+='<div style="padding:24px;text-align:center;color:var(--ink-4);font-size:13px">'+t('noPlacesYet')+'</div>';
+  }
+  html+='</div>';
+  body.innerHTML=html;
+}
+function viewedFollow(btn){ if(_viewedUserId!=null) toggleFollowProfile(_viewedUserId, btn); }
+function viewedMessage(){ if(_viewedUserObj && typeof _rememberChatUser==='function')_rememberChatUser(_viewedUserObj); if(_viewedUserId!=null) openChat(_viewedUserId); }
+var VIEW_FALLBACK_COVER='https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1200&q=85&auto=format&fit=crop';
+function renderViewedProfile(o){
+  var body=document.getElementById('upm-body'); if(!body)return;
+  _viewedUserId=o.id; _lastViewedOpts=o;
+  _viewedUserObj={id:o.id,name:o.name||'',handle:o.handle||'',initial:o.initial||((o.name||'T').trim()[0]||'T').toUpperCase(),photo:o.photo||'',color:o.color||'',_real:true};
+  var trips=o.trips||[], stories=o.stories||[], canView=(o.canView!==false);
+  _viewedTrips=trips.map(function(tp){ return {title:tp.dest, img:tp.img||'', images:(tp.images&&tp.images.length?tp.images:(tp.img?[tp.img]:[])), navId:tp.navId, navCity:tp.navCity, places:tp.places||[]}; });
+  var avBg=o.avbg || (o.photo?('background:#ccc center/cover no-repeat url('+o.photo+')'):('background:'+(o.color||'linear-gradient(135deg,var(--ember),var(--gold))')));
+  var cover=o.cover||VIEW_FALLBACK_COVER;
+  var tile=function(v,lab){ return '<div style="text-align:center"><div style="font-family:Cormorant Garamond,serif;font-size:22px;font-weight:600;color:var(--ink)">'+v+'</div><div style="font-size:11px;color:var(--ink-4)">'+lab+'</div></div>'; };
+  var html='<button onclick="profileBack()" title="Back" aria-label="Back" style="position:absolute;top:12px;left:12px;z-index:40;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);color:#fff;font-size:18px;cursor:pointer">←</button>';
+  html+='<div style="position:relative;height:148px;overflow:hidden;background:var(--ink);margin:0 -20px"><img src="'+escHtml(cover)+'" style="width:100%;height:100%;object-fit:cover" onerror="imgErr(this)"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.12),transparent 50%,rgba(250,250,248,1))"></div></div>';
+  html+='<div style="padding:0 20px;text-align:center">';
+  html+='<div style="position:relative;z-index:3;margin-top:-44px;margin-bottom:8px"><div style="width:84px;height:84px;border-radius:50%;'+avBg+';display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto;border:3.5px solid var(--paper);box-shadow:0 4px 16px rgba(0,28,48,.2)">'+(o.photo?'':escHtml(o.initial||''))+'</div></div>';
+  html+='<div style="font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500;letter-spacing:-.01em">'+escHtml(o.name||'')+'</div>';
+  html+='<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin:3px 0 8px">@'+escHtml(o.handle||'')+'</div>';
+  if(o.tier)html+='<div style="margin:0 0 10px"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border-radius:30px;padding:5px 12px;font-size:11px;font-weight:600">'+o.tier.emoji+' '+escHtml(o.tier.label)+'</span></div>';
+  if(o.bio)html+='<div style="font-size:13px;color:var(--ink-3);line-height:1.55;margin-bottom:14px;padding:0 10px">'+escHtml(o.bio)+'</div>';
+  html+='<div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:14px;flex-wrap:wrap">'+tile(o.countries||0,'🌍 '+t('countriesWordCap'))+tile(trips.length,'🧳 '+t('trips'))+tile(o.places||0,'🏙️ '+t('tabPlaces'))+(stories.length?tile(stories.length,'✍️ '+t('tabStories')):'')+'</div>';
+  if(o.isPrivate && o.followStatus==='none')html+='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--ink-4);margin-bottom:8px">🔒 '+t('privateProfileNote')+'</div>';
+  html+='<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn '+(o.followStatus==='none'?'btn-ember':'btn-ghost')+'" style="flex:1" id="upm-follow-btn" onclick="viewedFollow(this)">'+followLabel(o.id)+'</button><button class="btn btn-ghost" onclick="viewedMessage()" style="flex:1">'+t('messageBtn')+'</button></div></div>';
+  if(!canView){ html+='<div style="border-top:8px solid var(--paper-2);padding:28px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔒</div><div style="font-size:13px;line-height:1.5;padding:0 16px">'+t('privateLockMsg')+'</div></div>'; body.innerHTML=html; return; }
+  if(trips.length){
+    html+='<div style="border-top:8px solid var(--paper-2);padding:16px 16px 4px">';
+    html+='<div style="display:flex;gap:14px;overflow-x:auto;padding:2px 4px 12px;scrollbar-width:none;'+((trips.length<4)?'justify-content:center':'')+'">';
+    html+=trips.map(function(tp,idx){
+      var img=tp.img||'';
+      return '<div onclick="openStoryViewerIdx('+idx+')" style="flex:0 0 auto;text-align:center;cursor:pointer;width:66px"><div style="width:66px;height:66px;border-radius:50%;background:linear-gradient(135deg,#7B2FBE,#E0633A);padding:3px;box-sizing:border-box"><div style="position:relative;width:100%;height:100%;border-radius:50%;border:2px solid var(--paper);overflow:hidden;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:24px">'+(tp.flag||'📍')+(img?'<img src="'+escHtml(img)+'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="imgErr(this)">':'')+'</div></div><div style="font-size:10px;color:var(--ink-3);margin-top:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(tp.dest||'')+'</div></div>';
+    }).join('');
+    html+='</div>';
+    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0 16px">';
+    html+=trips.map(function(tp,idx){
+      return '<div onclick="openViewedTrip('+idx+')" style="position:relative;aspect-ratio:1;overflow:hidden;border-radius:6px;cursor:pointer;background:var(--paper-3)">'+(tp.img?'<img src="'+escHtml(tp.img)+'" style="width:100%;height:100%;object-fit:cover" onerror="imgErr(this)">':'')+'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div><div style="position:absolute;bottom:6px;left:8px;right:8px;color:#fff;font-family:Cormorant Garamond,serif;font-size:14px;font-weight:500;line-height:1.1">'+(tp.flag||'')+' '+escHtml(tp.dest||'')+'</div></div>';
+    }).join('');
+    html+='</div></div>';
+  }
+  if(stories.length){
+    html+='<div style="border-top:8px solid var(--paper-2);padding:16px 20px 12px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('tabStories')+'</div>';
+    html+=stories.map(function(s,si){ return '<div style="padding:12px 0;border-bottom:1px solid var(--paper-3)"><div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink);margin-bottom:4px">'+escHtml(s.title||'')+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(String(s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div></div>'; }).join('');
+    html+='</div>';
+  }
+  body.innerHTML=html;
+}
 function openUserProfile(id){
   var u=allUsers.find(function(x){return x.id===id;});
   if(!u){
@@ -6010,76 +6130,15 @@ function openUserProfile(id){
     if(real){ openRealUserProfile(real); }
     return;
   }
-  _profileReturnActive=_profileReturn; _profileReturn=null; // back target, if any
-  var isFollowing=(userData.following||[]).some(function(f){return f.id===id;});
-  var muts=u.mutuals||[];
-  var body=document.getElementById('upm-body');
-  if(!body)return;
-
+  _profileReturnActive=_profileReturn; _profileReturn=null;
   var destList=(u.dest||'').split(',').map(function(d){return d.trim();}).filter(Boolean);
-  var imgs=USER_CITY_IMG;
-  var fallbackImg='https://images.unsplash.com/photo-1488085061387-422e29b40080?w=300&q=80';
-
+  var imgs=USER_CITY_IMG, fallbackImg='https://images.unsplash.com/photo-1488085061387-422e29b40080?w=600&q=80';
   var theirStories=cityStories.filter(function(s){return s.author&&s.author.id===id;});
-  var canView=canViewUserContent(u); // private profiles hide cities/stories from non-followers
-  var gtier=(typeof TIER_GLOBAL!=='undefined')?TIER_GLOBAL[globalTierIdx(destList.length)]:null; // traveller tier from country count
-
-  body.innerHTML='<button onclick="profileBack()" title="Back" aria-label="Back" style="position:absolute;top:10px;left:12px;z-index:40;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink);font-size:17px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center">&#8592;</button>'
-    +'<div style="text-align:center;padding:28px 20px 16px">'
-    +'<div style="width:80px;height:80px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 12px">'+(u.photo?'':u.initial)+'</div>'
-    +'<div style="font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500;letter-spacing:-.01em">'+u.name+'</div>'
-    +'<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin:4px 0 8px">@'+u.handle+'</div>'
-    +(gtier?'<div style="margin:0 0 10px"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border-radius:30px;padding:5px 12px;font-size:11px;font-weight:600">'+gtier.emoji+' '+gtier.label+'</span></div>':'')
-    +(u.bio?'<div style="font-size:13px;color:var(--ink-3);line-height:1.55;margin-bottom:14px;padding:0 10px">'+u.bio+'</div>':'')
-    +'<div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px">'
-    +'<div style="text-align:center;padding:10px 20px;background:var(--paper-2);border-radius:var(--r-md)"><div style="font-family:Cormorant Garamond,serif;font-size:22px">'+u.trips+'</div><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);letter-spacing:.1em">'+t('trips').toUpperCase()+'</div></div>'
-    +(destList.length?'<div style="text-align:center;padding:10px 20px;background:var(--paper-2);border-radius:var(--r-md)"><div style="font-family:Cormorant Garamond,serif;font-size:22px">'+destList.length+'</div><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);letter-spacing:.1em">'+t('countriesLabel').toUpperCase()+'</div></div>':'')
-    +(theirStories.length?'<div style="text-align:center;padding:10px 20px;background:var(--paper-2);border-radius:var(--r-md)"><div style="font-family:Cormorant Garamond,serif;font-size:22px">'+theirStories.length+'</div><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);letter-spacing:.1em">'+t('tabStories').toUpperCase()+'</div></div>':'')
-    +'</div>'
-    +(muts.length?
-      '<div style="background:var(--ember-lt);border-radius:var(--r-md);padding:10px 14px;margin:0 0 14px;display:flex;align-items:center;gap:10px;text-align:left">'
-      +'<div style="display:flex">'+muts.slice(0,3).map(function(m){return'<div style="width:24px;height:24px;border-radius:50%;'+avatarBg(m)+';display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:white;border:2px solid white">'+(m.photo?'':m.initial)+'</div>';}).join('')+'</div>'
-      +'<div style="font-size:12px;color:var(--ember-dk)">'+t('mutualLabel')+': '+muts.slice(0,2).map(function(m){return m.name.split(' ')[0];}).join(', ')+(muts.length>2?' +more':'')+'</div>'
-      +'</div>'
-    :'')
-    +(userIsPrivate(u)&&followStatusOf(id)==='none'?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--ink-4);margin-bottom:8px">🔒 '+t('privateProfileNote')+'</div>':'')
-    +'<div style="display:flex;gap:8px;margin-bottom:4px">'
-    +'<button class="btn '+(followStatusOf(id)==='none'?'btn-ember':'btn-ghost')+'" style="flex:1" id="upm-follow-btn" onclick="toggleFollowProfile('+id+',this)">'+followLabel(id)+'</button>'
-    +'<button class="btn btn-ghost" onclick="openChat('+id+')" style="flex:1">'+t('messageBtn')+'</button>'
-    +'</div>'
-    +'</div>'
-    +(!canView?
-      '<div style="border-top:8px solid var(--paper-2);padding:28px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔒</div><div style="font-size:13px;line-height:1.5;padding:0 16px">'+t('privateLockMsg')+'</div></div>'
-    :'')
-    +((canView&&destList.length)?
-      '<div style="border-top:8px solid var(--paper-2);padding:16px 20px 8px">'
-      +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px">'+t('publicTrips')+'</div>'
-      +'<div style="display:flex;flex-direction:column;gap:10px">'
-      +destList.map(function(dest){
-        var img=imgs[dest]||fallbackImg;
-        var np=(CITY_PLACES[dest]||[]).length;
-        var sk=savedKey(id,dest),sv=isTripSaved(id,dest);
-        return'<div onclick="openUserCity('+id+',\''+dest.replace(/'/g,"\\'")+'\')" style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--paper-2);border-radius:var(--r-md);cursor:pointer">'
-          +'<img src="'+img+'" onerror="this.onerror=null;this.src=\''+fallbackImg+'\'" style="width:60px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0" loading="lazy">'
-          +'<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink)">'+cityFlag(dest)+' '+dest+'</div>'
-          +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4);margin-top:2px">'+(np?np+' '+t('places').toUpperCase()+' \xB7 ':'')+t('tapToExplore').toUpperCase()+'</div></div>'
-          +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0">'+saveCountBadge(id,dest)
-          +'<button data-save-key="'+sk+'" onclick="toggleSaveTrip('+id+',\''+dest.replace(/'/g,"\\'")+'\',event)" style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.04em;border-radius:20px;padding:7px 11px;cursor:pointer;border:1px solid var(--paper-3);background:'+(sv?'var(--ember-lt)':'#fff')+';color:'+(sv?'var(--ember-dk)':'var(--ink-2)')+'">'+(sv?('🔖 '+t('savedBtn')):('+ '+t('saveBtn')))+'</button></div></div>';
-      }).join('')
-      +'</div></div>'
-    :'')
-    +((canView&&theirStories.length)?
-      '<div style="border-top:8px solid var(--paper-2);padding:16px 20px 12px">'
-      +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('tabStories')+'</div>'
-      +theirStories.map(function(s){
-        return'<div style="padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer" onclick="closeModal();setTimeout(function(){openCityStory(\''+s.id+'\',\''+s.city+'\');},300)">'
-          +'<div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink);margin-bottom:4px">'+s.title+'</div>'
-          +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+s.city.toUpperCase()+' \xB7 '+s.date+' \xB7 <span style="color:'+(s.liked?'#E8334A':'inherit')+'">'+(s.liked?'\u2665':'\u2661')+' '+s.likes+'</span></div>'
-          +'</div>';
-      }).join('')
-      +'</div>'
-    :'');
-
+  var canView=canViewUserContent(u);
+  var gtier=(typeof TIER_GLOBAL!=='undefined')?TIER_GLOBAL[globalTierIdx(destList.length)]:null;
+  var places=destList.reduce(function(a,d){return a+((CITY_PLACES[d]||[]).length);},0);
+  var trips=destList.map(function(dest){ var img=imgs[dest]||fallbackImg; return {dest:dest, flag:cityFlag(dest), img:img, images:[img], navId:id, navCity:dest}; });
+  renderViewedProfile({ id:id, name:u.name, handle:u.handle, photo:u.photo||'', color:u.color||'', avbg:avatarBg(u), initial:u.initial, bio:u.bio||'', tier:gtier, cover:(imgs[destList[0]]||''), countries:destList.length, places:places, trips:(canView?trips:[]), stories:(canView?theirStories:[]), canView:canView, isPrivate:userIsPrivate(u), followStatus:followStatusOf(id) });
   openModal('sheet-user-profile');
 }
 
@@ -6087,49 +6146,34 @@ function openUserProfile(id){
 async function openRealUserProfile(u){
   _profileReturnActive=_profileReturn; _profileReturn=null;
   var body=document.getElementById('upm-body'); if(!body) return;
-  body.innerHTML='<button onclick="profileBack()" title="Back" aria-label="Back" style="position:absolute;top:10px;left:12px;z-index:40;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink);font-size:17px;cursor:pointer">←</button><div style="text-align:center;padding:46px 20px;color:var(--ink-4)">'+t('searching')+'</div>';
+  body.innerHTML='<div style="text-align:center;padding:46px 20px;color:var(--ink-4)">'+t('searching')+'</div>';
   openModal('sheet-user-profile');
-  var prof=u, utrips=[];
+  var prof=u, utrips=[], allPhotos=[], allPlaces=[];
   if(sb && u.id){
     try{
       var pr=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
       if(pr&&pr.data){ prof=Object.assign({}, u, _mapProfileToUser(pr.data)); prof.bio=pr.data.bio||''; }
       var tr=await sb.from('trips').select('*').eq('user_id',u.id).neq('privacy','private').order('created_at',{ascending:false}).limit(50);
       if(tr&&tr.data) utrips=tr.data;
+      var ph=await sb.from('photos').select('*').eq('user_id',u.id);
+      if(ph&&ph.data) allPhotos=ph.data;
+      var pl=await sb.from('places').select('*').eq('user_id',u.id);
+      if(pl&&pl.data) allPlaces=pl.data;
     }catch(e){}
   }
   var countries={}; utrips.forEach(function(tt){ var c=normCountry(tt.country||tt.dest); if(c)countries[c]=1; });
-  var nC=Object.keys(countries).length, st=followStatusOf(u.id);
+  var nC=Object.keys(countries).length;
+  var gtier=(typeof TIER_GLOBAL!=='undefined'&&typeof globalTierIdx==='function')?TIER_GLOBAL[globalTierIdx(nC)]:null;
   var avBg = prof.photo ? ('background:#ccc center/cover no-repeat url('+prof.photo+')') : ('background:'+(prof.color||'linear-gradient(135deg,var(--ember),var(--gold))'));
-  var html='<button onclick="profileBack()" title="Back" aria-label="Back" style="position:absolute;top:10px;left:12px;z-index:40;width:32px;height:32px;border-radius:50%;border:none;background:var(--paper-2);color:var(--ink);font-size:17px;cursor:pointer">←</button>'
-    +'<div style="text-align:center;padding:28px 20px 16px">'
-    +'<div style="width:80px;height:80px;border-radius:50%;'+avBg+';display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto 12px">'+(prof.photo?'':escHtml(prof.initial))+'</div>'
-    +'<div style="font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500">'+escHtml(prof.name)+'</div>'
-    +'<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4);margin:4px 0 8px">@'+escHtml(prof.handle)+'</div>'
-    +(prof.bio?'<div style="font-size:13px;color:var(--ink-3);line-height:1.55;margin-bottom:14px;padding:0 10px">'+escHtml(prof.bio)+'</div>':'')
-    +'<div style="display:flex;gap:6px;justify-content:center;margin-bottom:16px">'
-    +'<div style="text-align:center;padding:10px 20px;background:var(--paper-2);border-radius:var(--r-md)"><div style="font-family:Cormorant Garamond,serif;font-size:22px">'+utrips.length+'</div><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);letter-spacing:.1em">'+t('trips').toUpperCase()+'</div></div>'
-    +(nC?'<div style="text-align:center;padding:10px 20px;background:var(--paper-2);border-radius:var(--r-md)"><div style="font-family:Cormorant Garamond,serif;font-size:22px">'+nC+'</div><div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);letter-spacing:.1em">'+t('countriesWord').toUpperCase()+'</div></div>':'')
-    +'</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:4px">'
-    +'<button class="btn '+(st==='none'?'btn-ember':'btn-ghost')+'" style="flex:1" id="upm-follow-btn" onclick="toggleFollowProfile(\''+u.id+'\',this)">'+followLabel(u.id)+'</button>'
-    +'<button class="btn btn-ghost" onclick="openChat(\''+u.id+'\')" style="flex:1">'+t('messageBtn')+'</button>'
-    +'</div></div>';
-  if(utrips.length){
-    html+='<div style="border-top:8px solid var(--paper-2);padding:16px 20px 14px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px">'+t('publicTrips')+'</div><div style="display:flex;flex-direction:column;gap:10px">'
-      +utrips.map(function(tt){
-        var cover=(tt.cover_url && tt.cover_url.indexOf('blob:')!==0 && tt.cover_url.indexOf('data:')!==0)?tt.cover_url:'';
-        var fl=flagForCountry(tt.country)||(typeof cityFlag==='function'?cityFlag(tt.dest):'')||'📍';
-        var thumb=cover?('<img src="'+escHtml(cover)+'" style="width:60px;height:60px;border-radius:10px;object-fit:cover;flex-shrink:0" loading="lazy" onerror="this.outerHTML=\'<div style=&quot;width:60px;height:60px;border-radius:10px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0&quot;>'+fl+'</div>\'">'):('<div style="width:60px;height:60px;border-radius:10px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0">'+fl+'</div>');
-        return '<div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--paper-2);border-radius:var(--r-md)">'+thumb
-          +'<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink)">'+fl+' '+escHtml(tt.dest||tt.country||'')+'</div>'
-          +(tt.country?'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4);margin-top:2px">'+escHtml(String(tt.country).toUpperCase())+'</div>':'')+'</div></div>';
-      }).join('')
-      +'</div></div>';
-  } else {
-    html+='<div style="border-top:8px solid var(--paper-2);padding:30px 20px;text-align:center;color:var(--ink-4);font-size:13px">'+t('noResults')+'</div>';
-  }
-  body.innerHTML=html;
+  var trips=utrips.map(function(tt){
+    var cover=(tt.cover_url && tt.cover_url.indexOf('blob:')!==0 && tt.cover_url.indexOf('data:')!==0)?tt.cover_url:'';
+    var pics=allPhotos.filter(function(p){return p.trip_id===tt.id;}).map(function(p){return p.url;}).filter(function(x){return x && x.indexOf('blob:')!==0;});
+    var imgs = pics.length?pics:(cover?[cover]:[]);
+    var tplaces=allPlaces.filter(function(pp){return pp.trip_id===tt.id;});
+    return {dest:(tt.dest||tt.country||''), flag:(flagForCountry(tt.country)||cityFlag(tt.dest)||'📍'), img:(cover||pics[0]||''), images:imgs, places:tplaces};
+  });
+  var placesTotal=allPlaces.length;
+  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, trips:trips, stories:[], canView:true, isPrivate:false, followStatus:followStatusOf(u.id) });
 }
 
 var CITY_PLACES={
@@ -6208,7 +6252,7 @@ var _chatUser=null;
 // survive reloads even though `allUsers` only holds the demo/seed accounts.
 var _chatUsers={}, _ncRealUsers=[], _ncSearchT=null;
 function _resolveUser(id){ var k=String(id);
-  return allUsers.find(function(x){return String(x.id)===k;}) || _chatUsers[k] || (_ncRealUsers||[]).find(function(x){return String(x.id)===k;}) || null; }
+  return allUsers.find(function(x){return String(x.id)===k;}) || _chatUsers[k] || (_ncRealUsers||[]).find(function(x){return String(x.id)===k;}) || (typeof _searchedUsers!=='undefined'&&(_searchedUsers||[]).find(function(x){return String(x.id)===k;})) || ((userData.following||[]).find(function(x){return String(x.id)===k;})) || (typeof _viewedUserObj!=='undefined'&&_viewedUserObj&&String(_viewedUserObj.id)===k?_viewedUserObj:null) || null; }
 function _rememberChatUser(u){ if(u&&u.id!=null){ _chatUsers[String(u.id)]={id:u.id,name:u.name||'',handle:u.handle||'',initial:u.initial||((u.name||'T').trim()[0]||'T').toUpperCase(),photo:u.photo||'',color:u.color||'',_real:!!u._real}; if(typeof _saveChats==='function')_saveChats(); } }
 function openChat(id){
   var u=_resolveUser(id);if(!u)return;
@@ -6596,7 +6640,7 @@ const S={
     privateProfileNote:"Private — your follow needs approval",
     placesRatedHint:"Search a place to see how the people you follow rated it.",
     placeSearchEmpty:"No places match your search",
-    followRequests:"Follow requests",accept:"Accept",decline:"Decline",requestAccepted:"Request accepted",requestDeclined:"Request declined",lockedTripHint:"Subscribe to Pro to share this trip",
+    followRequests:"Follow requests",accept:"Accept",decline:"Decline",requestAccepted:"Request accepted",requestDeclined:"Request declined",lockedTripHint:"Subscribe to Pro to share this trip",viewPhotos:"View photos",noPlacesYet:"No places added yet",
     notRatedYet:"Not rated yet",
     followerRated1:"follower rated",
     followerRatedN:"followers rated",
@@ -15451,9 +15495,12 @@ async function dbSearchUsers(q){
   try{
     var term=String(q).replace(/[%,()]/g,' ').trim(); if(!term) return [];
     var res=await sb.from('profiles').select('id,name,username,avatar,lives_in,origin,is_public')
-      .or('username.ilike.%'+term+'%,name.ilike.%'+term+'%').limit(15);
+      .or('username.ilike.%'+term+'%,name.ilike.%'+term+'%').limit(20);
+    if(res.error){ // some columns may not exist on this project — retry minimal
+      res=await sb.from('profiles').select('id,name,username,avatar').or('username.ilike.%'+term+'%,name.ilike.%'+term+'%').limit(20);
+    }
     if(res.error||!res.data) return [];
-    return res.data.filter(function(pr){ return pr.id && pr.id!==userData.id && pr.is_public!==false; }).map(_mapProfileToUser);
+    return res.data.filter(function(pr){ return pr.id && pr.id!==userData.id; }).map(_mapProfileToUser);
   }catch(e){ return []; }
 }
 function renderPeopleTab(body) {
@@ -16108,8 +16155,8 @@ function allBlogs(){ return ownTripBlogs().concat(cityBlogs); }
 function getBlogById(id){ return allBlogs().find(function(b){return String(b.id)===String(id);})||null; }
 // ── Blog likes + saves (self-contained, persisted in their own localStorage key) ──
 var _blogMeta={};
-try{ _blogMeta=JSON.parse(localStorage.getItem('trafolio_blog_meta')||'{}')||{}; }catch(e){ _blogMeta={}; }
-function _saveBlogMeta(){ try{ localStorage.setItem('trafolio_blog_meta', JSON.stringify(_blogMeta)); }catch(e){} }
+try{ _blogMeta=JSON.parse(localStorage.getItem(_blogMetaKey())||'{}')||{}; }catch(e){ _blogMeta={}; }
+function _saveBlogMeta(){ try{ localStorage.setItem(_blogMetaKey(), JSON.stringify(_blogMeta)); }catch(e){} }
 function _blogSeedLikes(id){ var s=String(id),h=0; for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;} return h%40+6; } // stable 6..45
 function blogState(id){ var m=_blogMeta[id]||{}; return { liked:!!m.liked, likes:(m.likes!=null?m.likes:_blogSeedLikes(id)), saved:!!m.saved }; }
 function toggleBlogLike(id,ev){ if(ev&&ev.stopPropagation)ev.stopPropagation(); var st=blogState(id); var liked=!st.liked; _blogMeta[id]=Object.assign({},_blogMeta[id],{liked:liked,likes:st.likes+(liked?1:-1)}); _saveBlogMeta(); _refreshBlogCard(id); }
@@ -16296,6 +16343,7 @@ function doSocialAuth(provider){
   var opts = { redirectTo: isNative ? 'travel.trafolio.app://login-callback' : window.location.origin };
   if(provName === 'facebook'){ opts.scopes = 'public_profile'; }
   if(isNative){ opts.skipBrowserRedirect = true; }
+  if(provName==='google'){ opts.queryParams = { prompt: 'select_account' }; }
   sb.auth.signInWithOAuth({ provider: provName, options: opts }).then(function(res){
     if(res.error){ toast('Sign in failed: ' + res.error.message); return; }
     // Native: open Google in the in-app system browser; the deep-link listener finishes login.
@@ -16596,8 +16644,14 @@ async function dbSavePlace(place, tripId){
     if(place.placeId) row.place_id = place.placeId;
     if(place.city) row.city = place.city;
     var res=await sb.from('places').insert(row).select();
-    if(res.error && place.city && /(\bcity\b|column|schema cache)/i.test(res.error.message||'')){
-      delete row.city; res=await sb.from('places').insert(row).select();
+    if(res.error && /(column|schema cache|does not exist|PGRST)/i.test(res.error.message||'')){
+      // This project's places table is missing optional columns (photo / place_id / city).
+      // Retry with only the columns that always exist so the place STILL saves.
+      console.warn('dbSavePlace: dropping optional columns (run the schema SQL to keep place photos/links):',res.error.message);
+      var core={ trip_id:row.trip_id, user_id:row.user_id, name:row.name, cat:row.cat, note:row.note, rating:row.rating };
+      if(typeof row.lat!=='undefined') core.lat=row.lat;
+      if(typeof row.lng!=='undefined') core.lng=row.lng;
+      res=await sb.from('places').insert(core).select();
     }
     if(res.error){console.error('dbSavePlace DB error:',res.error);}
     else{
@@ -16614,12 +16668,42 @@ async function dbDeletePlace(placeId){
   }catch(e){console.error('dbDeletePlace error:',e);}
 }
 
+// One-time background migration: move legacy base64 (data:) photos out of the DB into Storage
+// and replace the row's url with a small public URL. Runs in small batches across logins so it
+// never blocks the UI; sets a per-account flag once no base64 photos remain.
+async function migrateBase64Photos(){
+  if(!sb||!userData.id||typeof sbUploadImage!=='function')return;
+  var flag='trafolio_photomig::'+(_currentAccount||'');
+  try{ if(localStorage.getItem(flag)==='1')return; }catch(e){}
+  try{
+    var res=await sb.from('photos').select('id,url').eq('user_id',userData.id).like('url','data:%').limit(40);
+    if(res.error){ console.warn('photo migration: select failed',res.error.message); return; }
+    var rows=(res.data||[]);
+    if(!rows.length){ try{ localStorage.setItem(flag,'1'); }catch(e){} return; }
+    var done=0;
+    for(var i=0;i<rows.length;i++){
+      var r=rows[i];
+      try{
+        var u=await sbUploadImage(r.url,'photo');
+        if(u && u.indexOf('http')===0 && u!==r.url){
+          var up=await sb.from('photos').update({url:u}).eq('id',r.id);
+          if(up && up.error){ console.warn('photo migration: update blocked (add photos update RLS):',up.error.message); return; }
+          (trips||[]).forEach(function(t){ (t.photos||[]).forEach(function(p){ if(p.dbId===r.id||p.url===r.url)p.url=u; }); });
+          done++;
+        }
+      }catch(e){}
+    }
+    if(done){ try{ if(typeof persistSoon==='function')persistSoon(); if(typeof renderProfile==='function')renderProfile(); }catch(e){} }
+    console.log('photo migration: moved '+done+'/'+rows.length+' this pass');
+    // more may remain → run again next login (flag only set when a pass finds zero)
+  }catch(e){ console.error('migrateBase64Photos:',e); }
+}
 async function dbLoadUserTrips(){
   if(!sb||!userData.id)return;
   // SAFETY: never destroy local data. Snapshot what we have, and only ever ADD cloud data
   // or keep local — we never blank `trips` because the cloud was empty or errored.
   var localTrips=(trips||[]).slice();
-  try{ if(localTrips.length) localStorage.setItem('trafolio_trips_recovery', JSON.stringify(localTrips)); }catch(e){}
+  try{ if(localTrips.length) localStorage.setItem(_recoveryKey(), JSON.stringify(localTrips)); }catch(e){}
   try{
     var res = await sb.from('trips').select('*').eq('user_id', userData.id).order('created_at',{ascending:false});
     if(res.error){ console.error('dbLoadUserTrips DB error (keeping local trips):',res.error); return; }
@@ -16686,6 +16770,7 @@ async function dbLoadUserTrips(){
       trips = dbTrips.concat(localOnly);
       renderDash();
       if(localOnly.length && typeof dbSyncLocalTrips==='function') dbSyncLocalTrips(localOnly);
+      if(typeof migrateBase64Photos==='function') setTimeout(migrateBase64Photos, 3500); // one-time: move old base64 photos to Storage
     }
   }catch(e){console.error('dbLoadUserTrips error (keeping local trips):',e);}
 }
@@ -17611,6 +17696,28 @@ var _conciergeCity=null;
 // Curated featured set shown on the landing grid (Euromonitor 2025 visitor ranking order).
 // Search still covers the FULL CONCIERGE_CITIES list — no city/guide is removed.
 var FEATURED_CITIES=["Bangkok","Hong Kong","London","Istanbul","Dubai","Paris","Kuala Lumpur","Tokyo","Singapore","New York","Rome","Madrid","Milan","Barcelona","Amsterdam","Seoul","Osaka","Vienna","Venice","Prague","Los Angeles","Miami","Berlin","Lisbon","Athens","Cairo","Mumbai","Delhi","Shanghai","Beijing","Marrakech","Cape Town","Mexico City","Toronto","San Francisco","Chicago","Sydney","Melbourne","Kyoto","Abu Dhabi","Doha","Rio de Janeiro","Buenos Aires","Bali","Phuket","Hanoi","Ho Chi Minh City","Florence","Budapest","Dublin"];
+var _concGeoT=null;
+// City-guide search in any language: when nothing matches the English city list, geocode the
+// query (forcing English names) and re-search so "بيروت", "東京", "Roma" etc. resolve.
+function _conciergeTranslate(q){
+  clearTimeout(_concGeoT);
+  _concGeoT=setTimeout(function(){
+    try{
+      fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language=en',{headers:{'User-Agent':'Trafolio/1.0'}})
+        .then(function(r){return r.json();})
+        .then(function(data){
+          var cur=document.getElementById('concierge-search'); if(cur && (cur.value||'').toLowerCase().trim()!==String(q).toLowerCase().trim()) return;
+          var terms=[];
+          (data||[]).forEach(function(item){ var a=item.address||{}; [a.city,a.town,a.village,a.state,a.country,item.name].forEach(function(x){ if(x)terms.push(String(x).toLowerCase()); }); });
+          var hit=null;
+          CONCIERGE_CITIES.forEach(function(c){ if(hit)return; var cn=c.n.toLowerCase(),cc=c.c.toLowerCase(); terms.forEach(function(tm){ if(hit||!tm)return; if(cn===tm||cc===tm||(tm.length>2&&(cn.indexOf(tm)>=0||tm.indexOf(cn)>=0))) hit=c; }); });
+          var grid=document.getElementById('concierge-grid'); if(!grid)return;
+          if(hit){ renderConcierge(hit.n); }
+          else { grid.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)">'+t('noResults')+'</div>'; }
+        }).catch(function(){});
+    }catch(e){}
+  },360);
+}
 function renderConcierge(q){
   var grid=document.getElementById('concierge-grid');
   if(!grid)return;
@@ -17626,7 +17733,8 @@ function renderConcierge(q){
     list=list.slice().sort(function(a,b){return (hasGuide(b)?1:0)-(hasGuide(a)?1:0);});
   }
   if(!list.length){
-    grid.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)">No cities match "'+q+'"</div>';
+    if(q && q.length>=2){ grid.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)">'+t('searching')+'</div>'; _conciergeTranslate(q); return; }
+    grid.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)">'+t('noResults')+'</div>';
     return;
   }
   grid.innerHTML='<div class="concierge-grid-responsive">'+list.map(function(c){
@@ -17797,8 +17905,8 @@ function openCityGuide(idx){
 }
 // ── City-guide highlights ("Your picks") — let the traveller star the must-dos
 // for a city and keep them as a quick reference. Stored locally per city.
-function _readCityHL(){ try{ return JSON.parse(localStorage.getItem('trafolio_city_highlights')||'{}')||{}; }catch(e){ return {}; } }
-function _writeCityHL(o){ try{ localStorage.setItem('trafolio_city_highlights',JSON.stringify(o)); }catch(e){} }
+function _readCityHL(){ try{ return JSON.parse(localStorage.getItem(_cityHLKey())||'{}')||{}; }catch(e){ return {}; } }
+function _writeCityHL(o){ try{ localStorage.setItem(_cityHLKey(),JSON.stringify(o)); }catch(e){} }
 function cityHLSet(city){ return _readCityHL()[city]||{}; }
 function toggleThingHL(i){
   if(!_conciergeCity) return;
@@ -18069,6 +18177,7 @@ function verifyPassword(email,pw){
   return rec.ph===_hashPass(pw,slug) ? rec : false;  // false = wrong password
 }
 // Wipe in-memory state to a clean slate (used when a brand-new account signs in).
+var DEFAULT_PROFILE_COVER='https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=95&auto=format&fit=crop';
 function _resetInMemoryState(){
   trips=[];
   if(typeof userStories!=='undefined')userStories=[];
@@ -18078,6 +18187,19 @@ function _resetInMemoryState(){
   userData.avatar=''; userData.cover=''; userData.bio=''; userData.from=''; userData.livesIn='';
   userData.followers=[]; userData.following=[]; userData.pendingFollows=[];
   userData.plan='free'; userData.subStatus=null; userData.tierIdx=0;
+  userData.statusNow=''; userData.statusNext=''; userData.vibes=[]; userData.photoURL='';
+  if(typeof conversations!=='undefined')conversations={};
+  if(typeof groups!=='undefined')groups={};
+  if(typeof _chatUsers!=='undefined')_chatUsers={};
+  if(typeof _ncRealUsers!=='undefined')_ncRealUsers=[];
+  if(typeof _searchedUsers!=='undefined')_searchedUsers=[];
+  if(typeof _viewedTrips!=='undefined')_viewedTrips=[];
+  if(typeof _viewedUserId!=='undefined')_viewedUserId=null;
+  if(typeof currentTrip!=='undefined')currentTrip=null;
+  if(typeof _shareDemo!=='undefined')_shareDemo=null;
+  try{ _blogMeta=JSON.parse(localStorage.getItem(_blogMetaKey())||'{}')||{}; }catch(e){ _blogMeta={}; }
+  try{ var _pc=document.getElementById('profile-cover'); if(_pc)_pc.src=DEFAULT_PROFILE_COVER; }catch(e){}
+  try{ ['profile-av','dash-av','top-av','prefs-av','ep-av-prev'].forEach(function(id){ var el=document.getElementById(id); if(el){ el.style.backgroundImage=''; el.textContent=(userData.name||'?').charAt(0).toUpperCase(); } }); }catch(e){}
 }
 function _isData(u){ return typeof u==='string' && u.indexOf('data:')===0; }
 // level 0 = everything; 1 = drop trip/book data-URL photos; 2 = also drop avatar/cover/story data-URLs
@@ -18114,6 +18236,10 @@ function _persistPayload(level){
 }
 // ── Resume where you left off: remember the active screen / trip tab / scroll. ──
 function _viewKey(){ return 'traf_view::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+// Per-account scoping for stores that used to be global (cross-account privacy leak):
+function _recoveryKey(){ return 'trafolio_trips_recovery::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+function _blogMetaKey(){ return 'trafolio_blog_meta::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+function _cityHLKey(){ return 'trafolio_city_highlights::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
 function _saveView(){
   if(typeof appMode==='undefined'||!appMode)return;
   try{
@@ -18159,7 +18285,7 @@ function persistState(){
   try{
     if((trips||[]).length){
       var slim=trips.map(function(t){ var c=JSON.parse(JSON.stringify(t)); if(Array.isArray(c.photos))c.photos=c.photos.filter(function(p){return p&&p.url&&p.url.indexOf('data:')!==0;}); return c; });
-      try{ localStorage.setItem('trafolio_trips_recovery', JSON.stringify(slim)); }catch(e){}
+      try{ localStorage.setItem(_recoveryKey(), JSON.stringify(slim)); }catch(e){}
     }
   }catch(e){}
   for(var level=0; level<=2; level++){
@@ -18173,12 +18299,12 @@ function restoreState(){
     if(!raw){
       // Nothing in this slot — try the cross-slot recovery snapshot so a wiped/empty
       // slot can still bring trips back instead of showing an empty profile.
-      try{ var rec=JSON.parse(localStorage.getItem('trafolio_trips_recovery')||'null'); if(Array.isArray(rec)&&rec.length){ trips=rec; return true; } }catch(e){}
+      try{ var rec=JSON.parse(localStorage.getItem(_recoveryKey())||'null'); if(Array.isArray(rec)&&rec.length){ trips=rec; return true; } }catch(e){}
       return false;
     }
     var d=JSON.parse(raw); if(!d) return false;
     if(Array.isArray(d.trips)&&d.trips.length) trips=d.trips;
-    else { try{ var rec2=JSON.parse(localStorage.getItem('trafolio_trips_recovery')||'null'); if(Array.isArray(rec2)&&rec2.length) trips=rec2; }catch(e){} }
+    else { try{ var rec2=JSON.parse(localStorage.getItem(_recoveryKey())||'null'); if(Array.isArray(rec2)&&rec2.length) trips=rec2; }catch(e){} }
     if(Array.isArray(d.userStories)) userStories=d.userStories;
     if(Array.isArray(d.cart)) cart=d.cart;
     if(Array.isArray(d.savedTrips)) savedTrips=d.savedTrips;
@@ -18225,6 +18351,14 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 })();
 </script>
 
+<div id="story-viewer" style="display:none;position:fixed;inset:0;z-index:300;background:#000">
+  <div id="sv-bars" style="position:absolute;top:0;left:0;right:0;display:flex;gap:4px;padding:12px 12px 0;z-index:3"></div>
+  <div id="sv-head" style="position:absolute;top:22px;left:14px;right:54px;z-index:3;color:#fff;font-family:'DM Mono',monospace;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+  <img id="sv-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000">
+  <div onclick="svPrev()" style="position:absolute;left:0;top:60px;bottom:0;width:32%;z-index:2"></div>
+  <div onclick="svNext()" style="position:absolute;right:0;top:60px;bottom:0;width:68%;z-index:2"></div>
+  <button onclick="svClose()" aria-label="Close" style="position:absolute;top:18px;right:14px;z-index:4;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:#fff;font-size:18px;cursor:pointer">✕</button>
+</div>
 <div class="modal-sheet" id="sheet-user-profile" style="max-height:88vh;overflow-y:auto"><div class="modal-handle"></div><div id="upm-body"></div></div>
 <div class="modal-sheet" id="sheet-edit-place">
   <div class="modal-handle"></div>
