@@ -15676,6 +15676,7 @@ function peopleRow(u){
   var btn = document.createElement('button');
   btn.className = 'follow-btn ' + (isF ? 'following' : 'follow');
   btn.textContent = isF ? t('following2') : t('follow');
+  btn.setAttribute('data-uid', u.id); // so _syncFollowButtons can flip its style too (was only updating text)
   btn.addEventListener('click', function() { toggleFollow(u.id, this); });
   row.appendChild(av); row.appendChild(info); row.appendChild(btn);
   return row;
