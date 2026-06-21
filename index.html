@@ -15602,7 +15602,19 @@ async function dbSearchUsers(q){
       res=await sb.from('profiles').select('id,name,username,avatar').or('username.ilike.%'+term+'%,name.ilike.%'+term+'%').limit(20);
     }
     if(res.error||!res.data) return [];
-    return res.data.filter(function(pr){ return pr.id && pr.id!==userData.id; }).map(_mapProfileToUser);
+    var users=res.data.filter(function(pr){ return pr.id && pr.id!==userData.id; }).map(_mapProfileToUser);
+    // Fill in each result's REAL trip count (deduped, public) — _mapProfileToUser defaults to 0.
+    var ids=users.map(function(u){return u.id;});
+    if(ids.length){
+      try{
+        var tc=await sb.from('trips').select('user_id,dest,date_from,privacy').in('user_id', ids).limit(1000);
+        if(tc&&tc.data){ var seen={}, cnt={};
+          tc.data.forEach(function(tt){ if((tt.privacy||'public')==='private')return; var k=tt.user_id+'|'+(String(tt.dest||'').toLowerCase())+'|'+(tt.date_from||''); if(seen[k])return; seen[k]=1; cnt[tt.user_id]=(cnt[tt.user_id]||0)+1; });
+          users.forEach(function(u){ u.trips=cnt[u.id]||0; });
+        }
+      }catch(e){}
+    }
+    return users;
   }catch(e){ return []; }
 }
 function renderPeopleTab(body) {
@@ -18448,7 +18460,10 @@ function restoreState(){
       ['name','username','bio','from','livesIn','avatar','cover','currency','plan','subStatus','tierIdx','statusNow','statusNext'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
       if(Array.isArray(u.vibes)) userData.vibes=u.vibes;
       if(typeof u.isPublic!=='undefined') userData.isPublic=u.isPublic;
-      if(Array.isArray(u.following)) userData.following=u.following.map(function(id){return allUsers.find(function(x){return x.id===id;});}).filter(Boolean);
+      // Keep real (Supabase-UUID) follows too — they aren't in allUsers, so fall back to a {id}
+      // stub instead of dropping them (this was wiping "following" on every reload).
+      if(Array.isArray(u.following)) userData.following=u.following.map(function(id){ return allUsers.find(function(x){return x.id===id;}) || (typeof _resolveUser==='function'&&_resolveUser(id)) || {id:id}; }).filter(Boolean);
+      if(Array.isArray(u.followers)) userData.followers=u.followers.map(function(id){ return (id&&typeof id==='object')?id:{id:id}; }).filter(Boolean);
       if(Array.isArray(u.pendingFollows)) userData.pendingFollows=u.pendingFollows;
     }
     return true;
