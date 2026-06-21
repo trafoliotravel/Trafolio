@@ -2401,6 +2401,7 @@ function enterApp(){
   if(typeof _restoreView==='function')setTimeout(function(){ _restoreView(_savedViewRaw); },60);
   if(typeof dbLoadSocial==='function')setTimeout(dbLoadSocial,1200);
   if(typeof dbLoadInbox==='function')setTimeout(dbLoadInbox,1600);
+  if(typeof startRealtime==='function')setTimeout(startRealtime,1900);
 }
 function exitApp(){
   window._deliberateSignOut=true; // mark this as a user-initiated sign-out (see onAuthStateChange)
@@ -2408,6 +2409,7 @@ function exitApp(){
   // Reset the UI to logged-out FIRST (appMode=false) so the SIGNED_OUT auth event below
   // doesn't loop back into exitApp() and freeze the page.
   appMode=false;
+  if(typeof stopRealtime==='function')stopRealtime();
   document.getElementById('nav-right-auth').style.display='';
   document.getElementById('nav-right-app').style.display='none';
   var _ts2=document.getElementById('top-search-btn'); if(_ts2)_ts2.style.display='none';
@@ -6112,7 +6114,7 @@ function renderViewedProfile(o){
   html+='<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--ink-4);letter-spacing:.08em;margin:3px 0 8px">@'+escHtml(o.handle||'')+'</div>';
   if(o.tier)html+='<div style="margin:0 0 10px"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border-radius:30px;padding:5px 12px;font-size:11px;font-weight:600">'+o.tier.emoji+' '+escHtml(o.tier.label)+'</span></div>';
   if(o.bio)html+='<div style="font-size:13px;color:var(--ink-3);line-height:1.55;margin-bottom:14px;padding:0 10px">'+escHtml(o.bio)+'</div>';
-  html+='<div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:14px;flex-wrap:wrap">'+tile(o.countries||0,'🌍 '+t('countriesWordCap'))+tile(trips.length,'🧳 '+t('trips'))+tile(o.places||0,'🏙️ '+t('tabPlaces'))+(stories.length?tile(stories.length,'✍️ '+t('tabStories')):'')+'</div>';
+  html+='<div style="display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px;flex-wrap:wrap">'+tile(o.following||0,'👀 '+t('following'))+tile(o.followers||0,'🫂 '+t('followers'))+tile(o.countries||0,'🌍 '+t('countriesWordCap'))+tile(trips.length,'🧳 '+t('trips'))+tile(o.places||0,'🏙️ '+t('tabPlaces'))+(stories.length?tile(stories.length,'✍️ '+t('tabStories')):'')+'</div>';
   if(o.isPrivate && o.followStatus==='none')html+='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--ink-4);margin-bottom:8px">🔒 '+t('privateProfileNote')+'</div>';
   html+='<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn '+(o.followStatus==='none'?'btn-ember':'btn-ghost')+'" style="flex:1" id="upm-follow-btn" onclick="viewedFollow(this)">'+followLabel(o.id)+'</button><button class="btn btn-ghost" onclick="viewedMessage()" style="flex:1">'+t('messageBtn')+'</button></div></div>';
   if(!canView){ html+='<div style="border-top:8px solid var(--paper-2);padding:28px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔒</div><div style="font-size:13px;line-height:1.5;padding:0 16px">'+t('privateLockMsg')+'</div></div>'; body.innerHTML=html; return; }
@@ -6162,17 +6164,20 @@ async function openRealUserProfile(u){
   var body=document.getElementById('upm-body'); if(!body) return;
   body.innerHTML='<div style="text-align:center;padding:46px 20px;color:var(--ink-4)">'+t('searching')+'</div>';
   openModal('sheet-user-profile');
-  var prof=u, utrips=[], allPhotos=[], allPlaces=[];
+  var prof=u, utrips=[], allPhotos=[], allPlaces=[], folCount=0, followingCount=0;
   if(sb && u.id){
     try{
       var pr=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
       if(pr&&pr.data){ prof=Object.assign({}, u, _mapProfileToUser(pr.data)); prof.bio=pr.data.bio||''; }
-      var tr=await sb.from('trips').select('*').eq('user_id',u.id).neq('privacy','private').order('created_at',{ascending:false}).limit(50);
-      if(tr&&tr.data) utrips=tr.data;
+      // Load all their trips, then hide only the explicitly-private ones (null privacy = public).
+      var tr=await sb.from('trips').select('*').eq('user_id',u.id).order('created_at',{ascending:false}).limit(80);
+      if(tr&&tr.data) utrips=tr.data.filter(function(t){ return (t.privacy||'public')!=='private'; });
       var ph=await sb.from('photos').select('*').eq('user_id',u.id);
       if(ph&&ph.data) allPhotos=ph.data;
       var pl=await sb.from('places').select('*').eq('user_id',u.id);
       if(pl&&pl.data) allPlaces=pl.data;
+      try{ var frr=await sb.from('follows').select('follower_id').eq('following_id',u.id); if(frr&&frr.data)folCount=frr.data.length; }catch(e){}
+      try{ var fgg=await sb.from('follows').select('following_id').eq('follower_id',u.id); if(fgg&&fgg.data)followingCount=fgg.data.length; }catch(e){}
     }catch(e){}
   }
   // Collapse duplicate trip rows (same dest+start) so a viewer doesn't see doubles the owner doesn't.
@@ -6191,7 +6196,7 @@ async function openRealUserProfile(u){
     return {dest:(tt.dest||tt.country||''), flag:(flagForCountry(tt.country)||cityFlag(tt.dest)||'📍'), img:(cover||pics[0]||''), images:imgs, places:tplaces};
   });
   var placesTotal=allPlaces.length;
-  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, trips:trips, stories:[], canView:true, isPrivate:false, followStatus:followStatusOf(u.id) });
+  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:[], canView:true, isPrivate:false, followStatus:followStatusOf(u.id) });
 }
 
 var CITY_PLACES={
@@ -6347,6 +6352,32 @@ async function dbLoadInbox(){ // pull every thread involving me so messages othe
   }catch(e){}
 }
 function _isRealChatPartner(id){ return !isGroupKey(id) && !/^[0-9]+$/.test(String(id)); }
+// ── Live (realtime) delivery: incoming messages + new followers appear instantly ──
+var _rtChannel=null;
+function startRealtime(){
+  if(!sb||!userData.id||_rtChannel)return;
+  try{
+    _rtChannel=sb.channel('rt-'+userData.id)
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'messages',filter:'to_id=eq.'+userData.id},function(payload){
+        var m=payload&&payload.new; if(!m)return; var other=m.from_id;
+        conversations[other]=conversations[other]||[];
+        if(conversations[other].some(function(x){return x._mid===m.id;}))return;
+        conversations[other].push({from:'them',text:m.text,time:'',fromName:m.from_name||'',_mid:m.id});
+        if(typeof _chatUsers!=='undefined' && !_chatUsers[other]){ _chatUsers[other]={id:other,name:m.from_name||'Traveller',handle:'',initial:((m.from_name||'T').trim()[0]||'T').toUpperCase(),_real:true}; }
+        if(typeof _saveChats==='function')_saveChats();
+        if(typeof _chatUser!=='undefined' && _chatUser===other){ if(typeof renderChat==='function')renderChat(); try{localStorage.setItem(_msgSeenKey(),String(Date.now()));}catch(e){} }
+        else { var cur=parseInt((document.getElementById('top-msg-count')||{}).textContent||'0',10)||0; if(typeof updateMsgBadge==='function')updateMsgBadge(cur+1); if(typeof toast==='function')toast('💬 '+(m.from_name||'New message')+': '+String(m.text||'').slice(0,40)); }
+      })
+      .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows',filter:'following_id=eq.'+userData.id},function(payload){
+        var f=payload&&payload.new; if(!f)return; userData.followers=userData.followers||[];
+        if(!userData.followers.some(function(x){return x.id===f.follower_id;})){ userData.followers.push({id:f.follower_id,name:f.follower_name||'Traveller',handle:f.follower_username||'',initial:((f.follower_name||'T').trim()[0]||'T').toUpperCase(),_real:true}); var fl=document.getElementById('p-stat-followers'); if(fl)fl.textContent=userData.followers.length; if(typeof persistSoon==='function')persistSoon(); }
+        var d=document.getElementById('bnav-profile-dot'); if(d)d.style.display='block';
+        if(typeof toast==='function')toast('👋 '+(f.follower_name||'Someone')+' '+t('startedFollowing'));
+      })
+      .subscribe();
+  }catch(e){}
+}
+function stopRealtime(){ try{ if(_rtChannel&&sb)sb.removeChannel(_rtChannel); }catch(e){} _rtChannel=null; }
 function sendChatMsg(){
   var i=document.getElementById('chat-input');if(!i||_chatUser==null)return;
   var txt=(i.value||'').trim();if(!txt)return;
