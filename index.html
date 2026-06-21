@@ -434,7 +434,7 @@ body.show-lbar .lbar{display:none}
     <button class="btn btn-ember btn-sm" onclick="showAuth('signup')" data-i18n="getStarted">Get started</button>
   </div>
   <div class="nav-right" id="nav-right-app" style="display:none;gap:8px">
-    <button id="top-msg-btn" onclick="openInbox()" aria-label="Messages" title="Messages" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></button>
+    <button id="top-msg-btn" onclick="openInbox()" aria-label="Messages" title="Messages" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span id="top-msg-count" style="display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--ember);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;line-height:17px;text-align:center;box-sizing:border-box">0</span></button>
     <button id="top-cart-btn" onclick="openCart()" aria-label="Cart" title="Cart" data-i18n-title="cartTitle" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🛒<span id="top-cart-count" style="display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--ember);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;line-height:17px;text-align:center;box-sizing:border-box">0</span></button>
     <div style="position:relative">
       <div class="avatar" id="top-av" onclick="toggleAvatarMenu(event)" style="cursor:pointer">J</div>
@@ -464,7 +464,7 @@ body.show-lbar .lbar{display:none}
   <div class="bnav-item" id="bnav-concierge" onclick="showScreen('s-concierge');setActiveNav('bnav-concierge');renderConcierge()">
     <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div><div class="bnav-label" data-i18n="navCityGuide">City Guide</div>
   </div>
-  <div class="bnav-item" id="bnav-profile" onclick="showScreen('s-profile');setActiveNav('bnav-profile')">
+  <div class="bnav-item" id="bnav-profile" style="position:relative" onclick="showScreen('s-profile');setActiveNav('bnav-profile');_markFollowersSeen&&_markFollowersSeen()"><span id="bnav-profile-dot" style="display:none;position:absolute;top:5px;left:calc(50% + 7px);width:9px;height:9px;border-radius:50%;background:var(--ember);box-shadow:0 0 0 1.5px var(--paper)"></span>
     <div class="bnav-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg></div><div class="bnav-label" data-i18n="profile">Profile</div>
   </div>
 </nav>
@@ -2379,6 +2379,9 @@ function goBack(){
 })();
 function enterApp(){
   appMode=true;
+  // Capture the saved view BEFORE showScreen('s-profile') below overwrites it (showScreen
+  // calls _saveView), so resume can return to the city guide / trip / feed etc., not just profile.
+  var _savedViewRaw=null; try{ if(typeof _viewKey==='function')_savedViewRaw=localStorage.getItem(_viewKey()); }catch(e){}
   _shareDemo=null; // never carry the Tokyo landing example into the real app
   if(typeof _loadChats==='function')_loadChats();
   document.getElementById('nav-right-auth').style.display='none';
@@ -2395,7 +2398,7 @@ function enterApp(){
   if(typeof renderConcierge==='function')renderConcierge();
   showScreen('s-profile');setActiveNav('bnav-profile');
   buildLangBar();
-  if(typeof _restoreView==='function')setTimeout(_restoreView,60);
+  if(typeof _restoreView==='function')setTimeout(function(){ _restoreView(_savedViewRaw); },60);
   if(typeof dbLoadSocial==='function')setTimeout(dbLoadSocial,1200);
   if(typeof dbLoadInbox==='function')setTimeout(dbLoadInbox,1600);
 }
@@ -5326,7 +5329,7 @@ function makeFollowerRow(u,relation){
   var muts=(u.mutuals||[]).slice(0,3);
   if(muts.length){mutStr='<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><div style="font-size:10px;color:var(--ink-4)">Also follows:</div><div style="display:flex;gap:3px">'+muts.map(function(m){return'<div style="width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;'+avatarBg(m)+'" title="@'+m.handle+'">'+(m.photo?'':m.initial)+'</div>';}).join('')+'</div></div>';}
   return'<div class="follower-row">'+makeAvatarHtml(u,42)+'<div style="flex:1;cursor:pointer" onclick="openUserProfile('+u.id+')"><div class="follower-name">'+u.name+'</div><div class="follower-handle">@'+u.handle+' · '+u.trips+' trips</div>'+mutStr+'</div><button class="follow-btn '+(relation==='following'?'following':'follow')+'" data-uid="'+u.id+'" onclick="toggleFollow('+u.id+',this)">'+(relation==='following'?'Following':'Follow')+'</button></div>';}
-function openFollowers(){
+function openFollowers(){ if(typeof _markFollowersSeen==='function')_markFollowersSeen();
   var list=document.getElementById('followers-list');if(!list)return;
   var fols=userData.followers||[];
   list.innerHTML=fols.map(function(u){return makeFollowerRow(u,'');}).join('')||'<div style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px">'+t('noFollowersYet')+'</div>';
@@ -5338,20 +5341,25 @@ function openFollowing(){
   list.innerHTML=figs.map(function(u){return makeFollowerRow(u,'following');}).join('')||'<div style="padding:24px 0;text-align:center;color:var(--ink-4);font-size:13px">'+t('notFollowingYet')+'</div>';
   openModal('sheet-following');
 }
-function toggleFollow(id,btn){
-  var isF=btn.classList.contains('following');
-  if(isF){
-    userData.following=(userData.following||[]).filter(function(u){return u.id!==id;});
-    btn.textContent=t('follow');btn.className='follow-btn follow';
-    toast(t('unfollowed'));
-  } else {
-    var u=allUsers.find(function(x){return x.id===id;}) || (_searchedUsers||[]).find(function(x){return x.id===id;});
-    if(u){userData.following=userData.following||[]; if(!userData.following.some(function(f){return f.id===id;}))userData.following.push(u);}
-    btn.textContent=t('following2');btn.className='follow-btn following';
-    toast(t('followingToast'));
+// Keep every follow button for a user (Travelers list + viewed profile) in the same state.
+function _syncFollowButtons(id){
+  var sid=String(id), st=followStatusOf(id), f=(st==='following');
+  document.querySelectorAll('.follow-btn[data-uid]').forEach(function(b){
+    if(String(b.getAttribute('data-uid'))!==sid)return;
+    b.className='follow-btn '+(f?'following':'follow');
+    b.textContent=(f?t('following2'):(st==='requested'?t('requested'):t('follow')));
+  });
+  var pb=document.getElementById('upm-follow-btn');
+  if(pb && typeof _viewedUserId!=='undefined' && String(_viewedUserId)===sid){
+    pb.textContent=followLabel(id);
+    pb.className='btn '+(st==='none'?'btn-ember':'btn-ghost')+(pb.classList.contains('btn-full')?' btn-full':'');
   }
-  if(typeof persistSoon==='function')persistSoon();
-  updateProfileStats();
+}
+// Travelers-list follow now goes through actFollow (local + cloud dbFollow + privacy/requests),
+// then syncs all visible follow buttons — was local-only and never wrote to the cloud.
+function toggleFollow(id,btn){
+  if(typeof actFollow==='function') actFollow(id);
+  if(typeof _syncFollowButtons==='function') _syncFollowButtons(id);
 }
 function unfollowUser(id,btn){toggleFollow(id,btn);}
 function followUser(id,btn){toggleFollow(id,btn);}
@@ -6030,7 +6038,8 @@ function svRender(){
   var v=document.getElementById('story-viewer'); if(!v||v.style.display==='none')return;
   var it=_sv.items[_sv.i]||{};
   var im=document.getElementById('sv-img'); if(im){ im.style.display='block'; im.src=it.url; }
-  var hd=document.getElementById('sv-head'); if(hd)hd.innerHTML='<span style="font-size:15px">📸</span> <span>'+escHtml(it.title||'')+'</span> <span style="opacity:.7">· '+(_sv.i+1)+'/'+_sv.items.length+'</span>';
+  var hd=document.getElementById('sv-head'); if(hd)hd.innerHTML='<span style="font-size:15px">📸</span> <span style="opacity:.85">'+(_sv.i+1)+' / '+_sv.items.length+'</span>';
+  var cap=document.getElementById('sv-caption'); if(cap)cap.innerHTML='<div style="font-family:Cormorant Garamond,serif;font-size:19px;font-weight:600;line-height:1.15">'+escHtml(it.title||'')+'</div>'+(it.caption?'<div style="font-size:13.5px;opacity:.92;margin-top:4px;line-height:1.4">'+escHtml(it.caption)+'</div>':'');
   var bars=document.getElementById('sv-bars');
   if(bars){
     if(_sv.items.length<=18){ bars.innerHTML=_sv.items.map(function(_,k){ return '<div style="flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,'+((k<=_sv.i)?'0.95':'0.32')+')"></div>'; }).join(''); }
@@ -6043,16 +6052,17 @@ function svPrev(){ if(_sv.i>0){ _sv.i--; svRender(); } }
 function svClose(){ clearTimeout(_sv.timer); var v=document.getElementById('story-viewer'); if(v)v.style.display='none'; }
 // Your own trip circle → story of that trip's photos (or its cover image if none uploaded).
 function _tripStoryImgs(tr){
-  var imgs=(tr.photos||[]).map(function(p){return p.url;}).filter(function(u){return u && u.indexOf('blob:')!==0;});
-  if(!imgs.length){ var c=(tr.cover&&tr.cover.indexOf('blob:')!==0&&tr.cover.indexOf('data:')!==0)?tr.cover:((typeof USER_CITY_IMG!=='undefined'&&USER_CITY_IMG[tr.dest])||''); if(c)imgs=[c]; }
-  return imgs;
+  var cc=(tr.dest||'')+((tr.country && String(tr.country).toLowerCase()!==String(tr.dest||'').toLowerCase())?(', '+tr.country):'');
+  var arr=(tr.photos||[]).filter(function(p){return p&&p.url&&p.url.indexOf('blob:')!==0;}).map(function(p){ return {url:p.url, title:cc, caption:p.caption||''}; });
+  if(!arr.length){ var c=(tr.cover&&tr.cover.indexOf('blob:')!==0&&tr.cover.indexOf('data:')!==0)?tr.cover:((typeof USER_CITY_IMG!=='undefined'&&USER_CITY_IMG[tr.dest])||''); if(c)arr=[{url:c,title:cc,caption:''}]; }
+  return arr;
 }
 function openTripStory(tripId){
   // Build ONE continuous playlist across all trips (newest→oldest) and start at the tapped trip,
   // so the story flows from country to country. Photos come from each trip's Photos section.
   var list=(trips||[]).slice().sort(function(a,b){ return String(b.startDate||b.dates||'').localeCompare(String(a.startDate||a.dates||''))||((b.id||0)-(a.id||0)); });
   var items=[], start=0;
-  list.forEach(function(tr){ if(tr.id===tripId||tr.dbId===tripId) start=items.length; _tripStoryImgs(tr).forEach(function(u){ items.push({url:u,title:tr.dest}); }); });
+  list.forEach(function(tr){ if(tr.id===tripId||tr.dbId===tripId) start=items.length; _tripStoryImgs(tr).forEach(function(it){ items.push(it); }); });
   if(!items.length){ openTrip(tripId); return; }
   openStoryViewer(items, start);
 }
@@ -6167,6 +6177,8 @@ async function openRealUserProfile(u){
   }
   // Collapse duplicate trip rows (same dest+start) so a viewer doesn't see doubles the owner doesn't.
   (function(){ var seen={}, dd=[]; utrips.forEach(function(tt){ var k=(String(tt.dest||'').toLowerCase())+'|'+(tt.date_from||''); if(!seen[k]){ seen[k]=1; dd.push(tt); } }); utrips=dd; })();
+  // Sort newest-start-date first, same as the owner's own profile grid (was created_at order).
+  utrips.sort(function(a,b){ return String(b.date_from||'').localeCompare(String(a.date_from||''))||((b.id||0)-(a.id||0)); });
   var countries={}; utrips.forEach(function(tt){ var c=normCountry(tt.country||tt.dest); if(c)countries[c]=1; });
   var nC=Object.keys(countries).length;
   var gtier=(typeof TIER_GLOBAL!=='undefined'&&typeof globalTierIdx==='function')?TIER_GLOBAL[globalTierIdx(nC)]:null;
@@ -6288,23 +6300,37 @@ function renderChat(){
   box.scrollTop=box.scrollHeight;
 }
 // ── Real cross-user social: follows + direct messages (Supabase-backed) ──
-async function dbFollow(u){ if(!window.sb||!userData.id||!u||!u.id)return; try{ await sb.from('follows').upsert({follower_id:userData.id,following_id:u.id,follower_name:userData.name||'',follower_username:userData.username||''},{onConflict:'follower_id,following_id'}); }catch(e){} }
-async function dbUnfollow(id){ if(!window.sb||!userData.id)return; try{ await sb.from('follows').delete().eq('follower_id',userData.id).eq('following_id',id); }catch(e){} }
+function _cloudWarn(){ if(window._cloudWarned)return; window._cloudWarned=true; if(typeof toast==='function')toast('⚠️ Not signed in to the cloud — follows & messages won’t reach others. Sign in online.'); }
+async function dbFollow(u){ if(!u||!u.id)return; if(!sb||!userData.id){ _cloudWarn(); return; } try{ await sb.from('follows').upsert({follower_id:userData.id,following_id:u.id,follower_name:userData.name||'',follower_username:userData.username||''},{onConflict:'follower_id,following_id'}); }catch(e){} }
+async function dbUnfollow(id){ if(!sb||!userData.id)return; try{ await sb.from('follows').delete().eq('follower_id',userData.id).eq('following_id',id); }catch(e){} }
 async function dbLoadSocial(){ // load the people who actually follow ME, so they show up + count is real
-  if(!window.sb||!userData.id)return;
+  if(!sb||!userData.id)return;
   try{
     var fr=await sb.from('follows').select('follower_id,follower_name,follower_username').eq('following_id',userData.id);
     if(fr&&fr.data){
       userData.followers=fr.data.map(function(r){return {id:r.follower_id,name:r.follower_name||'Traveller',handle:r.follower_username||'',initial:((r.follower_name||'T').trim()[0]||'T').toUpperCase(),_real:true};});
       var fl=document.getElementById('p-stat-followers'); if(fl)fl.textContent=userData.followers.length;
       if(typeof persistSoon==='function')persistSoon();
+      // New-follower notification (dot on profile + toast), with a silent baseline on first load.
+      var seenRaw=null; try{ seenRaw=localStorage.getItem(_folSeenKey()); }catch(e){}
+      if(seenRaw==null){ if(typeof _markFollowersSeen==='function')_markFollowersSeen(); }
+      else {
+        var seen=[]; try{ seen=JSON.parse(seenRaw)||[]; }catch(e){}
+        var fresh=userData.followers.filter(function(f){ return seen.indexOf(f.id)<0; });
+        if(fresh.length){ var d=document.getElementById('bnav-profile-dot'); if(d)d.style.display='block';
+          if(typeof toast==='function')toast(fresh.length===1?('👋 '+(fresh[0].name||t('travelerWord'))+' '+t('startedFollowing')):('👋 '+fresh.length+' '+t('newFollowers'))); }
+      }
     }
   }catch(e){}
 }
-async function dbSendMessage(toId,text){ if(!window.sb||!userData.id)return; try{ await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}); }catch(e){} }
-async function dbLoadConversation(otherId){ if(!window.sb||!userData.id)return null; try{ var r=await sb.from('messages').select('*').or('and(from_id.eq.'+userData.id+',to_id.eq.'+otherId+'),and(from_id.eq.'+otherId+',to_id.eq.'+userData.id+')').order('created_at',{ascending:true}); return (r&&r.data)||[]; }catch(e){ return null; } }
+async function dbSendMessage(toId,text){ if(!sb||!userData.id){ _cloudWarn(); return; } try{ await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}); }catch(e){} }
+async function dbLoadConversation(otherId){ if(!sb||!userData.id)return null; try{ var r=await sb.from('messages').select('*').or('and(from_id.eq.'+userData.id+',to_id.eq.'+otherId+'),and(from_id.eq.'+otherId+',to_id.eq.'+userData.id+')').order('created_at',{ascending:true}); return (r&&r.data)||[]; }catch(e){ return null; } }
+function _msgSeenKey(){ return 'traf_msg_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+function updateMsgBadge(n){ var b=document.getElementById('top-msg-count'); if(!b)return; if(n>0){ b.textContent=(n>99?'99+':n); b.style.display='block'; } else b.style.display='none'; }
+function _folSeenKey(){ return 'traf_fol_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+function _markFollowersSeen(){ try{ localStorage.setItem(_folSeenKey(), JSON.stringify((userData.followers||[]).map(function(f){return f.id;}))); }catch(e){} var d=document.getElementById('bnav-profile-dot'); if(d)d.style.display='none'; }
 async function dbLoadInbox(){ // pull every thread involving me so messages others sent actually arrive
-  if(!window.sb||!userData.id)return;
+  if(!sb||!userData.id)return;
   try{
     var r=await sb.from('messages').select('*').or('from_id.eq.'+userData.id+',to_id.eq.'+userData.id).order('created_at',{ascending:true});
     if(!r||!r.data)return;
@@ -6315,6 +6341,9 @@ async function dbLoadInbox(){ // pull every thread involving me so messages othe
     });
     Object.keys(byOther).forEach(function(k){ conversations[k]=byOther[k]; });
     if(typeof _saveChats==='function')_saveChats();
+    var lastSeen=0; try{ lastSeen=parseInt(localStorage.getItem(_msgSeenKey())||'0',10)||0; }catch(e){}
+    var unread=0; r.data.forEach(function(m){ if(m.to_id===userData.id){ var ts=new Date(m.created_at).getTime(); if(ts>lastSeen)unread++; } });
+    if(typeof updateMsgBadge==='function')updateMsgBadge(unread);
   }catch(e){}
 }
 function _isRealChatPartner(id){ return !isGroupKey(id) && !/^[0-9]+$/.test(String(id)); }
@@ -6395,7 +6424,7 @@ function _renderInboxList(){
       +'<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);flex-shrink:0">'+escHtml(last.time||'')+'</div></div>';
   }).join('');
 }
-function openInbox(){ openModal('sheet-inbox'); _renderInboxList(); if(typeof dbLoadInbox==='function'){ dbLoadInbox().then(function(){ _renderInboxList(); }); } }
+function openInbox(){ openModal('sheet-inbox'); _renderInboxList(); var _done=function(){ _renderInboxList(); try{ localStorage.setItem(_msgSeenKey(), String(Date.now())); }catch(e){} if(typeof updateMsgBadge==='function')updateMsgBadge(0); }; if(typeof dbLoadInbox==='function'){ dbLoadInbox().then(_done); } else _done(); }
 function showMsgToast(){openInbox();}
 
 // ── Group chats + people search / add (composer) ──────────────────────────────
@@ -6437,7 +6466,7 @@ function renderNewChatList(q){
   var list=document.getElementById('nc-list'); if(!list)return;
   _ncRenderRows(list,_ncCombined(q));
   // Look up REAL Trafolio members from Supabase and merge them in.
-  if(q && q.length>=2 && window.sb){
+  if(q && q.length>=2 && sb){
     clearTimeout(_ncSearchT);
     _ncSearchT=setTimeout(function(){
       dbSearchUsers(q).then(function(users){
@@ -6682,7 +6711,7 @@ const S={
     privateProfileNote:"Private — your follow needs approval",
     placesRatedHint:"Search a place to see how the people you follow rated it.",
     placeSearchEmpty:"No places match your search",
-    followRequests:"Follow requests",accept:"Accept",decline:"Decline",requestAccepted:"Request accepted",requestDeclined:"Request declined",lockedTripHint:"Subscribe to Pro to share this trip",viewPhotos:"View photos",noPlacesYet:"No places added yet",endBeforeStart:"End date can’t be before the start date",
+    followRequests:"Follow requests",accept:"Accept",decline:"Decline",requestAccepted:"Request accepted",requestDeclined:"Request declined",lockedTripHint:"Subscribe to Pro to share this trip",viewPhotos:"View photos",noPlacesYet:"No places added yet",endBeforeStart:"End date can’t be before the start date",startedFollowing:"started following you",newFollowers:"new followers",
     notRatedYet:"Not rated yet",
     followerRated1:"follower rated",
     followerRatedN:"followers rated",
@@ -15835,11 +15864,11 @@ function hydratePlaceThumbs(scope){
   })(imgs[i]);}
 }
 // ── Follow requests (private profiles) ── backed by Supabase table `follow_requests`.
-async function dbSendFollowReq(toId){ if(!window.sb||!userData.id)return; try{ await sb.from('follow_requests').upsert({from_id:userData.id,to_id:toId,from_name:userData.name||'',from_username:userData.username||'',status:'pending'},{onConflict:'from_id,to_id'}); }catch(e){} }
-async function loadFollowRequests(){ if(!window.sb||!userData.id)return []; try{ var r=await sb.from('follow_requests').select('*').eq('to_id',userData.id).eq('status','pending').order('created_at',{ascending:false}); return (r&&r.data)||[]; }catch(e){ return []; } }
+async function dbSendFollowReq(toId){ if(!sb||!userData.id)return; try{ await sb.from('follow_requests').upsert({from_id:userData.id,to_id:toId,from_name:userData.name||'',from_username:userData.username||'',status:'pending'},{onConflict:'from_id,to_id'}); }catch(e){} }
+async function loadFollowRequests(){ if(!sb||!userData.id)return []; try{ var r=await sb.from('follow_requests').select('*').eq('to_id',userData.id).eq('status','pending').order('created_at',{ascending:false}); return (r&&r.data)||[]; }catch(e){ return []; } }
 async function renderFollowRequests(){
   var wrap=document.getElementById('follow-requests'); if(!wrap)return; wrap.innerHTML='';
-  if(!window.sb||!userData||!userData.id) return;
+  if(!sb||!userData||!userData.id) return;
   var reqs=await loadFollowRequests(); if(!reqs.length)return;
   wrap.innerHTML='<div style="background:var(--paper-2);border-radius:14px;padding:14px;margin:6px 0 16px">'
     +'<div style="font-family:DM Mono,monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">'+t('followRequests')+' \u00b7 '+reqs.length+'</div>'
@@ -15852,7 +15881,7 @@ async function renderFollowRequests(){
         +'</div>'; }).join('')+'</div>';
 }
 async function respondFollowReq(fromId,accept){
-  try{ if(window.sb&&userData.id) await sb.from('follow_requests').update({status:accept?'accepted':'declined'}).eq('from_id',fromId).eq('to_id',userData.id); }catch(e){}
+  try{ if(sb&&userData.id) await sb.from('follow_requests').update({status:accept?'accepted':'declined'}).eq('from_id',fromId).eq('to_id',userData.id); }catch(e){}
   if(accept){ userData.followers=userData.followers||[]; if(userData.followers.indexOf(fromId)<0)userData.followers.push(fromId); if(typeof persistSoon==='function')persistSoon(); var frs=document.getElementById('p-stat-followers'); if(frs)frs.textContent=(userData.followers||[]).length; }
   toast(accept?t('requestAccepted'):t('requestDeclined'));
   renderFollowRequests();
@@ -15877,7 +15906,7 @@ function followLabel(id){
 }
 // Returns the new status after acting on the follow button for user `id`.
 function actFollow(id){
-  var u=allUsers.find(function(x){return x.id===id;}) || (_searchedUsers||[]).find(function(x){return x.id===id;}) || (userData.following||[]).find(function(x){return x.id===id;});
+  var u=(typeof _resolveUser==='function'&&_resolveUser(id)) || allUsers.find(function(x){return String(x.id)===String(id);}) || (_searchedUsers||[]).find(function(x){return String(x.id)===String(id);}) || (userData.following||[]).find(function(x){return String(x.id)===String(id);});
   var st=followStatusOf(id);
   userData.following=userData.following||[]; userData.pendingFollows=userData.pendingFollows||[];
   if(st==='following'){
@@ -15898,6 +15927,7 @@ function actFollow(id){
   }
   if(typeof persistSoon==='function')persistSoon();
   if(typeof updateProfileStats==='function')updateProfileStats();
+  if(typeof _syncFollowButtons==='function')_syncFollowButtons(id);
   return followStatusOf(id);
 }
 
@@ -18312,18 +18342,26 @@ function _saveView(){
     if(!sid||sid==='s-home')return;
     var pe=document.querySelector('.prof-tab.active');
     var v={screen:sid, tab:(typeof currentTab!=='undefined'?currentTab:''), ptab:pe?pe.getAttribute('data-ptab'):'',
-           tripId:(sid==='s-trip'&&currentTrip)?currentTrip.id:null, y:(window.scrollY||window.pageYOffset||0)};
+           tripId:(sid==='s-trip'&&currentTrip)?currentTrip.id:null,
+           tripKey:((sid==='s-trip'&&currentTrip)?((String(currentTrip.dest||'').toLowerCase())+'|'+(currentTrip.startDate||'')):null),
+           cityIdx:((sid==='s-city-guide'&&typeof CONCIERGE_CITIES!=='undefined'&&_conciergeCity)?CONCIERGE_CITIES.indexOf(_conciergeCity):null),
+           y:(window.scrollY||window.pageYOffset||0)};
     localStorage.setItem(_viewKey(), JSON.stringify(v));
   }catch(e){}
 }
-function _restoreView(){
+function _restoreView(raw){
   try{
-    var v=JSON.parse(localStorage.getItem(_viewKey())||'null'); if(!v||!v.screen)return;
+    var v=JSON.parse(((typeof raw!=='undefined'&&raw!=null)?raw:localStorage.getItem(_viewKey()))||'null'); if(!v||!v.screen)return;
     var go=function(){ try{ if(v.y) window.scrollTo(0,v.y); }catch(e){} };
-    if(v.screen==='s-trip' && v.tripId!=null && (trips||[]).some(function(t){return t.id===v.tripId;})){
-      openTrip(v.tripId);
-      if(v.tab && v.tab!=='places'){ var b=document.querySelector('#s-trip .tab-btn[data-tab="'+v.tab+'"]'); if(b)switchTab(b); }
-      setTimeout(go,320); return;
+    if(v.screen==='s-trip'){
+      var _vt=(trips||[]).find(function(t){ return t.id===v.tripId || (v.tripDbId!=null&&t.dbId===v.tripDbId) || (v.tripKey && (String(t.dest||'').toLowerCase()+'|'+(t.startDate||''))===v.tripKey); });
+      if(_vt){ openTrip(_vt.id); if(v.tab && v.tab!=='places'){ var b=document.querySelector('#s-trip .tab-btn[data-tab="'+v.tab+'"]'); if(b)switchTab(b); } setTimeout(go,320); }
+      return; // trip not loaded yet → stay put rather than show a blank trip
+    }
+    if(v.screen==='s-city-guide'){
+      if(v.cityIdx!=null && v.cityIdx>=0 && typeof openCityGuide==='function' && typeof CONCIERGE_CITIES!=='undefined' && CONCIERGE_CITIES[v.cityIdx]){ openCityGuide(v.cityIdx); setTimeout(go,320); return; }
+      // Can't rebuild the specific city → land on the City Guide grid, not a blank screen or profile.
+      if(typeof showScreen==='function')showScreen('s-concierge'); if(typeof setActiveNav==='function')setActiveNav('bnav-concierge'); if(typeof renderConcierge==='function')renderConcierge(); return;
     }
     if(v.screen!=='s-trip' && document.getElementById(v.screen)){
       showScreen(v.screen);
@@ -18417,12 +18455,13 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 </script>
 
 <div id="story-viewer" style="display:none;position:fixed;inset:0;z-index:300;background:#000">
-  <div id="sv-bars" style="position:absolute;top:0;left:0;right:0;display:flex;gap:4px;padding:12px 12px 0;z-index:3"></div>
-  <div id="sv-head" style="position:absolute;top:22px;left:14px;right:54px;z-index:3;color:#fff;font-family:'DM Mono',monospace;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
+  <div id="sv-bars" style="position:absolute;top:0;left:0;right:0;display:flex;gap:4px;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px 0;z-index:3"></div>
+  <div id="sv-head" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 26px);left:14px;right:54px;z-index:3;color:#fff;font-family:'DM Mono',monospace;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
   <img id="sv-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000">
-  <div onclick="svPrev()" style="position:absolute;left:0;top:60px;bottom:0;width:32%;z-index:2"></div>
-  <div onclick="svNext()" style="position:absolute;right:0;top:60px;bottom:0;width:68%;z-index:2"></div>
-  <button onclick="svClose()" aria-label="Close" style="position:absolute;top:18px;right:14px;z-index:4;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:#fff;font-size:18px;cursor:pointer">✕</button>
+  <div onclick="svPrev()" style="position:absolute;left:0;top:72px;bottom:130px;width:32%;z-index:2"></div>
+  <div onclick="svNext()" style="position:absolute;right:0;top:72px;bottom:130px;width:68%;z-index:2"></div>
+  <div id="sv-caption" style="position:absolute;left:0;right:0;bottom:0;padding:26px 18px calc(env(safe-area-inset-bottom,0px) + 24px);color:#fff;background:linear-gradient(to top,rgba(0,0,0,.72),transparent);z-index:3;pointer-events:none"></div>
+  <button onclick="svClose()" aria-label="Close" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 22px);right:14px;z-index:4;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:#fff;font-size:18px;cursor:pointer">✕</button>
 </div>
 <div class="modal-sheet" id="sheet-user-profile" style="max-height:88vh;overflow-y:auto"><div class="modal-handle"></div><div id="upm-body"></div></div>
 <div class="modal-sheet" id="sheet-edit-place">
