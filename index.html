@@ -2402,6 +2402,7 @@ function enterApp(){
   if(typeof dbLoadSocial==='function')setTimeout(dbLoadSocial,1200);
   if(typeof dbLoadInbox==='function')setTimeout(dbLoadInbox,1600);
   if(typeof startRealtime==='function')setTimeout(startRealtime,1900);
+  if(typeof startMsgPoll==='function')setTimeout(startMsgPoll,2200); // fallback so notifications survive a dropped realtime socket
 }
 function exitApp(){
   window._deliberateSignOut=true; // mark this as a user-initiated sign-out (see onAuthStateChange)
@@ -2410,6 +2411,7 @@ function exitApp(){
   // doesn't loop back into exitApp() and freeze the page.
   appMode=false;
   if(typeof stopRealtime==='function')stopRealtime();
+  if(typeof stopMsgPoll==='function')stopMsgPoll();
   document.getElementById('nav-right-auth').style.display='';
   document.getElementById('nav-right-app').style.display='none';
   var _ts2=document.getElementById('top-search-btn'); if(_ts2)_ts2.style.display='none';
@@ -6331,9 +6333,12 @@ async function dbLoadSocial(){ // load the people who actually follow ME, so the
 async function dbSendMessage(toId,text){ if(!sb||!userData.id){ _cloudWarn(); return; } try{ await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}); }catch(e){} }
 async function dbLoadConversation(otherId){ if(!sb||!userData.id)return null; try{ var r=await sb.from('messages').select('*').or('and(from_id.eq.'+userData.id+',to_id.eq.'+otherId+'),and(from_id.eq.'+otherId+',to_id.eq.'+userData.id+')').order('created_at',{ascending:true}); return (r&&r.data)||[]; }catch(e){ return null; } }
 function _msgSeenKey(){ return 'traf_msg_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
-function updateMsgBadge(n){ var b=document.getElementById('top-msg-count'); if(!b)return; if(n>0){ b.textContent=(n>99?'99+':n); b.style.display='block'; } else b.style.display='none'; }
+function updateMsgBadge(n){ var b=document.getElementById('top-msg-count'); if(!b)return; n=(n>0)?n:0; b.textContent=(n>99?'99+':n); b.style.display=n>0?'block':'none'; }
 function _folSeenKey(){ return 'traf_fol_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
 function _markFollowersSeen(){ try{ localStorage.setItem(_folSeenKey(), JSON.stringify((userData.followers||[]).map(function(f){return f.id;}))); }catch(e){} var d=document.getElementById('bnav-profile-dot'); if(d)d.style.display='none'; }
+// Ids of incoming messages already accounted for. Shared by the poll + realtime paths
+// so a given message is only ever toasted once. null = not yet baselined this session.
+var _seenMsgIds=null;
 async function dbLoadInbox(){ // pull every thread involving me so messages others sent actually arrive
   if(!sb||!userData.id)return;
   try{
@@ -6341,16 +6346,39 @@ async function dbLoadInbox(){ // pull every thread involving me so messages othe
     if(!r||!r.data)return;
     var byOther={};
     r.data.forEach(function(m){ var mine=m.from_id===userData.id; var other=mine?m.to_id:m.from_id;
-      (byOther[other]=byOther[other]||[]).push({from:mine?'me':'them',text:m.text,time:'',fromName:mine?'':(m.from_name||'')});
+      (byOther[other]=byOther[other]||[]).push({from:mine?'me':'them',text:m.text,time:'',fromName:mine?'':(m.from_name||''),_mid:m.id});
       if(!mine && typeof _chatUsers!=='undefined' && !_chatUsers[other]){ _chatUsers[other]={id:other,name:m.from_name||'Traveller',handle:'',initial:((m.from_name||'T').trim()[0]||'T').toUpperCase(),_real:true}; }
     });
     Object.keys(byOther).forEach(function(k){ conversations[k]=byOther[k]; });
     if(typeof _saveChats==='function')_saveChats();
     var lastSeen=0; try{ lastSeen=parseInt(localStorage.getItem(_msgSeenKey())||'0',10)||0; }catch(e){}
-    var unread=0; r.data.forEach(function(m){ if(m.to_id===userData.id){ var ts=new Date(m.created_at).getTime(); if(ts>lastSeen)unread++; } });
-    if(typeof updateMsgBadge==='function')updateMsgBadge(unread);
+    // First load this session = silent baseline: just count the badge, don't toast a storm
+    // of already-waiting messages. Later polls toast genuinely new arrivals.
+    var firstRun=(_seenMsgIds===null); if(firstRun)_seenMsgIds={};
+    var viewingId=(typeof _chatUser!=='undefined' && _chatUser!=null)?String(_chatUser):null;
+    var unread=0, sawFromOpenChat=false;
+    r.data.forEach(function(m){
+      if(m.to_id!==userData.id)return;                 // only messages addressed to me
+      var fromId=String(m.from_id);
+      var isNew=(new Date(m.created_at).getTime()>lastSeen);
+      if(viewingId && viewingId===fromId){ if(isNew)sawFromOpenChat=true; if(m.id!=null)_seenMsgIds[m.id]=1; return; } // open chat = read
+      if(isNew)unread++;
+      if(!firstRun && isNew && m.id!=null && !_seenMsgIds[m.id] && typeof toast==='function'){
+        toast('💬 '+(m.from_name||'New message')+': '+String(m.text||'').slice(0,40));
+      }
+      if(m.id!=null)_seenMsgIds[m.id]=1;
+    });
+    if(sawFromOpenChat){ try{ localStorage.setItem(_msgSeenKey(), String(Date.now())); }catch(e){} } // reading a chat clears its unread
+    if(typeof updateMsgBadge==='function')updateMsgBadge(sawFromOpenChat?0:unread);
   }catch(e){}
 }
+// Polling fallback: realtime can silently drop (socket reset, token refresh, app backgrounded,
+// flaky network) and never recover, which is the main reason message notifications "stop working".
+// A light poll re-derives the unread badge + toasts new arrivals regardless of the live channel.
+var _msgPollTimer=null;
+function startMsgPoll(){ if(_msgPollTimer||typeof dbLoadInbox!=='function')return; _msgPollTimer=setInterval(function(){ try{ if(!document.hidden)dbLoadInbox(); }catch(e){} },20000);
+  if(!window._msgVisHooked){ window._msgVisHooked=true; document.addEventListener('visibilitychange',function(){ if(!document.hidden && _msgPollTimer && typeof dbLoadInbox==='function')dbLoadInbox(); }); } }
+function stopMsgPoll(){ if(_msgPollTimer){ clearInterval(_msgPollTimer); _msgPollTimer=null; } _seenMsgIds=null; }
 function _isRealChatPartner(id){ return !isGroupKey(id) && !/^[0-9]+$/.test(String(id)); }
 // ── Live (realtime) delivery: incoming messages + new followers appear instantly ──
 var _rtChannel=null;
@@ -6365,8 +6393,10 @@ function startRealtime(){
         conversations[other].push({from:'them',text:m.text,time:'',fromName:m.from_name||'',_mid:m.id});
         if(typeof _chatUsers!=='undefined' && !_chatUsers[other]){ _chatUsers[other]={id:other,name:m.from_name||'Traveller',handle:'',initial:((m.from_name||'T').trim()[0]||'T').toUpperCase(),_real:true}; }
         if(typeof _saveChats==='function')_saveChats();
+        var alreadyToasted=(_seenMsgIds && m.id!=null && _seenMsgIds[m.id]); // poll may have beaten realtime
+        if(_seenMsgIds && m.id!=null)_seenMsgIds[m.id]=1;
         if(typeof _chatUser!=='undefined' && _chatUser===other){ if(typeof renderChat==='function')renderChat(); try{localStorage.setItem(_msgSeenKey(),String(Date.now()));}catch(e){} }
-        else { var cur=parseInt((document.getElementById('top-msg-count')||{}).textContent||'0',10)||0; if(typeof updateMsgBadge==='function')updateMsgBadge(cur+1); if(typeof toast==='function')toast('💬 '+(m.from_name||'New message')+': '+String(m.text||'').slice(0,40)); }
+        else { var cur=parseInt((document.getElementById('top-msg-count')||{}).textContent||'0',10)||0; if(typeof updateMsgBadge==='function')updateMsgBadge(cur+1); if(!alreadyToasted && typeof toast==='function')toast('💬 '+(m.from_name||'New message')+': '+String(m.text||'').slice(0,40)); }
       })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows',filter:'following_id=eq.'+userData.id},function(payload){
         var f=payload&&payload.new; if(!f)return; userData.followers=userData.followers||[];
@@ -16828,7 +16858,16 @@ async function dbLoadUserTrips(){
     var rows=res.data||[];
     console.log('DB trips loaded:', rows.length);
     if(!rows.length){
-      // Cloud has nothing yet — KEEP the local trips and push them up so they sync next time.
+      // Cloud has nothing for this user → any dbId on a local trip/place/photo is STALE
+      // (the cloud row was deleted). Clear those dead ids so the sync RE-INSERTS everything
+      // fresh, instead of dbSaveTrip's `if(trip.dbId) return` skipping it as "already synced".
+      localTrips.forEach(function(t){
+        delete t.dbId;
+        (t.places||[]).forEach(function(p){ delete p.dbId; });
+        (t.photos||[]).forEach(function(ph){ delete ph.dbId; });
+      });
+      if(localTrips.length && typeof persistSoon==='function') persistSoon();
+      // KEEP the local trips and push them up so they sync next time.
       if(localTrips.length && typeof dbSyncLocalTrips==='function') dbSyncLocalTrips(localTrips);
       return;
     }
@@ -17068,29 +17107,35 @@ function confirmDeleteTrip(){
 
 function doDeleteTrip(){
   if(!currentTrip)return;
-  var id=currentTrip.id;
-  var dbId=currentTrip.dbId||currentTrip.id;
-  var name=currentTrip.dest;
-  // Remove locally
-  trips=trips.filter(function(t){return t.id!==id;});
-  // Remove from database
-  dbDeleteTrip(dbId);
+  var trip=currentTrip;
+  var name=trip.dest;
+  var key=(String(trip.dest||'').toLowerCase())+'|'+(trip.startDate||'');
+  // Remove ALL local rows for this trip (covers duplicate rows so it doesn't reappear).
+  trips=trips.filter(function(t){ return t.id!==trip.id && ((String(t.dest||'').toLowerCase())+'|'+(t.startDate||''))!==key; });
+  dbDeleteTrip(trip);
   currentTrip=null;
   showScreen('s-dash');
   setActiveNav('bnav-profile');
   renderDash();
+  if(typeof persistSoon==='function')persistSoon();
   toast(name+' deleted');
 }
 
-async function dbDeleteTrip(tripId){
-  if(!sb||!userData.id)return;
+async function dbDeleteTrip(trip){
+  if(!sb||!userData.id||!trip)return;
   try{
-    // Delete places first (foreign key)
-    await sb.from('places').delete().eq('trip_id', tripId);
-    // Then delete trip
-    var res=await sb.from('trips').delete().eq('id', tripId);
+    // Find EVERY cloud row for this trip (dest+start) so leftover duplicates can't reappear.
+    var q=sb.from('trips').select('id').eq('user_id',userData.id).eq('dest',trip.dest||'');
+    q = trip.startDate ? q.eq('date_from',trip.startDate) : q.is('date_from',null);
+    var rows=await q;
+    var ids=(rows&&rows.data)?rows.data.map(function(r){return r.id;}):[];
+    if(trip.dbId!=null && ids.indexOf(trip.dbId)<0) ids.push(trip.dbId);
+    if(!ids.length) return;
+    try{ await sb.from('photos').delete().in('trip_id', ids); }catch(e){}
+    try{ await sb.from('places').delete().in('trip_id', ids); }catch(e){}
+    var res=await sb.from('trips').delete().in('id', ids);
     if(res.error)console.error('dbDeleteTrip error:',res.error);
-    else console.log('Trip deleted from DB');
+    else console.log('Trip deleted from DB ('+ids.length+' row(s))');
   }catch(e){console.error('dbDeleteTrip error:',e);}
 }
 
