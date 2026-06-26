@@ -4390,10 +4390,13 @@ function travelMapPoints(list){
     if(t.cities&&t.cities.length) t.cities.forEach(function(c){ if(c&&c.name)entries.push({name:c.name, lat:c.lat, lng:c.lng, flag:c.flag, country:c.country}); });
     if(t.dest && !entries.some(function(e){return e.name===t.dest;})) entries.push({name:t.dest, lat:t.lat, lng:t.lng, flag:t.flag, country:t.country});
     var tc=normCountry(tripCountry(t)); if(tc)countrySet[tc]=1;
+    // City count: a country (multi-city) trip's cities[] are the cities; a city trip's destination
+    // IS the city — even a city-state like Singapore/Maldives (so every destination is counted).
+    if(t.tripType==='country'){ (t.cities||[]).forEach(function(c){ if(c&&c.name)cityNames[String(c.name).toLowerCase()]=1; }); }
+    else if(t.dest){ cityNames[String(t.dest).toLowerCase()]=1; }
     entries.forEach(function(e){
       var ccn=normCountry(e.country||cityCountryName(e.name)||tripCountry(t)||t.country);
       if(ccn)countrySet[ccn]=1;
-      if(e.name && normCountry(e.name)!==ccn) cityNames[String(e.name).toLowerCase()]=1; // count real cities, not a country-name dest
       if(!ccn || byCountry[ccn]) return;               // this country already has its single pin
       var co=CITY_COORDS[e.name];
       if(!co){ var la=parseFloat(e.lat), ln=parseFloat(e.lng); if(isFinite(la)&&isFinite(ln)&&(la!==0||ln!==0)) co=[la,ln]; }
@@ -6649,14 +6652,17 @@ function renderChat(){
 }
 // ── Real cross-user social: follows + direct messages (Supabase-backed) ──
 function _cloudWarn(){ if(window._cloudWarned)return; window._cloudWarned=true; if(typeof toast==='function')toast('⚠️ Not signed in to the cloud — follows & messages won’t reach others. Sign in online.'); }
-async function dbFollow(u){ if(!u||!u.id)return; if(!sb||!userData.id){ _cloudWarn(); return; } try{ await sb.from('follows').upsert({follower_id:userData.id,following_id:u.id,follower_name:userData.name||'',follower_username:userData.username||''},{onConflict:'follower_id,following_id'}); }catch(e){} }
+async function dbFollow(u){ if(!u||!u.id)return; if(!sb||!userData.id){ _cloudWarn(); return; } try{ var r=await sb.from('follows').upsert({follower_id:userData.id,following_id:u.id},{onConflict:'follower_id,following_id'}); if(r&&r.error){ console.warn('dbFollow failed:',r.error.message); if(typeof toast==='function')toast('Follow didn\'t save: '+r.error.message); } }catch(e){ console.warn('dbFollow',e); } }
 async function dbUnfollow(id){ if(!sb||!userData.id)return; try{ await sb.from('follows').delete().eq('follower_id',userData.id).eq('following_id',id); }catch(e){} }
 async function dbLoadSocial(){ // load the people who actually follow ME, so they show up + count is real
   if(!sb||!userData.id)return;
   try{
-    var fr=await sb.from('follows').select('follower_id,follower_name,follower_username').eq('following_id',userData.id);
+    var fr=await sb.from('follows').select('follower_id').eq('following_id',userData.id);
     if(fr&&fr.data){
-      userData.followers=fr.data.map(function(r){return {id:r.follower_id,name:r.follower_name||'Traveller',handle:r.follower_username||'',initial:((r.follower_name||'T').trim()[0]||'T').toUpperCase(),_real:true};});
+      var fids=fr.data.map(function(r){return r.follower_id;}).filter(Boolean);
+      var fnames={};
+      if(fids.length){ try{ var fpr=await sb.from('profiles').select('id,name,username,avatar').in('id',fids); (fpr.data||[]).forEach(function(p){fnames[p.id]={name:p.name,username:p.username,avatar:p.avatar};}); }catch(e){} }
+      userData.followers=fids.map(function(id){ var n=fnames[id]||{}; var nm=n.name||'Traveller'; return {id:id,name:nm,handle:n.username||'',initial:(nm.trim()[0]||'T').toUpperCase(),photo:n.avatar||'',_real:true};});
       var fl=document.getElementById('p-stat-followers'); if(fl)fl.textContent=userData.followers.length;
       if(typeof persistSoon==='function')persistSoon();
       // New-follower notification (dot on profile + toast), with a silent baseline on first load.
@@ -16406,7 +16412,9 @@ function followLabel(id){
 }
 // Returns the new status after acting on the follow button for user `id`.
 function actFollow(id){
-  var u=(typeof _resolveUser==='function'&&_resolveUser(id)) || allUsers.find(function(x){return String(x.id)===String(id);}) || (_searchedUsers||[]).find(function(x){return String(x.id)===String(id);}) || (userData.following||[]).find(function(x){return String(x.id)===String(id);});
+  var u=(typeof _resolveUser==='function'&&_resolveUser(id)) || allUsers.find(function(x){return String(x.id)===String(id);}) || (_searchedUsers||[]).find(function(x){return String(x.id)===String(id);}) || (userData.following||[]).find(function(x){return String(x.id)===String(id);})
+    || (typeof _viewedUserObj!=='undefined' && _viewedUserObj && String(_viewedUserObj.id)===String(id) ? _viewedUserObj : null)
+    || {id:id, name:'Traveller', handle:'', initial:'T', _real:true}; // fallback so a follow always saves, even if the user isn't in a local list
   var st=followStatusOf(id);
   userData.following=userData.following||[]; userData.pendingFollows=userData.pendingFollows||[];
   if(st==='following'){
