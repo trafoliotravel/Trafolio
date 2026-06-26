@@ -447,6 +447,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
   </div>
   <div class="nav-right" id="nav-right-app" style="display:none;gap:8px">
     <button id="top-msg-btn" onclick="openInbox()" aria-label="Messages" title="Messages" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ink-2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg><span id="top-msg-count" style="display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--ember);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;line-height:17px;text-align:center;box-sizing:border-box">0</span></button>
+    <button id="top-notif-btn" onclick="openNotifications()" aria-label="Notifications" title="Notifications" data-i18n-title="notifications" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🔔<span id="top-notif-dot" style="display:none;position:absolute;top:-3px;right:-3px;width:11px;height:11px;border-radius:50%;background:var(--ember);border:2px solid var(--paper)"></span></button>
     <button id="top-cart-btn" onclick="openCart()" aria-label="Cart" title="Cart" data-i18n-title="cartTitle" style="position:relative;width:38px;height:38px;border-radius:50%;background:var(--paper-2);border:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">🛒<span id="top-cart-count" style="display:none;position:absolute;top:-5px;right:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;background:var(--ember);color:#fff;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;line-height:17px;text-align:center;box-sizing:border-box">0</span></button>
     <div style="position:relative">
       <div class="avatar" id="top-av" onclick="toggleAvatarMenu(event)" style="cursor:pointer">J</div>
@@ -906,6 +907,11 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 </div>
 
 <!-- INBOX (messages list) -->
+<div class="modal-sheet" id="sheet-notifications">
+  <div class="modal-handle"></div>
+  <div class="modal-title" data-i18n="notifications">Notifications</div>
+  <div id="notif-list" style="margin-top:12px"></div>
+</div>
 <div class="modal-sheet" id="sheet-inbox">
   <div class="modal-handle"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
@@ -1399,7 +1405,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     </div>
     <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px" data-i18n="allergies">Allergies / restrictions</div><input type="text" id="pref-allergies" placeholder="e.g. nuts, dairy, shellfish..." class="inp" data-i18n-ph="phAllergies"></div>
   </div>
-  <div style="position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--paper-3);padding:14px 20px calc(env(safe-area-inset-bottom,0px)+20px)">
+  <div style="position:fixed;bottom:0;left:0;right:0;z-index:60;background:var(--white);border-top:1px solid var(--paper-3);padding:14px 20px calc(env(safe-area-inset-bottom,0px)+20px)">
     <button onclick="savePrefs()" class="btn btn-ember btn-full" data-i18n="letsGo">Let&#8217;s go &#8594;</button>
   </div>
 </div>
@@ -2376,6 +2382,9 @@ function showScreen(id,_fromBack){
     _sTop(); requestAnimationFrame(_sTop); setTimeout(_sTop,60); setTimeout(_sTop,250);
   }
   if(typeof _saveView==='function')_saveView();
+  // The bottom nav belongs to the in-app experience only — hide it on the pre-app screens
+  // (landing, auth, profile setup) so it doesn't cover the "Let's go" button etc.
+  var _bn=document.getElementById('bottom-nav'); if(_bn && (id==='s-prefs'||id==='s-auth'||id==='s-home')) _bn.style.display='none';
   var nav=document.getElementById('topnav');if(nav){
     if(id==='s-home'){nav.classList.add('lp-topnav-transparent');window.addEventListener('scroll',window._lpScrollHandler||function(){});}
     else{nav.classList.remove('lp-topnav-transparent');if(window._lpScrollHandler)window.removeEventListener('scroll',window._lpScrollHandler);}
@@ -2518,6 +2527,8 @@ function enterApp(){
   if(typeof dbLoadSocial==='function')setTimeout(dbLoadSocial,1200);
   if(typeof dbLoadInbox==='function')setTimeout(dbLoadInbox,1600);
   if(typeof startRealtime==='function')setTimeout(startRealtime,1900);
+  if(typeof registerPush==='function')setTimeout(registerPush,2200);
+  if(typeof dbLoadNotifs==='function')setTimeout(dbLoadNotifs,2600);
   if(typeof startMsgPoll==='function')setTimeout(startMsgPoll,2200); // fallback so notifications survive a dropped realtime socket
 }
 function exitApp(){
@@ -3280,11 +3291,10 @@ function bbSlotsHtml(idx){
       var imgLayer=url?'<div class="bb-slot-img" style="background-image:url(\''+url+'\');'+bbShapeCss(cell.shape)+'"></div>':'';
       var cap=(url&&!isTitled)?'<div id="bb-ed-'+idx+'-'+i+'-cap" class="bb-cap" contenteditable="true" data-ph="'+escHtml(t('bbCaptionPh'))+'" onfocus="bbSetActive('+idx+','+i+',\'cap\')" onclick="event.stopPropagation()" oninput="bbSetCap('+idx+','+i+',this.innerText)" style="'+bbCellStyleStr(cell.capTs)+'">'+escHtml(cell.cap)+'</div>':'';
       var pick=url?'<button class="bb-slot-pick" title="'+escHtml(t('bbChoosePhoto'))+'" onclick="event.stopPropagation();bbPickSlot('+idx+','+i+')">&#128247;</button>':'';
-      var del=url?'<button class="bb-slot-del" title="'+escHtml(t('bbRemovePhoto')||'Remove photo')+'" onclick="event.stopPropagation();bbDeleteSlotPhoto('+idx+','+i+')">&#10005;</button>':'';
       var edit=url?'<button class="bb-slot-edit" title="'+escHtml(t('bbEditPhoto'))+'" onclick="event.stopPropagation();bbEditSlot('+idx+','+i+')">&#128396;</button>':'';
       var shape=url?'<button class="bb-slot-shape" title="'+escHtml(t('bbShape'))+'" onclick="event.stopPropagation();bbShapeSlot('+idx+','+i+')">&#9670;</button>':'';
       var typeBtn='<button class="bb-slot-type bb-slot-totext" title="'+escHtml(t('bbMakeText'))+'" onclick="event.stopPropagation();bbCellToText('+idx+','+i+',true)">&#128221;</button>';
-      slots+='<div class="bb-slot'+(url?' filled':' empty')+'"'+ga+' onclick="bbCycleSlot('+idx+','+i+')">'+imgLayer+pick+del+edit+shape+typeBtn+cap+'</div>';
+      slots+='<div class="bb-slot'+(url?' filled':' empty')+'"'+ga+' onclick="bbCycleSlot('+idx+','+i+')">'+imgLayer+pick+edit+shape+typeBtn+cap+'</div>';
     }
   }
   return slots;
@@ -6778,14 +6788,103 @@ function startRealtime(){
       })
       .on('postgres_changes',{event:'INSERT',schema:'public',table:'follows',filter:'following_id=eq.'+userData.id},function(payload){
         var f=payload&&payload.new; if(!f)return; userData.followers=userData.followers||[];
-        if(!userData.followers.some(function(x){return x.id===f.follower_id;})){ userData.followers.push({id:f.follower_id,name:f.follower_name||'Traveller',handle:f.follower_username||'',initial:((f.follower_name||'T').trim()[0]||'T').toUpperCase(),_real:true}); var fl=document.getElementById('p-stat-followers'); if(fl)fl.textContent=userData.followers.length; if(typeof persistSoon==='function')persistSoon(); }
         var d=document.getElementById('bnav-profile-dot'); if(d)d.style.display='block';
-        if(typeof toast==='function')toast('👋 '+(f.follower_name||'Someone')+' '+t('startedFollowing'));
+        // follows has no name columns → resolve the follower's name from profiles for the toast.
+        sb.from('profiles').select('name,username,avatar').eq('id',f.follower_id).maybeSingle().then(function(pr){
+          var p=(pr&&pr.data)||{}; var nm=p.name||'Someone';
+          if(!userData.followers.some(function(x){return x.id===f.follower_id;})){ userData.followers.push({id:f.follower_id,name:nm,handle:p.username||'',initial:((nm||'T').trim()[0]||'T').toUpperCase(),photo:p.avatar||'',_real:true}); var fl=document.getElementById('p-stat-followers'); if(fl)fl.textContent=userData.followers.length; if(typeof persistSoon==='function')persistSoon(); }
+          if(typeof toast==='function')toast('👋 '+nm+' '+t('startedFollowing'));
+        }).catch(function(){ if(typeof toast==='function')toast('👋 '+t('startedFollowing')); });
       })
       .subscribe();
   }catch(e){}
 }
 function stopRealtime(){ try{ if(_rtChannel&&sb)sb.removeChannel(_rtChannel); }catch(e){} _rtChannel=null; }
+// ── Notifications (who followed you + who liked your stories) ───────────────────────────
+var _notifs=[];
+function _notifSeenKey(){ return 'traf_notif_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
+// Record/remove a like on a story so its author gets a notification (real authors only).
+async function dbLikeStory(story, liked){
+  if(!sb||!userData.id||!story) return;
+  var owner=story.author&&story.author.id;
+  if(!owner || String(owner)===String(userData.id) || !isNaN(+owner)) return; // need a real (uuid) author, not yourself / demo
+  var sid=String(story.dbId||story.id||story.title||'');
+  try{
+    if(liked){ await sb.from('story_likes').upsert({story_id:sid, owner_id:owner, liker_id:userData.id, story_title:story.title||''},{onConflict:'story_id,liker_id'}); }
+    else { await sb.from('story_likes').delete().eq('story_id',sid).eq('liker_id',userData.id); }
+  }catch(e){}
+}
+async function dbLoadNotifs(){
+  if(!sb||!userData.id) return;
+  var list=[];
+  try{ var fr=await sb.from('follows').select('follower_id,created_at').eq('following_id',userData.id).order('created_at',{ascending:false}).limit(100);
+    (fr&&fr.data||[]).forEach(function(r){ list.push({type:'follow',userId:r.follower_id,ts:r.created_at}); }); }catch(e){}
+  try{ var lk=await sb.from('story_likes').select('liker_id,story_title,created_at').eq('owner_id',userData.id).order('created_at',{ascending:false}).limit(100);
+    (lk&&lk.data||[]).forEach(function(r){ list.push({type:'like',userId:r.liker_id,title:r.story_title||'',ts:r.created_at}); }); }catch(e){}
+  var ids=[]; list.forEach(function(n){ if(n.userId&&ids.indexOf(n.userId)<0)ids.push(n.userId); });
+  var names={};
+  if(ids.length){ try{ var pr=await sb.from('profiles').select('id,name,username,avatar').in('id',ids); (pr.data||[]).forEach(function(p){names[p.id]={name:p.name,username:p.username,avatar:p.avatar};}); }catch(e){} }
+  list.forEach(function(n){ var p=names[n.userId]||{}; n.name=p.name||'Traveller'; n.handle=p.username||''; n.photo=p.avatar||''; });
+  list.sort(function(a,b){ return String(b.ts||'').localeCompare(String(a.ts||'')); });
+  _notifs=list; _updateNotifDot();
+}
+function _updateNotifDot(){
+  var seen=null; try{ seen=localStorage.getItem(_notifSeenKey()); }catch(e){}
+  var newest=_notifs.length?_notifs[0].ts:null;
+  var dot=document.getElementById('top-notif-dot');
+  if(dot) dot.style.display=(newest && (!seen || String(newest)>String(seen)))?'block':'none';
+}
+function openNotifications(){
+  if(typeof openModal==='function')openModal('sheet-notifications');
+  renderNotifications();
+  Promise.resolve(dbLoadNotifs()).then(function(){
+    renderNotifications();
+    try{ if(_notifs.length)localStorage.setItem(_notifSeenKey(), _notifs[0].ts); }catch(e){}
+    var dot=document.getElementById('top-notif-dot'); if(dot)dot.style.display='none';
+  });
+}
+function renderNotifications(){
+  var box=document.getElementById('notif-list'); if(!box)return;
+  if(!_notifs.length){ box.innerHTML='<div style="padding:34px 12px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔔</div><div style="font-size:13px">'+(t('noNotifications')||'No notifications yet')+'</div></div>'; return; }
+  box.innerHTML=_notifs.map(function(n){
+    var verb=(n.type==='like')?((t('likedYourStory')||'liked your story')+(n.title?(' “'+escHtml(n.title)+'”'):'')):(t('startedFollowing')||'started following you');
+    var icon=(n.type==='like')?'❤️':'👋';
+    var av=n.photo?('background:#ccc center/cover no-repeat url('+n.photo+')'):'background:linear-gradient(135deg,var(--ember),var(--gold))';
+    return '<div onclick="closeModal();openUserProfile(\''+n.userId+'\')" style="display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+      +'<div style="width:40px;height:40px;border-radius:50%;'+av+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:15px">'+(n.photo?'':escHtml((n.name||'T')[0].toUpperCase()))+'</div>'
+      +'<div style="flex:1;min-width:0;font-size:13px;color:var(--ink-2);line-height:1.4"><b style="color:var(--ink)">'+escHtml(n.name||'Traveller')+'</b> '+verb+'</div>'
+      +'<div style="font-size:16px;flex-shrink:0">'+icon+'</div></div>';
+  }).join('');
+}
+// ── Native push registration (scaffold) ───────────────────────────────────────────────
+// Registers the device for push and saves its token to Supabase (device_tokens) so a future
+// server/Edge Function can send real pushes for follows/messages. No-op on web. On the phone
+// it needs the Push capability + APNs (iOS) / FCM (Android) configured before pushes actually
+// arrive — until then this just collects tokens harmlessly.
+function registerPush(){
+  if(typeof _isNative!=='function' || !_isNative()) return;
+  var PN = window.Capacitor && Capacitor.Plugins && Capacitor.Plugins.PushNotifications;
+  if(!PN || window._pushRegistered) return;
+  window._pushRegistered=true;
+  try{
+    PN.addListener('registration', function(token){
+      try{
+        var plat=(window.Capacitor && Capacitor.getPlatform && Capacitor.getPlatform())||'ios';
+        if(sb && userData.id && token && token.value){
+          sb.from('device_tokens').upsert({user_id:userData.id, token:token.value, platform:plat},{onConflict:'token'})
+            .then(function(r){ if(r&&r.error)console.warn('device_tokens save:',r.error.message); }).catch(function(){});
+        }
+      }catch(e){}
+    });
+    PN.addListener('registrationError', function(e){ console.warn('push registration error:',e); });
+    // Foreground push → show an in-app toast (background pushes are handled by the OS).
+    PN.addListener('pushNotificationReceived', function(n){ if(typeof toast==='function')toast('🔔 '+((n&&n.title)||(n&&n.body)||t('newNotification')||'Notification')); });
+    PN.checkPermissions().then(function(p){
+      if(p && p.receive==='granted'){ PN.register(); }
+      else { PN.requestPermissions().then(function(r){ if(r && r.receive==='granted')PN.register(); }).catch(function(){}); }
+    }).catch(function(){});
+  }catch(e){ console.warn('registerPush:',e); }
+}
 function sendChatMsg(){
   var i=document.getElementById('chat-input');if(!i||_chatUser==null)return;
   var txt=(i.value||'').trim();if(!txt)return;
@@ -7878,6 +7977,10 @@ const S={
     shareEverythingSub:'Include all places & photos',
     photosLabel:'Photos',
     highlightPhoto:'Highlight (up to 8)',
+    notifications:'Notifications',
+    noNotifications:'No notifications yet',
+    likedYourStory:'liked your story',
+    newNotification:'Notification',
     deletePhoto:'Delete photo',
     deletePhotoConfirm:'Delete this photo?',
     highlightMax:'You can highlight up to 8 photos',
@@ -16506,6 +16609,7 @@ function toggleStoryLike(id){
   var s=getStoryById(id); if(!s)return;
   if(s.liked){ s.liked=false; s.likes=Math.max(0,(s.likes||0)-1); }
   else { s.liked=true; s.likes=(s.likes||0)+1; }
+  if(typeof dbLikeStory==='function')dbLikeStory(s,s.liked); // record like so the author gets a notification
   if(typeof persistSoon==='function')persistSoon();
   refreshStoriesList();
 }
