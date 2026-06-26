@@ -1941,7 +1941,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     </div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:14px 16px 6px;border-bottom:1px solid var(--paper-3)">
       <button class="btn btn-ghost btn-sm" onclick="shareGuidePrint()">&#128424;&#65039; <span data-i18n="bbPrint">Print</span></button>
-      <button class="btn btn-ghost btn-sm" onclick="shareGuidePrint()">&#11015;&#65039; <span data-i18n="bbDownloadPdf">Download PDF</span></button>
+      <button class="btn btn-ghost btn-sm" onclick="shareGuideDownload()">&#11015;&#65039; <span data-i18n="bbDownloadPdf">Download PDF</span></button>
       <button class="btn btn-ghost btn-sm" onclick="shareCopyLink()">&#128279; <span data-i18n="copyLinkBtn">Copy link</span></button>
     </div>
     <div style="display:flex;align-items:flex-start;gap:7px;padding:11px 22px;background:var(--paper-2);border-bottom:1px solid var(--paper-3);font-size:11.5px;line-height:1.45;color:var(--ink-4)">
@@ -4210,11 +4210,56 @@ function shareGuideDoc(){
     + '<div class="foot">TRAFOLIO.TRAVEL</div></body></html>';
 }
 // Print / Save-as-PDF the shared guide (browser print dialog offers "Save as PDF").
+// Lazy-load the PDF library only when the user actually exports (keeps startup light).
+function _ensureHtml2pdf(cb){
+  if(typeof html2pdf!=='undefined') return cb();
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+  s.onload=function(){ cb(); }; s.onerror=function(){ cb(new Error('pdf-load')); };
+  document.head.appendChild(s);
+}
+// Generate a real PDF of the shared guide → download on web, share via the OS sheet on the phone
+// (window.print() doesn't work in the iOS WebView, so this is the reliable cross-platform path).
+function shareGuideDownload(){
+  var doc=shareGuideDoc(); if(!doc){ toast(t('mapShareFail')||'Nothing to export'); return; }
+  toast(t('generatingPdf')||'Generating PDF…');
+  _ensureHtml2pdf(function(err){
+    if(err || typeof html2pdf==='undefined'){
+      // No PDF lib (offline) → fall back to the browser print path on web.
+      if(typeof _isNative==='function' && _isNative()){ toast(t('mapShareFail')||'PDF needs a connection'); }
+      else { _printGuideIframe(doc); }
+      return;
+    }
+    var tr=(typeof shareTripData==='function')?shareTripData():currentTrip;
+    var name=((tr&&tr.dest)?String(tr.dest):'trafolio').replace(/[^\w\-]+/g,'-').replace(/^-+|-+$/g,'')||'trafolio';
+    var holder=document.createElement('div');
+    holder.style.cssText='position:fixed;left:-99999px;top:0;width:760px;background:#fff';
+    var sm=doc.match(/<style>[\s\S]*?<\/style>/i);
+    var body=doc.replace(/^[\s\S]*<body[^>]*>/i,'').replace(/<\/body>[\s\S]*$/i,'');
+    holder.innerHTML=(sm?sm[0]:'')+body;
+    document.body.appendChild(holder);
+    var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,scale:2,backgroundColor:'#ffffff'}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
+    html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
+      try{ holder.remove(); }catch(e){}
+      var file=new File([blob], name+'-trafolio.pdf', {type:'application/pdf'});
+      if(typeof _isNative==='function' && _isNative() && navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:(tr&&tr.dest)||'Trafolio'}).catch(function(){});
+      } else {
+        var url=URL.createObjectURL(blob), a=document.createElement('a');
+        a.href=url; a.download=name+'-trafolio.pdf'; document.body.appendChild(a); a.click();
+        setTimeout(function(){ try{a.remove();}catch(e){} URL.revokeObjectURL(url); },1500);
+      }
+    }).catch(function(e){ try{holder.remove();}catch(_){} console.warn('pdf gen:',e); toast(t('mapShareFail')||'Couldn’t generate PDF'); });
+  });
+}
 function shareGuidePrint(){
   var doc=shareGuideDoc(); if(!doc){toast(t('mapShareFail')||'Nothing to print');return;}
-  // window.open() is blocked inside the native iOS webview (so the old popup did nothing on the
-  // phone). A hidden iframe prints reliably everywhere and triggers the OS print sheet — which
-  // includes "Save as PDF" / share.
+  // The iOS WebView can't open a print dialog, so on the phone "Print" produces a shareable PDF.
+  if(typeof _isNative==='function' && _isNative()){ return shareGuideDownload(); }
+  _printGuideIframe(doc);
+}
+function _printGuideIframe(doc){
+  // Hidden-iframe print (works on web/desktop browsers; triggers Save-as-PDF in the print dialog).
   var old=document.getElementById('tf-print-frame'); if(old)old.remove();
   var f=document.createElement('iframe'); f.id='tf-print-frame';
   f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
@@ -4317,6 +4362,11 @@ function renderProfileStories(){
     el.addEventListener('click',function(){var idx=parseInt(this.dataset.sidx);var st=userStories[idx];if(st)openCityStory('u'+idx,st.city);});
   });
 }
+// Companion ("who's coming") icon + label for a trip card.
+function tripWithMeta(w){
+  var m={ solo:['🧍', t('solo')||'Solo'], couple:['💑', t('couple')||'Couple'], family:['👨‍👩‍👧‍👦', t('family')||'Family'], friends:['👯', t('friends')||'Friends'] };
+  return m[w]||null;
+}
 function renderProfileGrid(){
   var grid=document.getElementById('profile-trip-grid');if(!grid)return;
   // New user with no trips → show the encouraging prompt right here (not the dead #s-dash).
@@ -4338,6 +4388,7 @@ function renderProfileGrid(){
     +'<div style="position:absolute;bottom:6px;left:8px;right:8px">'
     +'<div style="font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500;line-height:1.1">'+escHtml(t.flag)+' '+escHtml(t.dest)+'</div>'
     +(t.dates?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.85);margin-top:1px">'+escHtml(t.dates)+'</div>':'')
+    +(function(){ var tw=tripWithMeta(t.with); return tw?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.04em;color:rgba(255,255,255,.8);margin-top:1px">'+tw[0]+' '+escHtml(tw[1])+'</div>':''; })()
     +'</div>'
     +'</div>';
   }).join('');
@@ -5132,7 +5183,7 @@ function createTrip(){
   }
   // Trips created beyond the free quota are "Pro-era" — visible to others & shareable only while Pro.
   var _requiresPro = activeTripCount() >= FREE_TRIP_LIMIT;
-  var newTrip={id:Date.now(),dest:tripDest,country:tripCountry,flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public',tripType:_tripType,cities:seedCities,requiresPro:_requiresPro};
+  var newTrip={id:Date.now(),dest:tripDest,country:tripCountry,flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public',tripType:_tripType,cities:seedCities,requiresPro:_requiresPro,with:_tripWith||'solo'};
   trips.unshift(newTrip);closeModal();renderDash();toast(flag+' '+newTrip.dest+' '+t('addedToast'));
   dbSaveTrip(newTrip);
   setTimeout(function(){openTrip(newTrip.id);},300);
@@ -5699,7 +5750,7 @@ async function doLocSearch(q){
   var dd=document.getElementById('at-loc-dropdown');if(!dd)return;
   dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3)">'+t('searching')+'</div>';
   dd.classList.add('open');
-  // PRIMARY: Google Places (New) — richer coverage and no OSM rate-limit dropouts. OSM is the fallback.
+  // 1) Google Places (New) — richest POI coverage.
   if(window._googleMapsReady && window.google && google.maps && google.maps.importLibrary && typeof _gpBroken==='function' && !_gpBroken()){
     try{
       var lib=await google.maps.importLibrary('places');
@@ -5709,14 +5760,43 @@ async function doLocSearch(q){
       }
     }catch(e){ if(typeof _gpFail==='function')_gpFail(); }
   }
-  // FALLBACK: OpenStreetMap / Nominatim
+  // 2) Google Geocoder — part of Maps JS, so it works wherever the map loads (no OSM rate limits).
+  if(window._googleMapsReady && window.google && google.maps && google.maps.Geocoder){
+    try{
+      var settled=false;
+      var fb=setTimeout(function(){ if(settled)return; settled=true; doLocSearchOSM(q); },2500);
+      new google.maps.Geocoder().geocode({address:q}, function(results,status){
+        if(settled)return; settled=true; clearTimeout(fb);
+        if(status==='OK' && results && results.length){ renderLocResultsGeocode(results,dd); }
+        else { doLocSearchOSM(q); } // not enabled / no result → OSM
+      });
+      return;
+    }catch(e){}
+  }
+  // 3) OpenStreetMap / Nominatim
   return doLocSearchOSM(q);
 }
-async function doLocSearchOSM(q){
+function renderLocResultsGeocode(results,dd){
+  function comp(r,type){ var c=r.address_components||[]; for(var i=0;i<c.length;i++){ if((c[i].types||[]).indexOf(type)>=0)return c[i]; } return null; }
+  dd.innerHTML=results.slice(0,6).map(function(r){
+    var cc=comp(r,'country'), ccShort=(cc&&cc.short_name)||'', country=(cc&&cc.long_name)||'';
+    var locC=comp(r,'locality')||comp(r,'administrative_area_level_1');
+    var nm=(locC&&locC.long_name)||String(r.formatted_address||'').split(',')[0];
+    var loc=r.geometry&&r.geometry.location, lat=loc?loc.lat():'', lng=loc?loc.lng():'';
+    var flag=getFlagEmoji(ccShort);
+    return '<div class="loc-item" data-city="'+String(nm).replace(/"/g,'&quot;')+'" data-country="'+String(country).replace(/"/g,'&quot;')+'" data-cc="'+String(ccShort).toLowerCase()+'" data-lat="'+lat+'" data-lng="'+lng+'" onclick="selectLocation(this)">'
+      +'<div style="font-size:18px;flex-shrink:0">'+(flag||'📍')+'</div>'
+      +'<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--ink)">'+escHtml(nm)+((country&&country!==nm)?(', '+escHtml(country)):'')+'</div>'
+      +'<div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(r.formatted_address||'')+'</div></div></div>';
+  }).join('');
+  dd.classList.add('open');
+}
+async function doLocSearchOSM(q,_retry){
   var dd=document.getElementById('at-loc-dropdown');if(!dd)return;
   dd.classList.add('open');
   try{
-    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language='+currentLang,{headers:{'User-Agent':'Trafolio/1.0'}});
+    var r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q)+'&format=json&limit=6&addressdetails=1&accept-language='+currentLang);
+    if(!r.ok) throw new Error('osm '+r.status);
     var data=await r.json();
     if(!data.length){dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-4)">'+t('noResults')+'</div>';return;}
     dd.innerHTML=data.map(function(item){
@@ -5731,7 +5811,11 @@ async function doLocSearchOSM(q){
         +'<div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--ink)">'+city+(country?', '+country:'')+'</div>'
         +'<div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace;text-transform:capitalize">'+type+'</div></div></div>';
     }).join('');
-  }catch(e){dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3)">'+t('locSearchUnavailable')+'</div>';}
+  }catch(e){
+    // Transient (often Nominatim rate-limit) → retry once, then a message that lets the user proceed.
+    if(!_retry){ setTimeout(function(){ doLocSearchOSM(q,true); }, 800); return; }
+    dd.innerHTML='<div style="padding:11px 14px;font-size:12px;color:var(--ink-3);line-height:1.5">'+(t('locTypeHint')||'Couldn’t load suggestions right now — type the city name and tap Save.')+'</div>';
+  }
 }
 function selectLocation(el){
   var city=el.dataset.city||'';var country=el.dataset.country||'';var flag=getFlagEmoji(el.dataset.cc||'');
@@ -6697,7 +6781,7 @@ async function dbLoadSocial(){ // load the people who actually follow ME, so the
     }
   }catch(e){}
 }
-async function dbSendMessage(toId,text){ if(!sb||!userData.id){ _cloudWarn(); return; } try{ await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}); }catch(e){} }
+async function dbSendMessage(toId,text){ if(!sb||!userData.id){ _cloudWarn(); return; } try{ var r=await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}); if(r&&r.error){ console.warn('dbSendMessage failed:',r.error.message); if(typeof toast==='function')toast('Message didn\'t send: '+r.error.message); } }catch(e){ console.warn('dbSendMessage',e); if(typeof toast==='function')toast('Message didn\'t send'); } }
 async function dbLoadConversation(otherId){ if(!sb||!userData.id)return null; try{ var r=await sb.from('messages').select('*').or('and(from_id.eq.'+userData.id+',to_id.eq.'+otherId+'),and(from_id.eq.'+otherId+',to_id.eq.'+userData.id+')').order('created_at',{ascending:true}); return (r&&r.data)||[]; }catch(e){ return null; } }
 function _msgSeenKey(){ return 'traf_msg_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
 // Per-conversation "last read" timestamps so each thread's unread clears independently
@@ -7658,6 +7742,8 @@ const S={
     notFollowingYet:'Not following anyone yet',
     editPlace:'Edit place',
     locSearchUnavailable:'Location search unavailable',
+    locTypeHint:'Couldn’t load suggestions right now — type the city name and tap Save.',
+    generatingPdf:'Generating PDF…',
     deleteBtn:'Delete',
     destExamplePh:'e.g. Tokyo, Kyoto, Dubai...',
     imageUrlPh:'Or paste your own image URL',
@@ -17422,10 +17508,10 @@ async function dbSaveTrip(trip){
     privacy: trip.privacy||'public'
   };
   // Optional newer columns — if the migration hasn't run, retry without them so trip-saving never breaks.
-  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[], requires_pro: !!trip.requiresPro});
+  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[], requires_pro: !!trip.requiresPro, trip_with: trip.with||''});
   try{
     var res=await sb.from('trips').insert(row).select();
-    if(res.error && /trip_type|cities|requires_pro|column|schema cache/i.test(res.error.message||'')){
+    if(res.error && /trip_type|cities|requires_pro|trip_with|column|schema cache/i.test(res.error.message||'')){
       console.warn('dbSaveTrip: trip_type/cities/requires_pro columns missing — saving without them. Run the migration to enable these.');
       res=await sb.from('trips').insert(base).select();
     }
@@ -17598,7 +17684,7 @@ async function dbLoadUserTrips(){
           startDate: t.date_from||'', endDate: t.date_to||'',
           days: t.date_from&&t.date_to ? Math.max(1,Math.round((new Date(t.date_to)-new Date(t.date_from))/86400000)+1) : 5,
           starred: false, cover: t.cover_url||'', privacy: t.privacy||'public',
-          tripType: t.trip_type||'city', cities: (Array.isArray(t.cities)?t.cities:[]),
+          tripType: t.trip_type||'city', cities: (Array.isArray(t.cities)?t.cities:[]), with: t.trip_with||'',
           requiresPro: !!t.requires_pro,
           photoVisibility: t.photo_visibility||null,
           blog: t.blog||'', blogTitle: t.blog_title||'',
