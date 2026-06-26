@@ -105,8 +105,14 @@ a.place-name-link:hover { text-decoration: underline; }
 .trip-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,28,48,.8) 0%, rgba(0,28,48,.15) 55%, transparent 100%); }
 .trip-hero-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 20px 20px 16px; display: flex; align-items: flex-end; justify-content: space-between; }
 .trip-hero-actions { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 56px + 10px); left: 0; right: 0; display: flex; justify-content: space-between; padding: 0 14px; }
-.tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--paper-3); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 4px; background: var(--white); position: sticky; top: 56px; z-index: 10; }
+.tab-bar { display: flex; gap: 0; border-bottom: 1px solid var(--paper-3); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 0 4px; background: var(--white); }
 .tab-bar::-webkit-scrollbar { display: none; }
+.tab-bar-wrap { position: sticky; top: 56px; z-index: 10; background: var(--white); }
+.tab-arrow { position: absolute; top: 0; bottom: 1px; width: 34px; border: none; cursor: pointer; z-index: 12; display: none; align-items: center; justify-content: center; font-size: 22px; line-height: 1; color: var(--ink-2); padding: 0; }
+.tab-arrow-l { left: 0; background: linear-gradient(to right, var(--white) 55%, rgba(255,255,255,0)); }
+.tab-arrow-r { right: 0; background: linear-gradient(to left, var(--white) 55%, rgba(255,255,255,0)); }
+.tab-bar-wrap.can-l .tab-arrow-l { display: flex; }
+.tab-bar-wrap.can-r .tab-arrow-r { display: flex; }
 .tab-btn { flex-shrink: 0; padding: 14px 16px; font-size: 13px; font-weight: 500; color: var(--ink-3); background: none; border: none; cursor: pointer; position: relative; transition: color .15s; white-space: nowrap; }
 .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 12px; right: 12px; height: 1.5px; background: var(--ink); transform: scaleX(0); transition: transform .2s cubic-bezier(.22,.68,0,1); }
 .tab-btn.active { color: var(--ink); }
@@ -142,7 +148,7 @@ a.place-name-link:hover { text-decoration: underline; }
 #lightbox.on { display: flex; }
 #lightbox img { max-width: 100%; max-height: 80vh; object-fit: contain; }
 #lightbox-cap { margin-top: 14px; font-size: 13px; color: rgba(255,255,255,.5); font-style: italic; }
-#lb-close { position: absolute; top: 20px; right: 20px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.12); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+#lb-close { position: absolute; top: calc(20px + env(safe-area-inset-top,0px)); right: 20px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.12); border: none; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 #toast { position: fixed; top: 66px; left: 50%; transform: translateX(-50%) translateY(-10px); background: var(--ink); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 500; z-index: 100; pointer-events: none; opacity: 0; transition: all .2s; white-space: nowrap; }
 #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .modal-bg { position: fixed; inset: 0; z-index: 80; background: rgba(0,28,48,.6); backdrop-filter: blur(4px); display: none; }
@@ -1464,13 +1470,17 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         </div>
       </div>
     </div>
-    <div class="tab-bar" id="trip-tabs">
-      <button class="tab-btn active" data-tab="places" onclick="switchTab(this)" data-i18n="tabPlaces">Places</button>
-      <button class="tab-btn" data-tab="notes" onclick="switchTab(this)" data-i18n="tabNotes">Notes</button>
-      <button class="tab-btn" data-tab="blog" onclick="switchTab(this)" data-i18n="tabBlog">Blog</button>
-      <button class="tab-btn" data-tab="photos" onclick="switchTab(this)" data-i18n="tabPhotos">Photos</button>
-      <button class="tab-btn" data-tab="book" onclick="switchTab(this)" data-i18n="tabBook">Memory Book</button>
-      <button class="tab-btn" data-tab="share" onclick="switchTab(this)" data-i18n="tabShare">Share</button>
+    <div class="tab-bar-wrap" id="trip-tabs-wrap">
+      <button class="tab-arrow tab-arrow-l" type="button" aria-label="Scroll tabs left" onclick="scrollTripTabs(-1)">&#8249;</button>
+      <div class="tab-bar" id="trip-tabs" onscroll="updateTabArrows()">
+        <button class="tab-btn active" data-tab="places" onclick="switchTab(this)" data-i18n="tabPlaces">Places</button>
+        <button class="tab-btn" data-tab="notes" onclick="switchTab(this)" data-i18n="tabNotes">Notes</button>
+        <button class="tab-btn" data-tab="blog" onclick="switchTab(this)" data-i18n="tabBlog">Blog</button>
+        <button class="tab-btn" data-tab="photos" onclick="switchTab(this)" data-i18n="tabPhotos">Photos</button>
+        <button class="tab-btn" data-tab="book" onclick="switchTab(this)" data-i18n="tabBook">Memory Book</button>
+        <button class="tab-btn" data-tab="share" onclick="switchTab(this)" data-i18n="tabShare">Share</button>
+      </div>
+      <button class="tab-arrow tab-arrow-r" type="button" aria-label="Scroll tabs right" onclick="scrollTripTabs(1)">&#8250;</button>
     </div>
 
     <!-- TAB: PLACES -->
@@ -1781,6 +1791,8 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     .bb-add-text{border:1px dashed var(--ink-4);background:#fff;border-radius:8px;height:28px;padding:0 11px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink-3)}
     .bb-slot-pick{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:7px;background:rgba(0,0,0,.55);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;z-index:3}
     .bb-slot-pick:hover{background:var(--ember)}
+    .bb-slot-del{position:absolute;top:6px;right:38px;width:26px;height:26px;border-radius:7px;background:rgba(200,30,45,.72);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;z-index:3}
+    .bb-slot-del:hover{background:#c81e2d}
     .bb-slot-edit{position:absolute;top:6px;left:6px;width:26px;height:26px;border-radius:7px;background:rgba(0,0,0,.55);color:#fff;border:none;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;z-index:3}
     .bb-slot-edit:hover{background:var(--ember)}
     .bb-import-btn{width:100%;border:1px dashed var(--ember);background:rgba(0,168,232,.06);color:var(--ember);border-radius:10px;height:42px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px}
@@ -1962,9 +1974,9 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 <!-- ════ SCREEN: PROFILE ════ -->
 <div id="s-profile" class="screen">
   <div class="pt-nav pb-safe">
-    <div style="position:relative;height:220px;overflow:hidden;background:var(--ink)">
+    <div style="position:relative;height:clamp(220px,26vw,360px);overflow:hidden;background:var(--ink)">
       <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=1600&q=95&auto=format&fit=crop" style="width:100%;height:100%;object-fit:cover;opacity:1" id="profile-cover" alt="" loading="eager">
-      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.06) 0%,transparent 38%,rgba(250,250,248,.22) 90%,rgba(250,250,248,1) 100%)"></div>
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,transparent 90%,rgba(250,250,248,.7) 100%)"></div>
       <!-- Single ⋯ menu consolidating the cover/header actions -->
       <button onclick="copyProfileLink()" aria-label="Share profile" title="Share profile" data-i18n-title="shareProfile" style="position:absolute;top:26px;right:58px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:18px;line-height:1;cursor:pointer;z-index:6">&#8599;</button>
       <button onclick="toggleProfileMenu(event)" aria-label="Profile actions" title="More" style="position:absolute;top:26px;right:14px;width:38px;height:38px;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);border:none;color:#fff;border-radius:50%;font-size:20px;line-height:1;cursor:pointer;z-index:6">&#8943;</button>
@@ -2555,6 +2567,15 @@ function renderDash(){
 function starTrip(id){var t=trips.find(function(x){return x.id===id;});if(t){t.starred=!t.starred;renderDash();toast(t.starred?tt('starredToast'):tt('unstarredToast'));}}
 
 // ─── TRIP DETAIL ──────────────────────────────────────────────────
+// Trip tab strip: left/right arrows so users know the tabs scroll horizontally.
+function scrollTripTabs(dir){ var tb=document.getElementById('trip-tabs'); if(tb)try{tb.scrollBy({left:dir*150,behavior:'smooth'});}catch(e){tb.scrollLeft+=dir*150;} }
+function updateTabArrows(){
+  var tb=document.getElementById('trip-tabs'); var wrap=document.getElementById('trip-tabs-wrap'); if(!tb||!wrap)return;
+  var max=tb.scrollWidth-tb.clientWidth-2;
+  wrap.classList.toggle('can-l', tb.scrollLeft>4);
+  wrap.classList.toggle('can-r', max>4 && tb.scrollLeft<max);
+}
+window.addEventListener('resize',function(){ if(typeof updateTabArrows==='function')updateTabArrows(); });
 function openTrip(id){
   _shareDemo=null;
   currentTrip=trips.find(function(t){return t.id===id;});if(!currentTrip)return;
@@ -2576,6 +2597,11 @@ function openTrip(id){
   var urlEl=document.getElementById('share-url-display');
   if(urlEl){var slug=currentTrip.dest.toLowerCase().replace(/\s+/g,'-');urlEl.innerHTML='trafolio.travel/<strong>'+userData.username+'</strong>/'+slug;}
   showScreen('s-trip');setActiveNav('bnav-profile');
+  // Open at the cover photo (top), not mid-page. The hero image loads and reflows the page,
+  // so reset every scroller and retry across paints.
+  var _tTop=function(){ try{window.scrollTo(0,0);}catch(e){} var de=document.documentElement,b=document.body,st=document.getElementById('s-trip'); if(de)de.scrollTop=0; if(b)b.scrollTop=0; if(st)st.scrollTop=0; };
+  _tTop(); requestAnimationFrame(_tTop); setTimeout(_tTop,60); setTimeout(_tTop,260);
+  if(typeof updateTabArrows==='function'){ updateTabArrows(); setTimeout(updateTabArrows,120); }
   setTimeout(function(){renderShareTab();},100);
 }
 function openShareSheet(){
@@ -2699,7 +2725,7 @@ function renderPlaces(filter){
     return'<div class="place-item" data-pid="'+p.id+'">'+photoHtml+'<div style="flex:1;min-width:0"><a class="place-name place-name-link" href="javascript:void(0)" data-map="'+gmapsUrl(p)+'" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.getAttribute(\'data-map\'),\'_blank\',\'noopener\');return false;">'+'<span class="place-cat-mini">'+CAT_ICONS[p.cat]+'</span> '+p.name+'<span class="place-loc-pin">📍</span></a>'+cityTag+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'<button class="place-edit-btn">⋮</button></div></div>';
   }).join('');
   hydratePlaceThumbs(list);
-  list.querySelectorAll('.place-edit-btn').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=this.closest('[data-pid]');if(item)openEditPlace(parseInt(item.dataset.pid));});});
+  list.querySelectorAll('.place-edit-btn').forEach(function(btn){btn.addEventListener('click',function(e){e.stopPropagation();var item=this.closest('[data-pid]');if(item)openEditPlace(item.dataset.pid);});});
 }
 function filterPlaces(el){currentFilter=el.dataset.f;document.querySelectorAll('#places-filter .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');renderPlaces(el.dataset.f);}
 // Memory-book showcase banner: hide a missing image, and hide the whole banner if none load.
@@ -2815,6 +2841,8 @@ function renderPhotosTab(){
   currentTrip.photos.forEach(function(ph,i){
     html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';
     html+='<img src="'+ph.url+'" alt="" loading="lazy">';
+    html+='<button onclick="event.stopPropagation();togglePhotoStar('+i+')" title="'+escHtml(t('highlightPhoto')||'Highlight (up to 8)')+'" style="position:absolute;top:6px;right:6px;z-index:3;width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;background:rgba(0,0,0,.45);color:'+(ph.star?'#FFC83D':'#fff')+';font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center">'+(ph.star?'★':'☆')+'</button>';
+    html+='<button onclick="event.stopPropagation();deleteTripPhoto('+i+')" title="'+escHtml(t('deletePhoto')||'Delete photo')+'" style="position:absolute;top:6px;left:6px;z-index:3;width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;background:rgba(200,30,45,.72);color:#fff;font-size:14px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>';
     html+=photoMetaHtml(ph);
     html+='<div class="photo-caption photo-caption-edit" contenteditable="true" data-ph="'+escHtml(t('bbCaptionPh'))+'" onclick="event.stopPropagation()" onblur="setPhotoCaption('+i+',this.innerText)">'+escHtml(ph.caption||'')+'</div>';
     html+='</div>';
@@ -2826,6 +2854,34 @@ function renderPhotosTab(){
   });
 }
 function setPhotoCaption(i,val){if(currentTrip&&currentTrip.photos[i])currentTrip.photos[i].caption=(val||'').trim();if(typeof persistSoon==='function')persistSoon();}
+// Star up to 8 photos as "highlights" — used by the share photo-scope option.
+function togglePhotoStar(i){
+  if(!currentTrip||!currentTrip.photos[i])return;
+  var ph=currentTrip.photos[i];
+  if(!ph.star){
+    var n=(currentTrip.photos||[]).filter(function(p){return p.star;}).length;
+    if(n>=8){ toast(t('highlightMax')||'You can highlight up to 8 photos'); return; }
+  }
+  ph.star=!ph.star;
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof dbUpdatePhotoStar==='function')dbUpdatePhotoStar(ph); // best-effort cloud sync (needs a `star` column)
+  renderPhotosTab();
+}
+// Best-effort: persist the star to the cloud if the photos table has a `star` column (optional).
+async function dbUpdatePhotoStar(ph){
+  if(!sb||!userData.id||!ph||!ph.dbId)return;
+  try{ await sb.from('photos').update({star:!!ph.star}).eq('id',ph.dbId); }catch(e){}
+}
+// Delete a single photo from the trip's Photos album (and from the cloud).
+function deleteTripPhoto(i){
+  if(!currentTrip||!currentTrip.photos||!currentTrip.photos[i])return;
+  if(!confirm(t('deletePhotoConfirm')||'Delete this photo?'))return;
+  var ph=currentTrip.photos[i];
+  currentTrip.photos.splice(i,1);
+  if(ph&&ph.dbId&&typeof sb!=='undefined'&&sb&&userData.id){ try{ sb.from('photos').delete().eq('id',ph.dbId); }catch(e){} }
+  if(typeof persistSoon==='function')persistSoon();
+  renderPhotosTab(); if(typeof renderDash==='function')renderDash();
+}
 var _notesDbT=null;
 function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('trip-notes-input').value;if(typeof persistSoon==='function')persistSoon();
   if(currentTrip&&typeof dbSaveTripNotes==='function'){var tr=currentTrip;if(_notesDbT)clearTimeout(_notesDbT);_notesDbT=setTimeout(function(){dbSaveTripNotes(tr);},800);}}
@@ -2840,7 +2896,7 @@ function renderShareTab(){
   var cont=document.getElementById('share-filters');if(!cont)return;
   if(!currentTrip){cont.innerHTML='';return;}
   var sel=shareSelOf(currentTrip);
-  var cats=['eat','stay','see','do','shop'];
+  var cats=['eat','stay','see','do','fun','view','shop'];
   var dim=sel.everything?';opacity:.5':'';
   var master='<label onclick="toggleShareEverything()" style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:12px 14px;background:var(--paper-2);border-radius:var(--r-md);margin-bottom:8px">'
     +'<div><div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('shareEverything')+'</div><div style="font-size:12px;color:var(--ink-4)">'+t('shareEverythingSub')+'</div></div>'+shareCheck(sel.everything)+'</label>';
@@ -2850,10 +2906,16 @@ function renderShareTab(){
     return'<label onclick="toggleShareCat(\''+c+'\')" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:'+CAT_FLAGS[c]+';display:flex;align-items:center;justify-content:center;font-size:15px">'+CAT_ICONS[c]+'</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+CAT_NAMES[c]+'</div><div style="font-size:12px;color:var(--ink-4)">'+n+' '+t('places').toLowerCase()+'</div></div>'+shareCheck(on)+'</label>';
   }).join('');
   var photosPrivate=(photoVisOf()==='private');
-  var pon=!photosPrivate&&(sel.everything||sel.photos);
+  var nAllPh=(currentTrip.photos||[]).length, nHlPh=(currentTrip.photos||[]).filter(function(p){return p.star;}).length;
+  var scope=sel.everything?'all':(sel.photoScope||'all');
+  function _phSeg(v,label,sub){ var on=(scope===v); return '<button type="button" onclick="setSharePhotoScope(\''+v+'\')" style="flex:1;padding:9px 5px;border-radius:9px;border:1.5px solid '+(on?'var(--ember)':'var(--paper-3)')+';background:'+(on?'var(--ember-lt)':'transparent')+';color:'+(on?'var(--ember-dk)':'var(--ink-2)')+';font-size:11px;font-weight:600;cursor:pointer;line-height:1.25;text-align:center">'+label+'<div style="font-size:9px;font-weight:400;color:var(--ink-4);margin-top:2px">'+sub+'</div></button>'; }
   var photoRow= photosPrivate
-    ? '<label onclick="toggleSharePhotos()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3);opacity:.55"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ember-dk)">🔒 '+t('photosPrivateLocked')+'</div></div><div style="font-size:15px;color:var(--ink-4)">🔒</div></label>'
-    : '<label onclick="toggleSharePhotos()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ink-4)">'+((currentTrip.photos||[]).length)+' '+t('bbPhotos')+'</div></div>'+shareCheck(pon)+'</label>';
+    ? '<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--paper-3);opacity:.55"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ember-dk)">🔒 '+t('photosPrivateLocked')+'</div></div><div style="font-size:15px;color:var(--ink-4)">🔒</div></div>'
+    : '<div style="padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📷</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('photosLabel')+'</div><div style="font-size:12px;color:var(--ink-4)">'+(t('sharePhotoScopeSub')||'Choose how many photos to share')+'</div></div></div><div style="display:flex;gap:6px">'
+      + _phSeg('all',(t('sharePhotosAll')||'Full album'), nAllPh+' '+t('bbPhotos'))
+      + _phSeg('highlights',(t('sharePhotosHighlights')||'Highlighted'), (t('upTo8')||'up to 8')+(nHlPh?(' · '+nHlPh+'★'):''))
+      + _phSeg('none',(t('sharePhotosNone')||'No photos'),'—')
+      + '</div></div>';
   var non=sel.everything||sel.notes;
   var notesRow='<label onclick="toggleShareNotes()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">📝</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('shareTips')+'</div><div style="font-size:12px;color:var(--ink-4)">'+t('shareNotesSub')+'</div></div>'+shareCheck(non)+'</label>';
   var bon=sel.everything||sel.blog;
@@ -2865,15 +2927,32 @@ function renderShareTab(){
 }
 function shareCheck(on){return'<div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;border:2px solid '+(on?'var(--ember)':'var(--paper-3)')+';background:'+(on?'var(--ember)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff">'+(on?'✓':'')+'</div>';}
 function shareSelOf(trip){
-  if(!trip.shareSel)trip.shareSel={everything:true,photos:true,notes:true,blog:true,missed:true,cats:{eat:true,stay:true,see:true,do:true,shop:true}};
-  if(!trip.shareSel.cats)trip.shareSel.cats={eat:true,stay:true,see:true,do:true,shop:true};
+  if(!trip.shareSel)trip.shareSel={everything:true,photos:true,notes:true,blog:true,missed:true,cats:{eat:true,stay:true,see:true,do:true,fun:true,view:true,shop:true}};
+  if(!trip.shareSel.cats)trip.shareSel.cats={eat:true,stay:true,see:true,do:true,fun:true,view:true,shop:true};
+  // Ensure newer place categories (fun/view) exist in older saved selections, defaulting ON,
+  // so places in those categories are never silently dropped from a share.
+  ['eat','stay','see','do','fun','view','shop'].forEach(function(c){ if(typeof trip.shareSel.cats[c]==='undefined')trip.shareSel.cats[c]=true; });
   if(typeof trip.shareSel.notes==='undefined')trip.shareSel.notes=true;
   if(typeof trip.shareSel.blog==='undefined')trip.shareSel.blog=true;
   if(typeof trip.shareSel.missed==='undefined')trip.shareSel.missed=true;
+  // photoScope: 'all' (full album) | 'highlights' (starred, up to 8) | 'none'. Migrate old boolean.
+  if(typeof trip.shareSel.photoScope==='undefined') trip.shareSel.photoScope = (trip.shareSel.photos===false?'none':'all');
   return trip.shareSel;
 }
-function _syncShareEverything(s){s.everything=s.photos&&s.notes&&s.blog&&s.missed&&['eat','stay','see','do','shop'].every(function(c){return s.cats[c];});}
-function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.notes=true;s.blog=true;s.missed=true;['eat','stay','see','do','shop'].forEach(function(c){s.cats[c]=true;});}renderShareTab();}
+// Photos that should appear in the shared guide, honouring the photoScope choice.
+function sharePhotosFor(t){
+  var sel=shareSelOf(t); var arr=(t.photos||[]);
+  if(sel.photoScope==='none') return [];
+  if(sel.photoScope==='highlights'){ var hl=arr.filter(function(p){return p.star;}); return hl.slice(0,8); }
+  return arr; // 'all'
+}
+function setSharePhotoScope(v){
+  if(!currentTrip)return;
+  if(photoVisOf()==='private'){ toast(t('photosPrivateLocked')); return; }
+  var s=shareSelOf(currentTrip); s.photoScope=v; s.photos=(v!=='none'); s.everything=false; _syncShareEverything(s); renderShareTab();
+}
+function _syncShareEverything(s){s.everything=(s.photoScope==='all')&&s.notes&&s.blog&&s.missed&&['eat','stay','see','do','fun','view','shop'].every(function(c){return s.cats[c];});}
+function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.photoScope='all';s.notes=true;s.blog=true;s.missed=true;['eat','stay','see','do','fun','view','shop'].forEach(function(c){s.cats[c]=true;});}renderShareTab();}
 function toggleShareBlog(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.blog=!s.blog;_syncShareEverything(s);renderShareTab();}
 function toggleShareCat(c){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.cats[c]=!s.cats[c];_syncShareEverything(s);renderShareTab();}
 function toggleSharePhotos(){if(!currentTrip)return;if(photoVisOf()==='private'){toast(t('photosPrivateLocked'));return;}var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);renderShareTab();}
@@ -3201,13 +3280,22 @@ function bbSlotsHtml(idx){
       var imgLayer=url?'<div class="bb-slot-img" style="background-image:url(\''+url+'\');'+bbShapeCss(cell.shape)+'"></div>':'';
       var cap=(url&&!isTitled)?'<div id="bb-ed-'+idx+'-'+i+'-cap" class="bb-cap" contenteditable="true" data-ph="'+escHtml(t('bbCaptionPh'))+'" onfocus="bbSetActive('+idx+','+i+',\'cap\')" onclick="event.stopPropagation()" oninput="bbSetCap('+idx+','+i+',this.innerText)" style="'+bbCellStyleStr(cell.capTs)+'">'+escHtml(cell.cap)+'</div>':'';
       var pick=url?'<button class="bb-slot-pick" title="'+escHtml(t('bbChoosePhoto'))+'" onclick="event.stopPropagation();bbPickSlot('+idx+','+i+')">&#128247;</button>':'';
+      var del=url?'<button class="bb-slot-del" title="'+escHtml(t('bbRemovePhoto')||'Remove photo')+'" onclick="event.stopPropagation();bbDeleteSlotPhoto('+idx+','+i+')">&#10005;</button>':'';
       var edit=url?'<button class="bb-slot-edit" title="'+escHtml(t('bbEditPhoto'))+'" onclick="event.stopPropagation();bbEditSlot('+idx+','+i+')">&#128396;</button>':'';
       var shape=url?'<button class="bb-slot-shape" title="'+escHtml(t('bbShape'))+'" onclick="event.stopPropagation();bbShapeSlot('+idx+','+i+')">&#9670;</button>':'';
       var typeBtn='<button class="bb-slot-type bb-slot-totext" title="'+escHtml(t('bbMakeText'))+'" onclick="event.stopPropagation();bbCellToText('+idx+','+i+',true)">&#128221;</button>';
-      slots+='<div class="bb-slot'+(url?' filled':' empty')+'"'+ga+' onclick="bbCycleSlot('+idx+','+i+')">'+imgLayer+pick+edit+shape+typeBtn+cap+'</div>';
+      slots+='<div class="bb-slot'+(url?' filled':' empty')+'"'+ga+' onclick="bbCycleSlot('+idx+','+i+')">'+imgLayer+pick+del+edit+shape+typeBtn+cap+'</div>';
     }
   }
   return slots;
+}
+// Remove a single photo from a book slot (empties the slot; it can be refilled by tapping +).
+function bbDeleteSlotPhoto(idx,i){
+  var pg=currentTrip&&currentTrip.book&&currentTrip.book[idx]; if(!pg)return;
+  if(pg.photos) pg.photos[i]='';
+  var c=(typeof bbCell==='function')?bbCell(pg,i):null; if(c){ c.cap=''; c.shape=null; }
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof bbRefresh==='function')bbRefresh(idx); else if(typeof renderBookPages==='function')renderBookPages();
 }
 // ── Cover / back-cover centered title: movable, removable, re-addable ──
 var _bbTitleDragPos=null;
@@ -4019,6 +4107,9 @@ function bbPreview(){
 }
 // Download the book as a self-contained HTML file the user can keep or open/print later.
 function bbDownload(){
+  // iOS WKWebView ignores <a download>, so a file download silently does nothing there.
+  // Route native users to the print sheet instead, where they tap "Save to Files" → PDF.
+  if(typeof _isNative==='function' && _isNative()){ bbDoPrint(); return; }
   var doc=bbBookDoc();if(!doc)return;
   try{
     var blob=new Blob([doc],{type:'text/html'});
@@ -4043,14 +4134,17 @@ function bbDoPrint(){
 // Preloads every photo first so the print dialog opens with all pictures fully rendered.
 function bbPrintWindow(){
   var doc=bbBookDoc();if(!doc)return;
-  var win=window.open('','_blank');if(!win){toast(t('bbPopupBlocked'));return;}
-  win.document.write(doc);
-  win.document.close();
-  // Collect all photo URLs in the doc and preload them (shared browser cache → the print
-  // window renders them instantly), then print once they're ready (or after a safety timeout).
+  // window.open() is blocked in the native iOS webview (that's the "allow pop-ups" prompt).
+  // A hidden iframe prints reliably and triggers the OS print sheet (which offers Save as PDF).
+  var old=document.getElementById('bb-print-frame'); if(old)old.remove();
+  var f=document.createElement('iframe'); f.id='bb-print-frame';
+  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
+  document.body.appendChild(f);
+  var d=f.contentWindow.document; d.open(); d.write(doc); d.close();
+  // Preload photos so the print sheet opens with everything rendered, then print.
   var urls=[]; doc.replace(/url\(['"]?([^'")]+)['"]?\)/g,function(m,u){ if(u&&u.indexOf('gradient')<0)urls.push(u); return m; });
   var printed=false;
-  function fire(){ if(printed)return; printed=true; try{win.focus();}catch(e){} try{win.print();}catch(e){} }
+  function fire(){ if(printed)return; printed=true; try{f.contentWindow.focus();}catch(e){} try{f.contentWindow.print();}catch(e){} }
   if(!urls.length){ setTimeout(fire,400); return; }
   var pending=urls.length;
   urls.forEach(function(u){ var im=new Image(); im.onload=im.onerror=function(){ if(--pending<=0) setTimeout(fire,300); }; im.src=u; });
@@ -4064,7 +4158,7 @@ function renderShPlaces(t,filter){
   var sel=shareSelOf(t);
   var places=t.places.filter(function(p){
     if(filter&&filter!=='all'&&p.cat!==filter)return false;
-    return sel.everything||sel.cats[p.cat];
+    return sel.everything||sel.cats[p.cat]!==false; // unknown categories show unless explicitly turned off
   });
   list.innerHTML=places.map(function(p){return'<div class="place-item"><div class="place-cat-dot cat-'+p.cat+'">'+CAT_ICONS[p.cat]+'</div><div><a class="place-name place-name-link" href="javascript:void(0)" data-map="'+gmapsUrl(p,t)+'" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.getAttribute(\'data-map\'),\'_blank\',\'noopener\');return false;">'+p.name+'<span class="place-loc-pin">📍</span></a>'+(p.note?'<div class="place-note">'+p.note+'</div>':'')+'</div><div class="place-stars">'+[1,2,3,4,5].map(function(i){return'<span class="star-dot'+(i<=p.rating?' on':'')+'">★</span>';}).join('')+'</div></div>';}).join('')||'<div style="padding:20px;text-align:center;color:var(--ink-4);font-size:13px">'+tt('nothingSharedYet')+'</div>';
 }
@@ -4072,7 +4166,10 @@ function renderShPhotos(t){var grid=document.getElementById('share-photo-strip')
   // Honour the photos' own visibility: 'private' photos are never shown in a shared trip.
   var pvis=(t.photoVisibility||t.privacy||'public');
   if(pvis==='private'){grid.innerHTML='';return;}
-  if(!(sel.everything||sel.photos)){grid.innerHTML='';return;}if(!(t.photos||[]).length){grid.innerHTML='';return;}bbSortPhotosInPlace(t);var html='';t.photos.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+escHtml(ph.url||'')+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+escHtml(ph.caption)+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=t.photos[idx]?t.photos[idx].url:'';var c=t.photos[idx]?t.photos[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
+  var phs=(typeof sharePhotosFor==='function')?sharePhotosFor(t):(t.photos||[]);
+  if(!phs.length){grid.innerHTML='';return;}
+  phs=phs.slice().sort(function(a,b){return bbPhotoTime(a,t)-bbPhotoTime(b,t);});
+  var html='';phs.forEach(function(ph){html+='<div class="photo-grid-item'+(ph.wide?' wide':'')+'">';html+='<img src="'+escHtml(ph.url||'')+'" alt="" loading="lazy">';if(ph.caption)html+='<div class="photo-caption">'+escHtml(ph.caption)+'</div>';html+='</div>';});grid.innerHTML=html;grid.querySelectorAll('.photo-grid-item').forEach(function(el,idx){el.style.cursor='pointer';var u=phs[idx]?phs[idx].url:'';var c=phs[idx]?phs[idx].caption||'':'';el.onclick=function(){openLB(u,c);};});}
 function shareFilter(el){document.querySelectorAll('#share-filter-strip .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');var _t=_shareDemo||currentTrip;if(_t)renderShPlaces(_t,el.dataset.f);}
 // The trip currently shown on the share page (demo example, open trip, or first trip).
 function shareTripData(){ return _shareDemo||currentTrip||null; }
@@ -4083,10 +4180,11 @@ function shareGuideDoc(){
   var owner=(tr.author&&tr.author.name)||userData.name||'';
   var notes=(sel.everything||sel.notes)&&tr.notes?'<p class="q">"'+E(tr.notes)+'"</p>':'';
   var blog=(sel.everything||sel.blog)&&((tr.blogTitle||'')||(tr.blog||''))?'<h2>'+E(tr.blogTitle||'')+'</h2><div class="blog">'+(tr.blog||'')+'</div>':'';
-  var places=(tr.places||[]).filter(function(p){return sel.everything||(sel.cats&&sel.cats[p.cat]);});
+  var places=(tr.places||[]).filter(function(p){return sel.everything||!sel.cats||sel.cats[p.cat]!==false;});
   var placesHtml=places.length?'<h3>Places</h3>'+places.map(function(p){return '<div class="pl"><b>'+E(p.name)+'</b>'+(p.note?' — '+E(p.note):'')+'</div>';}).join(''):'';
   var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<h3>Things we missed</h3><ul>'+tr.missed.map(function(m){return '<li style="white-space:pre-wrap">'+E(m)+'</li>';}).join('')+'</ul>':'';
-  var photos=(sel.everything||sel.photos)&&(tr.photos||[]).length?'<h3>Photos</h3><div class="ph">'+bbSortedPhotos(tr.photos,tr).map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
+  var _gphs=(typeof sharePhotosFor==='function')?sharePhotosFor(tr):((sel.everything||sel.photos)?(tr.photos||[]):[]);
+  var photos=_gphs.length?'<h3>Photos</h3><div class="ph">'+bbSortedPhotos(_gphs,tr).map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
   return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+E(tr.dest)+' — Trafolio</title><style>'
     +'*{box-sizing:border-box}body{font-family:Georgia,"Times New Roman",serif;color:#1a2b3a;max-width:760px;margin:0 auto;padding:40px 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'h1{font-size:30px;margin:0 0 2px}.meta{font-family:Arial,sans-serif;font-size:12px;color:#888;letter-spacing:.08em;text-transform:uppercase;margin:0 0 18px}'
@@ -4104,10 +4202,17 @@ function shareGuideDoc(){
 // Print / Save-as-PDF the shared guide (browser print dialog offers "Save as PDF").
 function shareGuidePrint(){
   var doc=shareGuideDoc(); if(!doc){toast(t('mapShareFail')||'Nothing to print');return;}
-  var w=window.open('','_blank'); if(!w){toast(t('bbPopupBlocked')||'Allow popups to print');return;}
-  w.document.write(doc); w.document.close();
+  // window.open() is blocked inside the native iOS webview (so the old popup did nothing on the
+  // phone). A hidden iframe prints reliably everywhere and triggers the OS print sheet — which
+  // includes "Save as PDF" / share.
+  var old=document.getElementById('tf-print-frame'); if(old)old.remove();
+  var f=document.createElement('iframe'); f.id='tf-print-frame';
+  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
+  document.body.appendChild(f);
+  var d=f.contentWindow.document; d.open(); d.write(doc); d.close();
   var imgs=(doc.match(/<img src="([^"]+)"/g)||[]).map(function(m){return (m.match(/"([^"]+)"/)||[])[1];}).filter(Boolean);
-  var pending=imgs.length, printed=false; function go(){ if(printed)return; printed=true; try{w.focus();w.print();}catch(e){} }
+  var pending=imgs.length, printed=false;
+  function go(){ if(printed)return; printed=true; try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast(t('mapShareFail')||'Print unavailable'); } }
   if(!pending){ setTimeout(go,400); }
   else { imgs.forEach(function(u){var im=new Image();im.onload=im.onerror=function(){if(--pending<=0)setTimeout(go,300);};im.src=u;}); setTimeout(go,2600); }
 }
@@ -4596,7 +4701,9 @@ function renderProfileExtras(){
   var html='';
   if((trips||[]).length){
     html+='<div style="display:flex;gap:14px;overflow-x:auto;padding:2px 2px 10px;-webkit-overflow-scrolling:touch;scrollbar-width:none;'+((trips.length<4)?'justify-content:center':'')+'">';
-    html+=trips.map(function(tr){
+    // Sort the story circles by trip date (newest first), matching the story playlist order.
+    var _storyOrder=(trips||[]).slice().sort(function(a,b){ return String(b.startDate||b.dates||'').localeCompare(String(a.startDate||a.dates||''))||((b.id||0)-(a.id||0)); });
+    html+=_storyOrder.map(function(tr){
       var cov=(tr.cover && tr.cover.indexOf('blob:')!==0)?tr.cover:'';
       var fl=(typeof flagForCountry==='function'&&flagForCountry(tr.country))||tr.flag||'📍';
       return '<div onclick="openTripStory('+tr.id+')" style="flex:0 0 auto;text-align:center;cursor:pointer;width:64px">'
@@ -4690,7 +4797,7 @@ function epPlaceSearch(which,val){
   _epLocT=setTimeout(function(){ epDoLoc(which,q); },320);
 }
 function epDoLoc(which,q){
-  if(window._googleMapsReady && !window._googlePlacesBroken && window.google && google.maps && google.maps.places){
+  if(window._googleMapsReady && !_gpBroken() && window.google && google.maps && google.maps.places){
     try{
       var svc=new google.maps.places.AutocompleteService();
       svc.getPlacePredictions({input:q, types:['(cities)'], language:currentLang}, function(preds,status){
@@ -4698,7 +4805,7 @@ function epDoLoc(which,q){
         epRenderLoc(which, preds.map(function(p){return p.description;}));
       });
       return;
-    }catch(e){ window._googlePlacesBroken=true; }
+    }catch(e){ _gpFail(); }
   }
   epNominatim(which,q);
 }
@@ -5521,7 +5628,7 @@ function makeFollowerRow(u,relation){
   var mutStr='';
   var muts=(u.mutuals||[]).slice(0,3);
   if(muts.length){mutStr='<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><div style="font-size:10px;color:var(--ink-4)">Also follows:</div><div style="display:flex;gap:3px">'+muts.map(function(m){return'<div style="width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;'+avatarBg(m)+'" title="@'+m.handle+'">'+(m.photo?'':m.initial)+'</div>';}).join('')+'</div></div>';}
-  return'<div class="follower-row">'+makeAvatarHtml(u,42)+'<div style="flex:1;cursor:pointer" onclick="openUserProfile('+u.id+')"><div class="follower-name">'+u.name+'</div><div class="follower-handle">@'+u.handle+' · '+u.trips+' trips</div>'+mutStr+'</div><button class="follow-btn '+(relation==='following'?'following':'follow')+'" data-uid="'+u.id+'" onclick="toggleFollow('+u.id+',this)">'+(relation==='following'?'Following':'Follow')+'</button></div>';}
+  return'<div class="follower-row">'+makeAvatarHtml(u,42)+'<div style="flex:1;cursor:pointer" onclick="openUserProfile('+u.id+')"><div class="follower-name">'+(u.name||u.handle||'Traveller')+'</div><div class="follower-handle">@'+(u.handle||'')+(u.trips!=null?' · '+u.trips+' trips':'')+'</div>'+mutStr+'</div><button class="follow-btn '+(relation==='following'?'following':'follow')+'" data-uid="'+u.id+'" onclick="toggleFollow('+u.id+',this)">'+(relation==='following'?'Following':'Follow')+'</button></div>';}
 function openFollowers(){ if(typeof _markFollowersSeen==='function')_markFollowersSeen();
   var list=document.getElementById('followers-list');if(!list)return;
   var fols=userData.followers||[];
@@ -5994,32 +6101,37 @@ function acceptDayProposed(btn){
 }
 function acceptAllProposed(){
   if(!currentTrip)return;
-  if(!currentTrip.photos)currentTrip.photos=[];
-  var added=0;
-  // All date-matched buckets
-  var buckets=window._dayBuckets||{};
-  Object.keys(buckets).map(Number).forEach(function(day){
-    (buckets[day]||[]).forEach(function(p){
-      var po={url:p.url,caption:p.caption||'',wide:false,day:day,dateTime:p.dateTime,gps:p.gps};
-      currentTrip.photos.push(po);added++;
-      if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
+  // Show the "please keep waiting" overlay while we add + upload (this step can take a while
+  // for many photos, and used to look frozen). The setTimeout lets the overlay paint first.
+  _photoProgress(true, t('processingPhotos')||'Adding your photos…');
+  var _pat=document.getElementById('photo-progress-patience'); if(_pat){ _pat.textContent=t('photoUploadPatience')||''; _pat.style.display='block'; }
+  setTimeout(function(){
+    if(!currentTrip.photos)currentTrip.photos=[];
+    var added=0;
+    var buckets=window._dayBuckets||{};
+    Object.keys(buckets).map(Number).forEach(function(day){
+      (buckets[day]||[]).forEach(function(p){
+        var po={url:p.url,caption:p.caption||'',wide:false,day:day,dateTime:p.dateTime,gps:p.gps};
+        currentTrip.photos.push(po);added++;
+        if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
+      });
     });
-  });
-  window._dayBuckets={};
-  // Undated photos → use the chosen day (or day 1)
-  if(_pendingNoExif&&_pendingNoExif.length){
-    var day=parseInt((document.getElementById('no-exif-day')||{value:'1'}).value)||1;
-    _pendingNoExif.forEach(function(x){
-      var po={url:x.photoObj.url,caption:x.photoObj.caption||'',wide:false,day:day,dateTime:x.photoObj.dateTime,gps:x.photoObj.gps};
-      currentTrip.photos.push(po);added++;
-      if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
-    });
-    _pendingNoExif=[];
-  }
-  clearProposals();
-  renderPhotosTab();renderDash();
-  toast((added||0)+' '+(t('photosAddedAll')||'photos added'));
-  if(typeof persistSoon==='function')persistSoon();
+    window._dayBuckets={};
+    if(_pendingNoExif&&_pendingNoExif.length){
+      var day=parseInt((document.getElementById('no-exif-day')||{value:'1'}).value)||1;
+      _pendingNoExif.forEach(function(x){
+        var po={url:x.photoObj.url,caption:x.photoObj.caption||'',wide:false,day:day,dateTime:x.photoObj.dateTime,gps:x.photoObj.gps};
+        currentTrip.photos.push(po);added++;
+        if(typeof dbSavePhoto==='function')dbSavePhoto(po,currentTrip.id);
+      });
+      _pendingNoExif=[];
+    }
+    clearProposals();
+    renderPhotosTab();renderDash();
+    _photoProgress(false);
+    toast((added||0)+' '+(t('photosAddedAll')||'photos added'));
+    if(typeof persistSoon==='function')persistSoon();
+  },50);
 }
 function addNoExifPhotos(){
   var day=parseInt((document.getElementById('no-exif-day')||{value:'1'}).value)||1;
@@ -6223,7 +6335,7 @@ function setProfilePhoto(input){var file=input.files[0];if(!file)return;var read
 };reader.readAsDataURL(file);}
 function setCoverPhoto(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){
   // Use a compressed data-URL (NOT createObjectURL — blob: URLs become invalid after reload).
-  bbCompressImage(e.target.result,{maxEdge:1280,quality:.82},function(url){
+  bbCompressImage(e.target.result,{maxEdge:1600,quality:.9},function(url){
     function apply(u){ userData.cover=u;
       var pc=document.getElementById('profile-cover');if(pc){pc.src=u;pc.style.opacity='1';}
       var prev=document.getElementById('ep-cover-prev');if(prev)prev.src=u;
@@ -6556,6 +6668,16 @@ async function dbLoadSocial(){ // load the people who actually follow ME, so the
         if(fresh.length){ var d=document.getElementById('bnav-profile-dot'); if(d)d.style.display='block';
           if(typeof toast==='function')toast(fresh.length===1?('👋 '+(fresh[0].name||t('travelerWord'))+' '+t('startedFollowing')):('👋 '+fresh.length+' '+t('newFollowers'))); }
       }
+    }
+    // Also load who I FOLLOW, with their REAL names (the Following list was id-only stubs → "undefined").
+    var fg=await sb.from('follows').select('following_id').eq('follower_id',userData.id);
+    if(fg&&fg.data){
+      var ids=fg.data.map(function(r){return r.following_id;}).filter(Boolean);
+      var names={};
+      if(ids.length){ try{ var pr=await sb.from('profiles').select('id,name,username,avatar').in('id',ids); (pr.data||[]).forEach(function(p){ names[p.id]={name:p.name,username:p.username,avatar:p.avatar}; }); }catch(e){} }
+      userData.following=ids.map(function(id){ var n=names[id]||{}; var nm=n.name||'Traveller'; return {id:id,name:nm,handle:n.username||'',initial:(nm.trim()[0]||'T').toUpperCase(),photo:n.avatar||'',trips:0,_real:true}; });
+      var fge=document.getElementById('p-stat-following'); if(fge)fge.textContent=userData.following.length;
+      if(typeof persistSoon==='function')persistSoon();
     }
   }catch(e){}
 }
@@ -7591,6 +7713,7 @@ const S={
     bbImported:"Photos imported",
     bbEditTitle:"Adjust photo",
     bbEditPhoto:"Adjust photo",
+    bbRemovePhoto:"Remove photo",
     bbEditAspect:"Crop",
     bbEditZoom:"Zoom",
     bbEditPosX:"Horizontal",
@@ -7748,6 +7871,15 @@ const S={
     shareEverything:'Share everything',
     shareEverythingSub:'Include all places & photos',
     photosLabel:'Photos',
+    highlightPhoto:'Highlight (up to 8)',
+    deletePhoto:'Delete photo',
+    deletePhotoConfirm:'Delete this photo?',
+    highlightMax:'You can highlight up to 8 photos',
+    sharePhotoScopeSub:'Choose how many photos to share',
+    sharePhotosAll:'Full album',
+    sharePhotosHighlights:'Highlighted',
+    sharePhotosNone:'No photos',
+    upTo8:'up to 8',
     nothingSharedYet:'Nothing selected to share'
   },
   ar:{
@@ -16830,6 +16962,11 @@ function doSocialAuth(provider){
     });
   }catch(e){}
 })();
+// Google place-search failures are TEMPORARY, not permanent. A single timeout / transient error
+// used to set window._googlePlacesBroken and disable Google for the WHOLE session (so search
+// "stopped working" until reload). Use a 60s cooldown instead so it self-heals.
+function _gpBroken(){ return !!(window._googlePlacesBrokenUntil && Date.now() < window._googlePlacesBrokenUntil); }
+function _gpFail(){ window._googlePlacesBrokenUntil = Date.now() + 60000; }
 function onPlaceSearch(val){
   _selectedGPlace=null;var q=(val||'').trim();var res=document.getElementById('pl-search-results');
   var glink=document.getElementById('pl-gmaps-link');if(glink)glink.style.display='none';
@@ -16850,7 +16987,7 @@ function doPlaceSearch(q){
   // exist on Google actually show up. Uses Place.searchByText (the legacy AutocompleteService/
   // PlacesService is disabled on keys created after Mar 2025). Nominatim stays as the fallback
   // for when Google is unavailable / returns nothing, so search never goes dead.
-  if(window._googleMapsReady && window.google && google.maps && google.maps.importLibrary && !window._googlePlacesBroken){
+  if(window._googleMapsReady && window.google && google.maps && google.maps.importLibrary && !_gpBroken()){
     doGooglePlacesNew(q,bias,res,nominatimQ);
   } else {
     doNominatimSearch(nominatimQ,res);
@@ -16859,7 +16996,7 @@ function doPlaceSearch(q){
 // Google Places (New) text search → rich, accurate POI results in one call (no getDetails needed).
 function doGooglePlacesNew(q,bias,res,nominatimQ){
   var settled=false;
-  var fb=setTimeout(function(){ if(settled)return; settled=true; window._googlePlacesBroken=true; doNominatimSearch(nominatimQ,res); },3500);
+  var fb=setTimeout(function(){ if(settled)return; settled=true; _gpFail(); doNominatimSearch(nominatimQ,res); },3500);
   google.maps.importLibrary('places').then(function(lib){
     var Place=lib.Place;
     if(!Place||!Place.searchByText) throw new Error('Place.searchByText unavailable');
@@ -16874,7 +17011,7 @@ function doGooglePlacesNew(q,bias,res,nominatimQ){
       if(!places||!places.length){ doNominatimSearch(nominatimQ,res); return; } // nothing on Google → try OSM
       renderGooglePlaceResults(places,res);
     });
-  }).catch(function(){ if(settled)return; settled=true; clearTimeout(fb); window._googlePlacesBroken=true; doNominatimSearch(nominatimQ,res); });
+  }).catch(function(){ if(settled)return; settled=true; clearTimeout(fb); _gpFail(); doNominatimSearch(nominatimQ,res); });
 }
 function renderGooglePlaceResults(places,res){
   res.innerHTML='';
@@ -16922,10 +17059,10 @@ function doGooglePlaceSearch(q,res){
   // Guard: if Google never calls back (legacy Places API not enabled on the key),
   // fall back to Nominatim after a short wait and stop trying Google this session.
   var done=false;
-  var fallbackTimer=setTimeout(function(){ if(done)return; done=true; window._googlePlacesBroken=true; doNominatimSearch(q,res); },1400);
+  var fallbackTimer=setTimeout(function(){ if(done)return; done=true; _gpFail(); doNominatimSearch(q,res); },1400);
   service.getPlacePredictions(req,function(predictions,status){
     if(done)return; done=true; clearTimeout(fallbackTimer);
-    if(status!==google.maps.places.PlacesServiceStatus.OK||!predictions||!predictions.length){window._googlePlacesBroken=true;doNominatimSearch(q,res);return;}
+    if(status!==google.maps.places.PlacesServiceStatus.OK||!predictions||!predictions.length){_gpFail();doNominatimSearch(q,res);return;}
     res.innerHTML='';
     predictions.slice(0,5).forEach(function(pred){
       var d=document.createElement('div');
@@ -16992,10 +17129,54 @@ function doNominatimSearch(q,res){
 
 
 var _editingPlaceId=null;
+// Google place search inside the EDIT sheet (so you can re-pick the correct place after saving).
+var _editSelGPlace=null, _epSearchTimer=null;
+function onEditPlaceSearch(val){
+  _editSelGPlace=null;
+  var q=(val||'').trim(); var res=document.getElementById('ep-search-results'); if(!res)return;
+  clearTimeout(_epSearchTimer);
+  if(!q){ res.innerHTML=''; res.style.display='none'; return; }
+  res.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">'+t('searching')+'</div>'; res.style.display='block';
+  _epSearchTimer=setTimeout(function(){ doEditPlaceSearch(q); },380);
+}
+function doEditPlaceSearch(q){
+  var res=document.getElementById('ep-search-results'); if(!res)return;
+  var bias=(currentTrip&&(currentTrip.country||currentTrip.dest))||'';
+  if(window._googleMapsReady && window.google && google.maps && google.maps.importLibrary && typeof _gpBroken==='function' && !_gpBroken()){
+    var settled=false;
+    var fb=setTimeout(function(){ if(settled)return; settled=true; if(typeof _gpFail==='function')_gpFail(); epOsmSearch(q,bias,res); },3500);
+    google.maps.importLibrary('places').then(function(lib){
+      if(!lib.Place||!lib.Place.searchByText) throw 0;
+      return lib.Place.searchByText({textQuery:q+(bias?(', '+bias):''),fields:['displayName','formattedAddress','location','id'],maxResultCount:8,language:currentLang}).then(function(r){
+        if(settled)return; settled=true; clearTimeout(fb);
+        if(!r||!r.places||!r.places.length){ epOsmSearch(q,bias,res); return; }
+        renderEditPlaceResults(r.places.map(function(p){ var loc=p.location; return {name:(typeof p.displayName==='string')?p.displayName:((p.displayName&&p.displayName.text)||''),addr:p.formattedAddress||'',id:p.id||null,lat:(loc&&(typeof loc.lat==='function'?loc.lat():loc.lat))||null,lng:(loc&&(typeof loc.lng==='function'?loc.lng():loc.lng))||null}; }),res);
+      });
+    }).catch(function(){ if(settled)return; settled=true; clearTimeout(fb); if(typeof _gpFail==='function')_gpFail(); epOsmSearch(q,bias,res); });
+  } else { epOsmSearch(q,bias,res); }
+}
+function epOsmSearch(q,bias,res){
+  fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(q+(bias?' '+bias:''))+'&format=json&limit=8&addressdetails=1&accept-language='+currentLang)
+    .then(function(r){return r.json();}).then(function(data){
+      if(!data||!data.length){ res.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">'+t('noResults')+'</div>'; return; }
+      renderEditPlaceResults(data.map(function(it){ var a=it.address||{}; var nm=a.attraction||a.amenity||a.tourism||it.name||(a.city||a.town||''); return {name:nm||q,addr:it.display_name||'',id:null,lat:it.lat,lng:it.lon}; }),res);
+    }).catch(function(){ res.style.display='none'; });
+}
+function renderEditPlaceResults(items,res){
+  res.innerHTML='';
+  items.slice(0,8).forEach(function(p){
+    var d=document.createElement('div');
+    d.style.cssText='padding:11px 14px;border-bottom:1px solid var(--paper-3);cursor:pointer';
+    d.innerHTML='<div style="font-size:14px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 '+escHtml(p.name)+'</div><div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(p.addr||'')+'</div>';
+    (function(pp){ d.addEventListener('click',function(){ var ni=document.getElementById('ep-place-name'); if(ni)ni.value=pp.name; _editSelGPlace={name:pp.name,place_id:pp.id||null,lat:pp.lat,lng:pp.lng}; res.innerHTML=''; res.style.display='none'; }); })(p);
+    res.appendChild(d);
+  });
+}
 function openEditPlace(placeId){
   if(!currentTrip)return;
-  var place=currentTrip.places.find(function(p){return p.id===placeId;});if(!place)return;
-  _editingPlaceId=placeId;selectedCat=place.cat;
+  var place=currentTrip.places.find(function(p){return String(p.id)===String(placeId);});if(!place)return;
+  _editingPlaceId=place.id;selectedCat=place.cat;
+  _editSelGPlace=null; var _epsr=document.getElementById('ep-search-results'); if(_epsr){_epsr.innerHTML='';_epsr.style.display='none';}
   document.querySelectorAll('#sheet-edit-place .cat-pill').forEach(function(el){el.classList.toggle('active',el.dataset.cat===place.cat);});
   var n=document.getElementById('ep-place-name');var no=document.getElementById('ep-place-note');
   if(n)n.value=place.name||'';if(no)no.value=place.note||'';
@@ -17028,6 +17209,10 @@ function saveEditedPlace(){
   place.name=n;place.note=(document.getElementById('ep-place-note')||{value:''}).value.trim();
   place.cat=selectedCat;place.rating=document.querySelectorAll('.ep-rstar.on').length;
   place.photo=_placePhoto||null;
+  // If the user picked a Google search result, update the place's real coordinates + place id
+  // so its map pin / link point to the right spot.
+  if(_editSelGPlace && _editSelGPlace.name===n){ if(_editSelGPlace.lat!=null)place.lat=_editSelGPlace.lat; if(_editSelGPlace.lng!=null)place.lng=_editSelGPlace.lng; if(_editSelGPlace.place_id)place.placeId=_editSelGPlace.place_id; }
+  _editSelGPlace=null;
   if(typeof dbUpdatePlace==='function')dbUpdatePlace(place); // sync edits (incl. photo) to the cloud
   if(typeof persistSoon==='function')persistSoon();          // and keep them locally
   _placePhoto=null;
@@ -17293,7 +17478,7 @@ async function dbLoadUserTrips(){
           return { id:p.id, dbId:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, lat:p.lat, lng:p.lng, photo:p.photo||null, placeId:p.place_id||null, city:p.city||'' };
         });
         var tripPhotos = allPhotos.filter(function(p){ return p.trip_id === t.id; }).map(function(p){
-          return { url:p.url, caption:p.caption||'', day:p.day, dbId:p.id, wide:false };
+          return { url:p.url, caption:p.caption||'', day:p.day, dbId:p.id, wide:false, star:!!p.star };
         });
         return {
           id: t.id, dbId: t.id, dest: t.dest, country: t.country, flag: t.flag||'🌍',
@@ -19026,7 +19211,7 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
     <div class="cat-pill" data-cat="view" onclick="selCatEdit(this)">🌅 <span data-i18n="view">View</span></div>
     <div class="cat-pill" data-cat="shop" onclick="selCatEdit(this)">🛍️ <span data-i18n="shop">Shop</span></div>
   </div>
-  <div class="form-field"><label class="add-form-label" data-i18n="name">Name</label><input class="inp" id="ep-place-name" data-i18n-ph="placeNamePh" placeholder="Place name"></div>
+  <div class="form-field" style="position:relative"><label class="add-form-label" data-i18n="name">Name</label><input class="inp" id="ep-place-name" data-i18n-ph="placeNamePh" placeholder="Place name" autocomplete="off" oninput="onEditPlaceSearch(this.value)"><div id="ep-search-results" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--paper-3);border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,28,48,.12);z-index:50;max-height:240px;overflow-y:auto"></div></div>
   <div class="form-field" style="margin-top:12px"><label class="add-form-label" data-i18n="yourTake">Your take</label><input class="inp" id="ep-place-note" data-i18n-ph="whatLoved" placeholder="What did you love?"></div>
   <div class="form-field" style="margin-top:12px"><label class="add-form-label" data-i18n="rating">Rating</label><div style="display:flex;gap:6px;margin-top:6px"><span class="rstar ep-rstar" onclick="setEditPlaceRating(1)">&#9733;</span><span class="rstar ep-rstar" onclick="setEditPlaceRating(2)">&#9733;</span><span class="rstar ep-rstar" onclick="setEditPlaceRating(3)">&#9733;</span><span class="rstar ep-rstar" onclick="setEditPlaceRating(4)">&#9733;</span><span class="rstar ep-rstar" onclick="setEditPlaceRating(5)">&#9733;</span></div></div>
   <div class="form-field" style="margin-top:12px"><label class="add-form-label">Photo <span style="color:var(--ink-4);font-weight:400">(optional)</span></label>
