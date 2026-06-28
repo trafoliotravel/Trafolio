@@ -4314,7 +4314,9 @@ function shareGuideDoc(){
   var placesHtml=places.length?'<h3>Places</h3>'+places.map(function(p){return '<div class="pl"><b>'+E(p.name)+'</b>'+(p.note?' — '+E(p.note):'')+'</div>';}).join(''):'';
   var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<h3>Things we missed</h3><ul>'+tr.missed.map(function(m){return '<li style="white-space:pre-wrap">'+E(m)+'</li>';}).join('')+'</ul>':'';
   var _gphs=(typeof sharePhotosFor==='function')?sharePhotosFor(tr):((sel.everything||sel.photos)?(tr.photos||[]):[]);
-  var photos=_gphs.length?'<h3>Photos</h3><div class="ph">'+bbSortedPhotos(_gphs,tr).map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
+  // Cap the exported album so the PDF canvas stays under mobile limits (highlights are already ≤8).
+  var _gpics=bbSortedPhotos(_gphs,tr).slice(0,40);
+  var photos=_gpics.length?'<h3>Photos</h3><div class="ph">'+_gpics.map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
   return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+E(tr.dest)+' — Trafolio</title><style>'
     +'*{box-sizing:border-box}body{font-family:Georgia,"Times New Roman",serif;color:#1a2b3a;max-width:760px;margin:0 auto;padding:40px 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
     +'h1{font-size:30px;margin:0 0 2px}.meta{font-family:Arial,sans-serif;font-size:12px;color:#888;letter-spacing:.08em;text-transform:uppercase;margin:0 0 18px}'
@@ -4356,12 +4358,16 @@ function shareGuideDownload(){
     var tr=(typeof shareTripData==='function')?shareTripData():currentTrip;
     var name=((tr&&tr.dest)?String(tr.dest):'trafolio').replace(/[^\w\-]+/g,'-').replace(/^-+|-+$/g,'')||'trafolio';
     var holder=document.createElement('div');
-    holder.style.cssText='position:fixed;left:-99999px;top:0;width:760px;background:#fff';
+    holder.style.cssText='position:absolute;left:-99999px;top:0;width:760px;background:#fff';
     var sm=doc.match(/<style>[\s\S]*?<\/style>/i);
     var body=doc.replace(/^[\s\S]*<body[^>]*>/i,'').replace(/<\/body>[\s\S]*$/i,'');
     holder.innerHTML=(sm?sm[0]:'')+body;
     document.body.appendChild(holder);
-    var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,scale:2,backgroundColor:'#ffffff'}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
+    // MUST pass the full content height to html2canvas — for an off-screen container it otherwise
+    // captures height 0, producing a single (blank-ish) page. scale 1.5 keeps the canvas under the
+    // iOS Safari ~16MP limit so large guides don't fail.
+    var _hh=holder.scrollHeight||holder.offsetHeight||1123;
+    var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,scale:1.5,backgroundColor:'#ffffff',height:_hh,windowHeight:_hh}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
     html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
       try{ holder.remove(); }catch(e){}
       var file=new File([blob], name+'-trafolio.pdf', {type:'application/pdf'});
