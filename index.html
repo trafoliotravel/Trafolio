@@ -563,11 +563,11 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     <label class="add-form-label" data-i18n="category">Category</label>
     <div class="cat-select-grid" id="cat-grid">
       <div class="cat-opt on" data-cat="eat" onclick="selectCat(this)"><span>🍴</span><span class="cat-lbl" data-i18n="eat">Eat</span></div>
+      <div class="cat-opt" data-cat="coffee" onclick="selectCat(this)"><span>☕</span><span class="cat-lbl" data-i18n="coffee">Coffee</span></div>
       <div class="cat-opt" data-cat="stay" onclick="selectCat(this)"><span>🛎️</span><span class="cat-lbl" data-i18n="stay">Stay</span></div>
       <div class="cat-opt" data-cat="see" onclick="selectCat(this)"><span>🏛️</span><span class="cat-lbl" data-i18n="see">See</span></div>
       <div class="cat-opt" data-cat="do" onclick="selectCat(this)"><span>🎫</span><span class="cat-lbl" data-i18n="doAct">Do</span></div>
       <div class="cat-opt" data-cat="fun" onclick="selectCat(this)"><span>🎡</span><span class="cat-lbl" data-i18n="fun">Fun</span></div>
-      <div class="cat-opt" data-cat="view" onclick="selectCat(this)"><span>🌅</span><span class="cat-lbl" data-i18n="view">View</span></div>
       <div class="cat-opt" data-cat="shop" onclick="selectCat(this)"><span>🛍️</span><span class="cat-lbl" data-i18n="shop">Shop</span></div>
     </div>
   </div>
@@ -708,6 +708,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
   <div class="modal-title" id="itin-modal-title" data-i18n="addToPlan">Add to plan</div>
   <div class="cat-grid" id="itin-cat-grid" style="margin-bottom:14px">
     <div class="cat-opt on" data-cat="eat" onclick="selItinCat(this)"><span>&#127869;</span><span class="cl" data-i18n="eat">Eat</span></div>
+    <div class="cat-opt" data-cat="coffee" onclick="selItinCat(this)"><span>&#9749;</span><span class="cl" data-i18n="coffee">Coffee</span></div>
     <div class="cat-opt" data-cat="stay" onclick="selItinCat(this)"><span>&#128716;</span><span class="cl" data-i18n="stay">Stay</span></div>
     <div class="cat-opt" data-cat="see" onclick="selItinCat(this)"><span>&#127960;</span><span class="cl" data-i18n="see">See</span></div>
     <div class="cat-opt" data-cat="do" onclick="selItinCat(this)"><span>&#127917;</span><span class="cl" data-i18n="doAct">Do</span></div>
@@ -1501,11 +1502,11 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
       <div class="filter-strip" id="places-filter">
         <div class="filter-pill active" data-f="all" onclick="filterPlaces(this)" data-i18n="all">All</div>
         <div class="filter-pill" data-f="eat" onclick="filterPlaces(this)">🍴 <span data-i18n="eat">Eat</span></div>
+        <div class="filter-pill" data-f="coffee" onclick="filterPlaces(this)">☕ <span data-i18n="coffee">Coffee</span></div>
         <div class="filter-pill" data-f="stay" onclick="filterPlaces(this)">🛎️ <span data-i18n="stay">Stay</span></div>
         <div class="filter-pill" data-f="see" onclick="filterPlaces(this)">🏛️ <span data-i18n="see">See</span></div>
         <div class="filter-pill" data-f="do" onclick="filterPlaces(this)">🎫 <span data-i18n="doAct">Do</span></div>
         <div class="filter-pill" data-f="fun" onclick="filterPlaces(this)">🎡 <span data-i18n="fun">Fun</span></div>
-        <div class="filter-pill" data-f="view" onclick="filterPlaces(this)">🌅 <span data-i18n="view">View</span></div>
         <div class="filter-pill" data-f="shop" onclick="filterPlaces(this)">🛍️ <span data-i18n="shop">Shop</span></div>
       </div>
       <div id="places-list" style="padding:0 20px"></div>
@@ -1959,6 +1960,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
       </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:14px 16px 6px;border-bottom:1px solid var(--paper-3)">
+      <button class="btn btn-ember btn-sm" id="share-save-btn" onclick="saveSharedTrip()" style="display:none">&#128278; <span data-i18n="saveFav">Save to favourites</span></button>
       <button class="btn btn-ghost btn-sm" onclick="shareGuidePrint()">&#128424;&#65039; <span data-i18n="bbPrint">Print</span></button>
       <button class="btn btn-ghost btn-sm" onclick="shareGuideDownload()">&#11015;&#65039; <span data-i18n="bbDownloadPdf">Download PDF</span></button>
       <button class="btn btn-ghost btn-sm" onclick="shareCopyLink()">&#128279; <span data-i18n="copyLinkBtn">Copy link</span></button>
@@ -1971,6 +1973,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     <div class="filter-strip" id="share-filter-strip">
       <div class="filter-pill active" data-f="all" onclick="shareFilter(this)" data-i18n="allPlaces">All places</div>
       <div class="filter-pill" data-f="eat" onclick="shareFilter(this)">&#127869;&#65039; <span data-i18n="eat">Eat</span></div>
+      <div class="filter-pill" data-f="coffee" onclick="shareFilter(this)">&#9749; <span data-i18n="coffee">Coffee</span></div>
       <div class="filter-pill" data-f="stay" onclick="shareFilter(this)">&#128716;&#65039; <span data-i18n="stay">Stay</span></div>
       <div class="filter-pill" data-f="see" onclick="shareFilter(this)">&#127963;&#65039; <span data-i18n="see">See</span></div>
       <div class="filter-pill" data-f="do" onclick="shareFilter(this)">&#127917; <span data-i18n="doAct">Do</span></div>
@@ -2179,6 +2182,18 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
 (function initSupabaseSession(){
   if(!sb) return;
 
+  // Onboarding for a brand-new user (Google/Facebook sign-ups previously skipped this entirely):
+  // show the profile-setup screen (bio / from / lives-in) with a warm welcome. Name + avatar are
+  // already filled from the Google account.
+  function _startOnboarding(){
+    try{
+      var first=((userData.name||'there').split(' ')[0]);
+      if(typeof initPPills==='function') initPPills();
+      if(typeof showScreen==='function') showScreen('s-prefs');
+      // small delay so the screen is mounted before the toast
+      setTimeout(function(){ if(typeof toast==='function') toast('Welcome to Trafolio, '+first+'! Let’s set up your profile.'); }, 300);
+    }catch(e){ console.error('onboarding:',e); }
+  }
   function applySession(user, showWelcome){
     if(!user)return;
     var meta = user.user_metadata || {};
@@ -2205,7 +2220,8 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
       if(typeof restoreState==='function') restoreState();
       enterApp();
       _setKeep(true);
-      if(showWelcome) toast('Welcome back, '+fullName.split(' ')[0]+'!');
+      // NOTE: the welcome message is deferred until the profile read below tells us whether this
+      // is a returning user ("Welcome back") or a brand-new one (full onboarding via _startOnboarding).
     }
     // First READ existing profile (so we restore saved bio/avatar instead of wiping them)
     if(sb && userData.id){
@@ -2232,12 +2248,16 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
           if(userData.cover){var _pc=document.getElementById('profile-cover');if(_pc){_pc.src=userData.cover;_pc.style.opacity='1';}}
           if(typeof renderProfile==='function') renderProfile();
           console.log('Profile restored from DB');
+          // Returning user → a simple welcome-back (only on a fresh sign-in, not token refresh).
+          if(showWelcome && typeof toast==='function') toast('Welcome back, '+((userData.name||fullName).split(' ')[0])+'!');
           dbLoadUserTrips();
           dbLoadStories();
           if(typeof dbLoadFeedStories==='function')dbLoadFeedStories();
           if(typeof dbLoadFeedBlogs==='function')dbLoadFeedBlogs();
         } else {
-          // No profile yet — create one
+          // No profile yet — BRAND-NEW user (this is the path Google/OAuth sign-ups hit). Create a
+          // starter profile, then run the SAME onboarding email signups get: a welcome + the
+          // profile setup screen (name is from Google; they fill bio / from / lives-in).
           sb.from('profiles').upsert({
             id: userData.id,
             name: userData.name || '',
@@ -2251,6 +2271,7 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
             else console.log('New profile created');
             dbLoadUserTrips();
           }).catch(function(e){ console.error('Profile upsert failed:', e); dbLoadUserTrips(); });
+          _startOnboarding();
         }
       }).catch(function(e){
         console.error('Profile read failed:', e);
@@ -2320,9 +2341,9 @@ if(!sb){ setTimeout(function(){ try{ localResume(); }catch(e){} }, 0); }
 function getFlagEmoji(cc){ return (cc&&isoToFlag(cc))||'🌍'; }
 
 // ─── DATA ─────────────────────────────────────────────────────────
-const CAT_ICONS={eat:'🍴',stay:'🛎️',see:'🏛️',do:'🎫',fun:'🎡',view:'🌅',shop:'🛍️'};
-const CAT_FLAGS={eat:'#DCF4FF',stay:'#DCF4FF',see:'#DCF4FF',do:'#DCF4FF',fun:'#DCF4FF',view:'#DCF4FF',shop:'#DCF4FF'};
-const CAT_NAMES={eat:'Eat',stay:'Stay',see:'See',do:'Do',fun:'Fun',view:'View',shop:'Shop'};
+const CAT_ICONS={eat:'🍴',coffee:'☕',stay:'🛎️',see:'🏛️',do:'🎫',fun:'🎡',view:'🌅',shop:'🛍️'};
+const CAT_FLAGS={eat:'#DCF4FF',coffee:'#DCF4FF',stay:'#DCF4FF',see:'#DCF4FF',do:'#DCF4FF',fun:'#DCF4FF',view:'#DCF4FF',shop:'#DCF4FF'};
+const CAT_NAMES={eat:'Eat',coffee:'Coffee',stay:'Stay',see:'See',do:'Do',fun:'Fun',view:'View',shop:'Shop'};
 let currentTrip=null,currentTab='places',selectedCat='eat',selectedRating=4,appMode=false,currentFilter='all';
 var FALLBACK_COVER='https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&q=85';
 try{window.FALLBACK_COVER=FALLBACK_COVER;}catch(e){}
@@ -2420,6 +2441,9 @@ function showScreen(id,_fromBack){
     // Reset every scroller and retry across paints so Preview always opens at the very top.
     var _sTop=function(){ try{window.scrollTo(0,0);}catch(e){} var de=document.documentElement,b=document.body,sh=document.getElementById('s-share'); if(de)de.scrollTop=0; if(b)b.scrollTop=0; if(sh)sh.scrollTop=0; };
     _sTop(); requestAnimationFrame(_sTop); setTimeout(_sTop,60); setTimeout(_sTop,250);
+    // Trap the browser/device Back on the shared page even for a guest (appMode off) — otherwise
+    // Back leaves Trafolio entirely (e.g. straight back to WhatsApp). goBack() then keeps them in-app.
+    if(typeof _armBackTrap==='function') _armBackTrap();
   }
   if(typeof _saveView==='function')_saveView();
   // The bottom nav belongs to the in-app experience only — hide it on the pre-app screens
@@ -2453,7 +2477,10 @@ function goBack(){
 // while in-app and route it through goBack() (close modal → previous screen), re-arming each time.
 function _armBackTrap(){ try{ history.pushState({tf:1}, ''); }catch(e){} }
 window.addEventListener('popstate', function(){
-  if(typeof appMode==='undefined' || !appMode) return; // on landing/auth, let the browser behave normally
+  // Keep Back inside Trafolio while in the app OR while viewing a shared page (incl. guests who
+  // opened a link from WhatsApp/Safari — without this, Back leaves the app entirely).
+  var onShare=document.getElementById('s-share') && document.getElementById('s-share').classList.contains('active');
+  if((typeof appMode==='undefined' || !appMode) && !onShare) return; // landing/auth: let the browser behave normally
   try{ goBack(); }catch(e){}
   _armBackTrap();
 });
@@ -2564,6 +2591,7 @@ function enterApp(){
   var _ts=document.getElementById('top-search-btn'); if(_ts)_ts.style.display='flex';
   document.getElementById('bottom-nav').style.display='flex';
   applyIdentity();updateCartBtn();
+  if(typeof _resumePendingSave==='function')_resumePendingSave(); // finish a "save to favourites" started before sign-in
   if(typeof initSearchClears==='function')initSearchClears(); // wire clear-X on every search box
   if(typeof renderDash==='function')renderDash();
   renderProfile();
@@ -2922,7 +2950,10 @@ function togglePhotoStar(i){
   if(!currentTrip||!currentTrip.photos[i])return;
   var ph=currentTrip.photos[i];
   if(!ph.star){
-    var n=(currentTrip.photos||[]).filter(function(p){return p.star;}).length;
+    // Count DISTINCT starred photos (by dbId/url) so a duplicate entry can't falsely fill the
+    // 8 slots and block new highlights.
+    var seen={}, n=0;
+    (currentTrip.photos||[]).forEach(function(p){ if(p&&p.star){ var k=p.dbId||p.url; if(!seen[k]){ seen[k]=1; n++; } } });
     if(n>=8){ toast(t('highlightMax')||'You can highlight up to 8 photos'); return; }
   }
   ph.star=!ph.star;
@@ -2959,7 +2990,7 @@ function renderShareTab(){
   var cont=document.getElementById('share-filters');if(!cont)return;
   if(!currentTrip){cont.innerHTML='';return;}
   var sel=shareSelOf(currentTrip);
-  var cats=['eat','stay','see','do','fun','view','shop'];
+  var cats=['eat','coffee','stay','see','do','fun','shop'];
   var dim=sel.everything?';opacity:.5':'';
   var master='<label onclick="toggleShareEverything()" style="display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;padding:12px 14px;background:var(--paper-2);border-radius:var(--r-md);margin-bottom:8px">'
     +'<div><div style="font-size:14px;font-weight:600;color:var(--ink)">'+t('shareEverything')+'</div><div style="font-size:12px;color:var(--ink-4)">'+t('shareEverythingSub')+'</div></div>'+shareCheck(sel.everything)+'</label>';
@@ -2994,7 +3025,7 @@ function shareSelOf(trip){
   if(!trip.shareSel.cats)trip.shareSel.cats={eat:true,stay:true,see:true,do:true,fun:true,view:true,shop:true};
   // Ensure newer place categories (fun/view) exist in older saved selections, defaulting ON,
   // so places in those categories are never silently dropped from a share.
-  ['eat','stay','see','do','fun','view','shop'].forEach(function(c){ if(typeof trip.shareSel.cats[c]==='undefined')trip.shareSel.cats[c]=true; });
+  ['eat','coffee','stay','see','do','fun','shop'].forEach(function(c){ if(typeof trip.shareSel.cats[c]==='undefined')trip.shareSel.cats[c]=true; });
   if(typeof trip.shareSel.notes==='undefined')trip.shareSel.notes=true;
   if(typeof trip.shareSel.blog==='undefined')trip.shareSel.blog=true;
   if(typeof trip.shareSel.missed==='undefined')trip.shareSel.missed=true;
@@ -3026,8 +3057,8 @@ function setSharePhotoScope(v){
   if(photoVisOf()==='private'){ toast(t('photosPrivateLocked')); return; }
   var s=shareSelOf(currentTrip); s.photoScope=v; s.photos=(v!=='none'); s.everything=false; _syncShareEverything(s); _persistShareSel(); renderShareTab();
 }
-function _syncShareEverything(s){s.everything=(s.photoScope==='all')&&s.notes&&s.blog&&s.missed&&['eat','stay','see','do','fun','view','shop'].every(function(c){return s.cats[c];});}
-function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.photoScope='all';s.notes=true;s.blog=true;s.missed=true;['eat','stay','see','do','fun','view','shop'].forEach(function(c){s.cats[c]=true;});}_persistShareSel();renderShareTab();}
+function _syncShareEverything(s){s.everything=(s.photoScope==='all')&&s.notes&&s.blog&&s.missed&&['eat','coffee','stay','see','do','fun','shop'].every(function(c){return s.cats[c];});}
+function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.photoScope='all';s.notes=true;s.blog=true;s.missed=true;['eat','coffee','stay','see','do','fun','shop'].forEach(function(c){s.cats[c]=true;});}_persistShareSel();renderShareTab();}
 function toggleShareBlog(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.blog=!s.blog;_syncShareEverything(s);_persistShareSel();renderShareTab();}
 function toggleShareCat(c){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.cats[c]=!s.cats[c];_syncShareEverything(s);_persistShareSel();renderShareTab();}
 function toggleSharePhotos(){if(!currentTrip)return;if(photoVisOf()==='private'){toast(t('photosPrivateLocked'));return;}var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);_persistShareSel();renderShareTab();}
@@ -4181,9 +4212,9 @@ function bbPreview(){
 }
 // Download the book as a self-contained HTML file the user can keep or open/print later.
 function bbDownload(){
-  // iOS WKWebView ignores <a download>, so a file download silently does nothing there.
-  // Route native users to the print sheet instead, where they tap "Save to Files" → PDF.
-  if(typeof _isNative==='function' && _isNative()){ bbDoPrint(); return; }
+  // Phone (iOS app / iOS Safari / Android): a blob <a download> doesn't save in the WebView — show
+  // the visible printable view so the OS "Save to Files" gives a real PDF.
+  if((typeof _isNative==='function' && _isNative())||_isMobileBrowser()){ _openPrintable(bbBookDoc()); return; }
   var doc=bbBookDoc();if(!doc)return;
   try{
     var blob=new Blob([doc],{type:'text/html'});
@@ -4197,33 +4228,10 @@ function bbDownload(){
   }catch(e){bbPrintWindow();}
 }
 // Print the book straight from the preview iframe (fallback to a new window).
-function bbDoPrint(){
-  var frame=document.getElementById('bb-preview-frame');
-  if(frame&&frame.contentWindow){
-    try{frame.contentWindow.focus();frame.contentWindow.print();return;}catch(e){}
-  }
-  bbPrintWindow();
-}
+function bbDoPrint(){ _openPrintable(bbBookDoc()); }
 // Fallback: open the book in a new window and trigger the browser print dialog.
 // Preloads every photo first so the print dialog opens with all pictures fully rendered.
-function bbPrintWindow(){
-  var doc=bbBookDoc();if(!doc)return;
-  // window.open() is blocked in the native iOS webview (that's the "allow pop-ups" prompt).
-  // A hidden iframe prints reliably and triggers the OS print sheet (which offers Save as PDF).
-  var old=document.getElementById('bb-print-frame'); if(old)old.remove();
-  var f=document.createElement('iframe'); f.id='bb-print-frame';
-  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
-  document.body.appendChild(f);
-  var d=f.contentWindow.document; d.open(); d.write(doc); d.close();
-  // Preload photos so the print sheet opens with everything rendered, then print.
-  var urls=[]; doc.replace(/url\(['"]?([^'")]+)['"]?\)/g,function(m,u){ if(u&&u.indexOf('gradient')<0)urls.push(u); return m; });
-  var printed=false;
-  function fire(){ if(printed)return; printed=true; try{f.contentWindow.focus();}catch(e){} try{f.contentWindow.print();}catch(e){} }
-  if(!urls.length){ setTimeout(fire,400); return; }
-  var pending=urls.length;
-  urls.forEach(function(u){ var im=new Image(); im.onload=im.onerror=function(){ if(--pending<=0) setTimeout(fire,300); }; im.src=u; });
-  setTimeout(fire,6000); // safety: print even if an image hangs
-}
+function bbPrintWindow(){ _openPrintable(bbBookDoc()); } // visible printable view → OS Print/Save (off-screen iframe printed blank on iOS)
 function toggleStar(){if(!currentTrip)return;currentTrip.starred=!currentTrip.starred;document.getElementById('star-btn').textContent=currentTrip.starred?'★':'☆';toast(currentTrip.starred?t('starredToast'):t('unstarredToast'));}
 
 // ─── SHARE PUBLIC PAGE ────────────────────────────────────────────
@@ -4359,10 +4367,38 @@ function _ensureHtml2pdf(cb){
 // Used to route exports through the OS share sheet, since iOS Safari can't reliably save a blob
 // <a download> to Files and its iframe window.print() only renders one page.
 function _isMobileBrowser(){ try{ return /iphone|ipad|ipod|android/i.test(navigator.userAgent||'') || (/Mac/.test(navigator.platform||'') && (navigator.maxTouchPoints||0) > 1); }catch(e){ return false; } }
+// RELIABLE print/save: show the document in a FULL-SCREEN VISIBLE iframe with a Print/Save button.
+// Off-screen iframes print blank on iOS, and html2canvas often renders blank in the iOS WebView —
+// this avoids both. Tapping Print opens the OS sheet → "Save to Files" (PDF) / AirPrint. The user
+// can also read or screenshot the page. Works the same on iOS app, iOS Safari and desktop.
+function _openPrintable(doc){
+  if(!doc){ if(typeof toast==='function')toast('Nothing to export'); return; }
+  var old=document.getElementById('tf-print-ov'); if(old)old.remove();
+  var ov=document.createElement('div'); ov.id='tf-print-ov';
+  ov.style.cssText='position:fixed;inset:0;z-index:100000;background:#fff;display:flex;flex-direction:column';
+  var bar=document.createElement('div');
+  bar.style.cssText='flex:0 0 auto;display:flex;gap:8px;justify-content:space-between;align-items:center;padding:calc(9px + env(safe-area-inset-top,0px)) 12px 9px;background:#001C30;color:#fff;font-family:-apple-system,Segoe UI,Roboto,sans-serif';
+  bar.innerHTML='<button id="tf-pr-close" style="background:rgba(255,255,255,.16);border:none;color:#fff;border-radius:9px;padding:9px 13px;font-size:14px;cursor:pointer">✕ Close</button>'
+    +'<div style="font-size:11.5px;opacity:.8;text-align:center;line-height:1.3">Tap Print →<br>Save to Files for PDF</div>'
+    +'<button id="tf-pr-go" style="background:#E0633A;border:none;color:#fff;border-radius:9px;padding:9px 15px;font-size:14px;font-weight:700;cursor:pointer">🖨 Print / Save PDF</button>';
+  var f=document.createElement('iframe'); f.id='tf-pr-if';
+  f.style.cssText='flex:1;width:100%;border:0;background:#fff';
+  ov.appendChild(bar); ov.appendChild(f); document.body.appendChild(ov);
+  try{ var d=f.contentWindow.document; d.open(); d.write(doc); d.close(); }catch(e){}
+  document.getElementById('tf-pr-close').onclick=function(){ try{ov.remove();}catch(e){} };
+  document.getElementById('tf-pr-go').onclick=function(){
+    try{ f.contentWindow.focus(); f.contentWindow.print(); }
+    catch(e){ try{ window.print(); }catch(_){ if(typeof toast==='function')toast('Use your browser’s Print to save as PDF'); } }
+  };
+}
 // Generate a real PDF of the shared guide → download on web, share via the OS sheet on the phone
 // (window.print() doesn't work in the iOS WebView, so this is the reliable cross-platform path).
 function shareGuideDownload(){
   var doc=shareGuideDoc(); if(!doc){ toast(t('mapShareFail')||'Nothing to export'); return; }
+  // Phone (iOS app / iOS Safari / Android): the reliable path is the visible print view → the OS
+  // "Save to Files" gives a real PDF. (html2canvas frequently renders blank in the iOS WebView.)
+  if((typeof _isNative==='function'&&_isNative())||_isMobileBrowser()){ _openPrintable(doc); return; }
+  // Desktop browser → generate a real PDF file directly (verified working).
   toast(t('generatingPdf')||'Generating PDF…');
   _ensureHtml2pdf(function(err){
     if(err || typeof html2pdf==='undefined'){
@@ -4378,53 +4414,51 @@ function shareGuideDownload(){
     var sm=doc.match(/<style>[\s\S]*?<\/style>/i);
     var body=doc.replace(/^[\s\S]*<body[^>]*>/i,'').replace(/<\/body>[\s\S]*$/i,'');
     holder.innerHTML=(sm?sm[0]:'')+body;
+    // Let html2canvas re-fetch images cross-origin so they aren't blank in the capture.
+    [].slice.call(holder.querySelectorAll('img')).forEach(function(im){ try{ im.crossOrigin='anonymous'; }catch(e){} });
     document.body.appendChild(holder);
-    // MUST pass the full content height to html2canvas — for an off-screen container it otherwise
-    // captures height 0, producing a single (blank-ish) page. scale 1.5 keeps the canvas under the
-    // iOS Safari ~16MP limit so large guides don't fail.
-    var _hh=holder.scrollHeight||holder.offsetHeight||1123;
-    var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,scale:1.5,backgroundColor:'#ffffff',height:_hh,windowHeight:_hh}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
-    html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
-      try{ holder.remove(); }catch(e){}
-      var file=new File([blob], name+'-trafolio.pdf', {type:'application/pdf'});
-      // Native app OR any mobile browser (iOS Safari etc.): use the OS share sheet so the user can
-      // "Save to Files" / Print — a blob <a download> doesn't reliably land in Files on iOS. Desktop: download.
-      var _useShare=((typeof _isNative==='function'&&_isNative())||_isMobileBrowser());
-      if(_useShare && navigator.canShare && navigator.canShare({files:[file]})){
-        navigator.share({files:[file], title:(tr&&tr.dest)||'Trafolio'}).catch(function(){});
-      } else {
-        var url=URL.createObjectURL(blob), a=document.createElement('a');
-        a.href=url; a.download=name+'-trafolio.pdf'; document.body.appendChild(a); a.click();
-        setTimeout(function(){ try{a.remove();}catch(e){} URL.revokeObjectURL(url); },1500);
-      }
-    }).catch(function(e){ try{holder.remove();}catch(_){} console.warn('pdf gen:',e); toast(t('mapShareFail')||'Couldn’t generate PDF'); });
+    function _gen(){
+      // Measure AFTER images have loaded — otherwise scrollHeight excludes their height and the
+      // capture is a near-blank, single short page (this was the "empty file" bug).
+      var _hh=holder.scrollHeight||holder.offsetHeight||1123;
+      var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,allowTaint:false,scale:1.5,backgroundColor:'#ffffff',height:_hh,windowHeight:_hh}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
+      html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
+        try{ holder.remove(); }catch(e){}
+        if(!blob || blob.size<800){ toast(t('mapShareFail')||'Couldn’t generate PDF'); return; } // guard against a blank export
+        var file=new File([blob], name+'-trafolio.pdf', {type:'application/pdf'});
+        var _useShare=((typeof _isNative==='function'&&_isNative())||_isMobileBrowser());
+        if(_useShare && navigator.canShare && navigator.canShare({files:[file]})){
+          navigator.share({files:[file], title:(tr&&tr.dest)||'Trafolio'}).catch(function(){
+            // share dismissed/failed → still give a desktop-style download as a fallback
+            try{ var u2=URL.createObjectURL(blob),a2=document.createElement('a'); a2.href=u2; a2.download=name+'-trafolio.pdf'; document.body.appendChild(a2); a2.click(); setTimeout(function(){a2.remove();URL.revokeObjectURL(u2);},1500);}catch(e){}
+          });
+        } else {
+          var url=URL.createObjectURL(blob), a=document.createElement('a');
+          a.href=url; a.download=name+'-trafolio.pdf'; document.body.appendChild(a); a.click();
+          setTimeout(function(){ try{a.remove();}catch(e){} URL.revokeObjectURL(url); },1500);
+        }
+      }).catch(function(e){ try{holder.remove();}catch(_){} console.warn('pdf gen:',e); toast(t('mapShareFail')||'Couldn’t generate PDF'); });
+    }
+    // Wait for every image to finish (or fail) loading before generating, with a safety timeout.
+    var imgs=[].slice.call(holder.querySelectorAll('img')), pending=imgs.length, started=false;
+    function fire(){ if(started)return; started=true; _gen(); }
+    if(!pending){ setTimeout(fire,150); }
+    else {
+      imgs.forEach(function(im){
+        if(im.complete && im.naturalWidth>0){ if(--pending<=0)fire(); }
+        else { im.addEventListener('load',function(){ if(--pending<=0)fire(); }); im.addEventListener('error',function(){ if(--pending<=0)fire(); }); }
+      });
+      setTimeout(fire, 6000); // never hang if an image stalls
+    }
   });
 }
 function shareGuidePrint(){
   var doc=shareGuideDoc(); if(!doc){toast(t('mapShareFail')||'Nothing to print');return;}
-  // Native app OR a mobile browser (iOS Safari etc.): window.print() in an iframe is unreliable
-  // there and only renders ONE page, so produce a real multi-page PDF via the share sheet instead.
-  if((typeof _isNative==='function' && _isNative()) || _isMobileBrowser()){ return shareGuideDownload(); }
-  _printGuideIframe(doc);
+  // Visible printable view → OS Print/Save dialog. Reliable on iOS app, iOS Safari and desktop
+  // (the old off-screen iframe printed a blank sheet on iOS).
+  _openPrintable(doc);
 }
-function _printGuideIframe(doc){
-  // Hidden-iframe print for desktop browsers (triggers Save-as-PDF in the print dialog).
-  var old=document.getElementById('tf-print-frame'); if(old)old.remove();
-  var f=document.createElement('iframe'); f.id='tf-print-frame';
-  // Give the iframe a REAL page width + tall height (off-screen) so the print engine lays the whole
-  // document out and paginates it — a 0×0 iframe printed only the first page in some browsers.
-  f.style.cssText='position:fixed;left:-99999px;top:0;width:794px;height:1123px;border:0;background:#fff';
-  document.body.appendChild(f);
-  var d=f.contentWindow.document; d.open(); d.write(doc); d.close();
-  var imgs=(doc.match(/<img src="([^"]+)"/g)||[]).map(function(m){return (m.match(/"([^"]+)"/)||[])[1];}).filter(Boolean);
-  var pending=imgs.length, printed=false;
-  function go(){ if(printed)return; printed=true;
-    try{ var h=(d.body?d.body.scrollHeight:0); if(h>0)f.style.height=Math.max(1123,h)+'px'; }catch(e){} // size to full content for pagination
-    try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast(t('mapShareFail')||'Print unavailable'); }
-  }
-  if(!pending){ setTimeout(go,400); }
-  else { imgs.forEach(function(u){var im=new Image();im.onload=im.onerror=function(){if(--pending<=0)setTimeout(go,300);};im.src=u;}); setTimeout(go,2600); }
-}
+function _printGuideIframe(doc){ _openPrintable(doc); } // delegate to the reliable visible-print view
 function shareCopyLink(){
   var tr=shareTripData(); var slug=tr?String(tr.dest||'').toLowerCase().replace(/\s+/g,'-'):'';
   var uname=(tr&&tr.author&&tr.author.username)?tr.author.username:(userData.username||'me');
@@ -4473,6 +4507,51 @@ function renderSharePage(){
     } else { missedBlock.style.display='none';missedBlock.innerHTML=''; }
   }
   renderShPlaces(t,'all');renderShPhotos(t);
+  // "Save to favourites" — only on SOMEONE ELSE'S shared trip (a real shared link), never on your
+  // own trip or your own Preview. Recipients tap it to bookmark the trip.
+  var saveBtn=document.getElementById('share-save-btn');
+  if(saveBtn){
+    var d=_shareDemo, isOwn=d&&d.author&&d.author.id===userData.id;
+    if(d && !isOwn){ saveBtn.style.display=''; updateShareSaveBtn(); }
+    else saveBtn.style.display='none';
+  }
+}
+function _shareSaveTarget(){ return _shareDemo||(typeof currentTrip!=='undefined'?currentTrip:null); }
+function updateShareSaveBtn(){
+  var b=document.getElementById('share-save-btn'); if(!b)return;
+  var d=_shareSaveTarget(); if(!d)return;
+  var uid=(d.author&&d.author.id)||((d===currentTrip&&userData.id)?userData.id:0), city=d.dest||'';
+  var on=(typeof isTripSaved==='function')&&isTripSaved(uid,city);
+  b.innerHTML=on?('🔖 '+(tt('savedBtn')||'Saved')):('🔖 '+(tt('saveFav')||'Save to favourites'));
+}
+// Save a SHARED trip to the viewer's favourites. Guests are asked to sign in first, then the
+// save resumes automatically; signed-in travellers save immediately.
+function saveSharedTrip(){
+  var d=_shareSaveTarget(); if(!d){ if(typeof toast==='function')toast('Nothing to save'); return; }
+  var uid=(d.author&&d.author.id)||((d===currentTrip&&userData.id)?userData.id:0), city=d.dest||'', cover=d.cover||'', who=(d.author&&d.author.name)||userData.name||'';
+  if(!userData.id){
+    try{ localStorage.setItem('trafolio_pending_save', JSON.stringify({uid:uid,city:city,cover:cover,userName:who})); }catch(e){}
+    if(typeof toast==='function')toast('Sign in to save this trip to your favourites');
+    if(typeof showAuth==='function')showAuth('signup'); else if(typeof showScreen==='function')showScreen('s-auth');
+    return;
+  }
+  _doSaveShared(uid,city,cover,who);
+  updateShareSaveBtn();
+}
+function _doSaveShared(uid,city,cover,userName){
+  if(typeof savedTrips==='undefined')return;
+  var k=savedKey(uid,city), i=savedTrips.findIndex(function(s){return s.key===k;});
+  if(i>=0){ savedTrips.splice(i,1); if(typeof toast==='function')toast(tt('unsavedToast')||'Removed from favourites'); }
+  else { savedTrips.unshift({key:k,uid:uid,userName:userName||'',userHandle:'',city:city,cover:cover||(USER_CITY_IMG[city]||FALLBACK_COVER)}); if(typeof toast==='function')toast('🔖 '+(tt('savedToast')||'Saved to favourites')); }
+  if(typeof persistSoon==='function')persistSoon();
+  var sv=document.getElementById('sheet-saved'); if(sv&&sv.classList.contains('on')&&typeof renderSaved==='function')renderSaved();
+}
+// After a guest signs in, finish the save they started on the shared page.
+function _resumePendingSave(){
+  var raw=null; try{ raw=localStorage.getItem('trafolio_pending_save'); }catch(e){}
+  if(!raw||!userData.id)return;
+  try{ localStorage.removeItem('trafolio_pending_save'); }catch(e){}
+  try{ var p=JSON.parse(raw); if(p&&p.city){ _doSaveShared(p.uid,p.city,p.cover,p.userName); } }catch(e){}
 }
 
 // ─── PROFILE ──────────────────────────────────────────────────────
@@ -4517,7 +4596,10 @@ function renderProfileStories(){
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
       +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+cityFlag(s.city)+' '+escHtml((s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div>'
       +'<span class="story-vis-badge">'+vm.icon+' '+escHtml(vm.label)+'</span>'
-      +'<button type="button" class="pstory-like" onclick="event.stopPropagation();toggleStoryLike(\'u\'+'+i+')" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</button></div>'
+      +'<span style="margin-left:auto;display:flex;gap:12px;align-items:center">'
+      +'<button type="button" class="pstory-like" onclick="event.stopPropagation();toggleStoryLike(\'u\'+'+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</button>'
+      +'<button type="button" onclick="event.stopPropagation();deleteUserStory('+i+')" title="'+escHtml(tt('deleteStory')||'Delete story')+'" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;color:var(--ink-4);line-height:1">🗑️</button>'
+      +'</span></div>'
       +'<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:4px">'+escHtml(s.title||'')+'</div>'
       +'<div style="font-size:12.5px;color:var(--ink-3);line-height:1.5;font-style:italic">'+escHtml((s.body||'').substring(0,110))+'…</div>'
       +'</div>'+sthumb
@@ -4526,6 +4608,22 @@ function renderProfileStories(){
   wrap.querySelectorAll('.profile-story-card').forEach(function(el){
     el.addEventListener('click',function(){var idx=parseInt(this.dataset.sidx);var st=userStories[idx];if(st)openCityStory('u'+idx,st.city);});
   });
+}
+// Delete one of YOUR OWN stories (from local + cloud).
+function deleteUserStory(i){
+  if(typeof userStories==='undefined'||!userStories[i])return;
+  if(!confirm(tt('deleteStoryConfirm')||'Delete this story? This cannot be undone.'))return;
+  var st=userStories[i];
+  userStories.splice(i,1);
+  if(typeof dbDeleteStory==='function')dbDeleteStory(st);
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof renderProfileStories==='function')renderProfileStories();
+  if(typeof refreshStoriesList==='function')refreshStoriesList(); // update Explore/Feed too
+  if(typeof toast==='function')toast(tt('storyDeleted')||'Story deleted');
+}
+function dbDeleteStory(story){
+  if(!sb||!userData.id||!story||!story.dbId)return;
+  try{ sb.from('stories').delete().eq('id',story.dbId).then(function(r){ if(r&&r.error)console.warn('dbDeleteStory:',r.error.message); }); }catch(e){}
 }
 // Companion ("who's coming") icon + label for a trip card.
 function tripWithMeta(w){
@@ -5875,7 +5973,23 @@ function showPaymentSuccess(results){
 function setTripPrivacy(level){if(!currentTrip)return;currentTrip.privacy=level;['public','followers','private'].forEach(function(p){var opt=document.getElementById('tpriv-'+p);var rad=document.getElementById('tprad-'+p);if(opt)opt.classList.toggle('on',p===level);if(rad)rad.classList.toggle('on',p===level);});var msgs={public:t('tripPublic'),followers:t('tripFollowersOnly'),private:t('tripPrivate')};toast(msgs[level]);renderShareTab();if(typeof persistSoon==='function')persistSoon();if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{privacy:level});}
 
 // ─── SOCIAL ───────────────────────────────────────────────────────
-function userPhoto(id){var u=allUsers.find(function(x){return x.id===id;});return u&&u.photo?u.photo:'';}
+// Cache of real users' avatar URLs by id (populated from profiles as we load them), so story/feed
+// avatars resolve for real accounts — not just the demo `allUsers`.
+var _profilePhotos={};
+function cacheProfilePhoto(id,url){ if(id!=null&&id!==''&&url)_profilePhotos[id]=url; }
+function userPhoto(id){
+  if(id==null||id==='') return '';
+  if(typeof userData!=='undefined' && id===userData.id && userData.avatar) return userData.avatar; // your own
+  var u=allUsers.find(function(x){return x.id===id;}); if(u&&u.photo) return u.photo;             // demo users
+  if(_profilePhotos[id]) return _profilePhotos[id];                                                // cached real users
+  // last resort: scan the caches we keep of real users
+  var pools=[];
+  if(typeof _searchedUsers!=='undefined'&&_searchedUsers)pools=pools.concat(_searchedUsers);
+  if(typeof userData!=='undefined'&&userData.following)pools=pools.concat(userData.following);
+  if(typeof _viewedUserObj!=='undefined'&&_viewedUserObj)pools.push(_viewedUserObj);
+  var r=pools.find(function(x){return x&&x.id===id;}); if(r&&r.photo){ _profilePhotos[id]=r.photo; return r.photo; }
+  return '';
+}
 function avatarBg(u){return u&&u.photo?('background:#ccc center/cover no-repeat url('+u.photo+')'):('background:'+(u?u.color:'#ccc'));}
 function makeAvatarHtml(u,size){size=size||42;var s='width:'+size+'px;height:'+size+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+(size/2.5|0)+'px;font-weight:600;color:white;flex-shrink:0;cursor:pointer;'+avatarBg(u)+';transition:transform .15s';return'<div style="'+s+'" onclick="openUserProfile('+u.id+')" title="@'+u.handle+'">'+(u.photo?'':u.initial)+'</div>';}
 function makeFollowerRow(u,relation){
@@ -6922,11 +7036,18 @@ function renderViewedProfile(o){
   }
   if(stories.length){
     html+='<div style="border-top:8px solid var(--paper-2);padding:16px 20px 12px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('tabStories')+'</div>';
-    html+=stories.map(function(s,si){ return '<div onclick="openCityStory(\''+s.id+'\',\''+escHtml(String(s.city||'').replace(/\x27/g,""))+'\')" style="padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+    html+=stories.map(function(s,si){
+      var ph=(typeof storyPhotoFor==='function')?storyPhotoFor(s):(s.photo||'');
+      return '<div onclick="openCityStory(\''+s.id+'\',\''+escHtml(String(s.city||'').replace(/\x27/g,""))+'\')" style="padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer;display:flex;gap:12px;align-items:flex-start">'
+      +'<div style="flex:1;min-width:0">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
       +'<div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink);flex:1;min-width:0">'+escHtml(s.title||'')+'</div>'
       +'<button type="button" onclick="event.stopPropagation();toggleStoryLike(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0;flex-shrink:0;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</button></div>'
-      +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(String(s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div></div>'; }).join('');
+      +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(String(s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div>'
+      +(s.body?'<div style="font-size:12.5px;color:var(--ink-3);line-height:1.5;font-style:italic;margin-top:4px">'+escHtml(String(s.body).substring(0,90))+'…</div>':'')
+      +'</div>'
+      +(ph?'<div style="width:84px;height:84px;border-radius:10px;overflow:hidden;flex-shrink:0;background:'+((typeof cityGradient==='function')?cityGradient(s.city):'var(--paper-3)')+'"><img src="'+escHtml(ph)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="imgFallback&&imgFallback(this,\''+(s.city||'').replace(/\x27/g,"")+'\')"></div>':'')
+      +'</div>'; }).join('');
     html+='</div>';
   }
   body.innerHTML=html;
@@ -7298,14 +7419,24 @@ function openNotifications(){
     var dot=document.getElementById('top-notif-dot'); if(dot)dot.style.display='none';
   });
 }
+// Open the profile of whoever a notification is about. These are REAL users (follower/liker),
+// so go straight to openRealUserProfile (which fetches the profile from the cloud by id) —
+// openUserProfile alone only resolves demo users + people you already follow.
+function openNotifUser(i){
+  var n=_notifs[i]; if(!n||!n.userId)return;
+  if(typeof closeModal==='function')closeModal();
+  var u={id:n.userId, name:n.name||'Traveller', handle:n.handle||'', photo:n.photo||'', initial:((n.name||'T')[0]||'T').toUpperCase()};
+  if(typeof openRealUserProfile==='function'){ openRealUserProfile(u); }
+  else if(typeof openUserProfile==='function'){ openUserProfile(n.userId); }
+}
 function renderNotifications(){
   var box=document.getElementById('notif-list'); if(!box)return;
   if(!_notifs.length){ box.innerHTML='<div style="padding:34px 12px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔔</div><div style="font-size:13px">'+(t('noNotifications')||'No notifications yet')+'</div></div>'; return; }
-  box.innerHTML=_notifs.map(function(n){
+  box.innerHTML=_notifs.map(function(n,i){
     var verb=(n.type==='like')?((t('likedYourStory')||'liked your story')+(n.title?(' “'+escHtml(n.title)+'”'):'')):(t('startedFollowing')||'started following you');
     var icon=(n.type==='like')?'❤️':'👋';
     var av=n.photo?('background:#ccc center/cover no-repeat url('+n.photo+')'):'background:linear-gradient(135deg,var(--ember),var(--gold))';
-    return '<div onclick="closeModal();openUserProfile(\''+n.userId+'\')" style="display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+    return '<div onclick="openNotifUser('+i+')" style="display:flex;align-items:center;gap:11px;padding:11px 2px;border-bottom:1px solid var(--paper-3);cursor:pointer">'
       +'<div style="width:40px;height:40px;border-radius:50%;'+av+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;flex-shrink:0;font-size:15px">'+(n.photo?'':escHtml((n.name||'T')[0].toUpperCase()))+'</div>'
       +'<div style="flex:1;min-width:0;font-size:13px;color:var(--ink-2);line-height:1.4"><b style="color:var(--ink)">'+escHtml(n.name||'Traveller')+'</b> '+verb+'</div>'
       +'<div style="font-size:16px;flex-shrink:0">'+icon+'</div></div>';
@@ -7748,6 +7879,10 @@ const S={
     tabBudget:'Budget',
     tabPhotos:'Photos',
     tabItinerary:'Itinerary',
+    saveFav:'Save to favourites',
+    feedEmptyTitle:'Your feed is quiet',
+    feedEmptySub:'Follow travellers and their latest trips, stories and recs show up here.',
+    discoverTravellers:'Discover travellers',
     itinGpsNote:"This itinerary is built from your photos' GPS & time stamps. Import photos that still have their location data (the originals from your camera roll) — photos sent through chat apps usually have it stripped, and then we can't tell where or when they were taken.",
     itinBuildPill:'Show my itinerary from photos',
     itinNoPhotos:'No photos in this trip yet. Import some in the Photos tab first.',
@@ -7763,6 +7898,7 @@ const S={
     tabBook:'Memory Book',
     all:'All',
     eat:'Eat',
+    coffee:'Coffee',
     stay:'Stay',
     see:'See',
     doAct:'Do',
@@ -16504,14 +16640,19 @@ function renderFeedMain() {
 
   var html = discoverBanner;
   if(followed.length){
-    html += sectionHeader('Trafollowers');
     html += followed.map(function(p){ return feedCardHtml(p, p._idx); }).join('');
-  }
-  if(others.length){
-    html += sectionHeader('Other Travellers');
-    html += others.map(function(p){ return feedCardHtml(p, p._idx); }).join('');
+  } else {
+    // Following feed shows ONLY people you follow. With nobody followed it's empty (the discover
+    // banner above invites them to find travellers) — we never surface strangers' stories here.
+    html += '<div style="padding:46px 22px;text-align:center;color:var(--ink-4)">'
+      + '<div style="font-size:30px;margin-bottom:10px">🧭</div>'
+      + '<div style="font-family:Cormorant Garamond,serif;font-size:20px;color:var(--ink-2);margin-bottom:6px">'+(tt('feedEmptyTitle')||'Your feed is quiet')+'</div>'
+      + '<div style="font-size:13px;line-height:1.5;max-width:300px;margin:0 auto 16px">'+(tt('feedEmptySub')||'Follow travellers and their latest trips, stories and recs show up here.')+'</div>'
+      + '<button class="btn btn-ember btn-sm" onclick="showScreen(\'s-explore\');setActiveNav&&setActiveNav(\'bnav-explore\')">'+(tt('discoverTravellers')||'Discover travellers')+'</button>'
+      + '</div>';
   }
   body.innerHTML = html;
+  void others; // (kept for structure; not rendered in the Following tab)
 
   // Wire click events via data attrs
   body.querySelectorAll('.feed-card').forEach(function(el) {
@@ -17442,12 +17583,18 @@ function addStoryPhoto(input){
   var file=input.files[0];if(!file)return;
   var reader=new FileReader();
   reader.onload=function(e){
-    _storyPhoto=e.target.result;
-    var prev=document.getElementById('story-photo-preview');
-    var img=document.getElementById('story-photo-img');
-    if(img)img.src=_storyPhoto;
-    if(prev)prev.style.display='block';
-    var lbl=document.getElementById('story-photo-label');if(lbl)lbl.textContent='Change photo';
+    function show(url){
+      _storyPhoto=url;
+      var prev=document.getElementById('story-photo-preview');
+      var img=document.getElementById('story-photo-img');
+      if(img)img.src=_storyPhoto;
+      if(prev)prev.style.display='block';
+      var lbl=document.getElementById('story-photo-label');if(lbl)lbl.textContent='Change photo';
+    }
+    // Compress so the photo persists (raw data-URLs are multi-MB and get dropped from storage),
+    // and so it uploads quickly. Square-ish thumbnail is all the story card needs.
+    if(typeof bbCompressImage==='function'){ bbCompressImage(e.target.result,{maxEdge:1000,quality:.85},function(u){ show(u||e.target.result); }); }
+    else show(e.target.result);
   };
   reader.readAsDataURL(file);
 }
@@ -17457,7 +17604,7 @@ function removeStoryPhoto(){
   var lbl=document.getElementById('story-photo-label');if(lbl)lbl.textContent='Add a photo';
 }
 
-function publishStory() {
+async function publishStory() {
   var city  = ((document.getElementById('story-city-inp')||{}).value||'').trim();
   var title = ((document.getElementById('story-title-inp')||{}).value||'').trim();
   var body2 = ((document.getElementById('story-body-inp')||{}).value||'').trim();
@@ -17465,9 +17612,13 @@ function publishStory() {
   if (!city)  { toast(t('storyNeedCity')); return; }
   if (!title) { toast(t('storyNeedTitle')); return; }
   if (!body2) { toast(t('storyNeedBody')); return; }
+  // Upload the attached photo to Storage first so it becomes a durable URL — then it persists and
+  // shows as the square thumbnail on the story card (a raw data-URL would be dropped on reload).
+  var _photo=_storyPhoto||null;
+  if(_photo && typeof sbUploadImage==='function'){ try{ var _u=await sbUploadImage(_photo,'story'); if(_u)_photo=_u; }catch(e){} }
   userStories.push({
     city:city, flag:(_storyChosenFlag||cityFlag(city)), title:title, body:body2, date:'Just now', likes:0,
-    visibility:(_storyVis||'public'), photo:_storyPhoto||null,
+    visibility:(_storyVis||'public'), photo:_photo,
     author:{id:userData.id||0, name:userData.name, initial:userData.name[0], color:'linear-gradient(135deg,var(--ember),var(--gold))'}
   });
   if(typeof dbSaveStory==='function')dbSaveStory(userStories[userStories.length-1]);
@@ -18273,6 +18424,19 @@ async function dbLoadFeedStories(){
         author:{id:s.user_id, name:nm, initial:(nm||'?')[0], color:'linear-gradient(135deg,var(--ember),var(--gold))'}};
     });
     if(typeof refreshStoriesList==='function') refreshStoriesList();
+    // Fetch the authors' avatars so their profile photo shows on the story card (the stories
+    // table doesn't store avatars — they live on the profiles row).
+    try{
+      var ids=[]; feedStories.forEach(function(s){ var i=s.author&&s.author.id; if(i&&ids.indexOf(i)<0&&!_profilePhotos[i])ids.push(i); });
+      if(ids.length){
+        var pr=await sb.from('profiles').select('id,avatar').in('id',ids);
+        if(pr&&pr.data){
+          pr.data.forEach(function(p){ if(p.avatar)cacheProfilePhoto(p.id,p.avatar); });
+          feedStories.forEach(function(s){ if(s.author&&_profilePhotos[s.author.id])s.author.photo=_profilePhotos[s.author.id]; });
+          if(typeof refreshStoriesList==='function') refreshStoriesList();
+        }
+      }
+    }catch(e){}
   }catch(e){ console.error('dbLoadFeedStories error:',e); }
 }
 // Blogs from OTHER users for the Explore → Blogs feed. Blogs live in the trips table
@@ -19847,11 +20011,11 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
   <div class="modal-title" data-i18n="editPlace">Edit place</div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
     <div class="cat-pill active" data-cat="eat" onclick="selCatEdit(this)">🍴 <span data-i18n="eat">Eat</span></div>
+    <div class="cat-pill" data-cat="coffee" onclick="selCatEdit(this)">☕ <span data-i18n="coffee">Coffee</span></div>
     <div class="cat-pill" data-cat="stay" onclick="selCatEdit(this)">🛎️ <span data-i18n="stay">Stay</span></div>
     <div class="cat-pill" data-cat="see" onclick="selCatEdit(this)">🏛️ <span data-i18n="see">See</span></div>
     <div class="cat-pill" data-cat="do" onclick="selCatEdit(this)">🎫 <span data-i18n="doAct">Do</span></div>
     <div class="cat-pill" data-cat="fun" onclick="selCatEdit(this)">🎡 <span data-i18n="fun">Fun</span></div>
-    <div class="cat-pill" data-cat="view" onclick="selCatEdit(this)">🌅 <span data-i18n="view">View</span></div>
     <div class="cat-pill" data-cat="shop" onclick="selCatEdit(this)">🛍️ <span data-i18n="shop">Shop</span></div>
   </div>
   <div class="form-field" style="position:relative"><label class="add-form-label" data-i18n="name">Name</label><input class="inp" id="ep-place-name" data-i18n-ph="placeNamePh" placeholder="Place name" autocomplete="off" oninput="onEditPlaceSearch(this.value)"><div id="ep-search-results" style="display:none;position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--paper-3);border-radius:0 0 10px 10px;box-shadow:0 8px 24px rgba(0,28,48,.12);z-index:50;max-height:240px;overflow-y:auto"></div></div>
