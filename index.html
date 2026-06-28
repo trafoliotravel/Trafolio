@@ -419,6 +419,9 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     @media (min-width:700px){ .concierge-grid-responsive { grid-template-columns:1fr 1fr 1fr; gap:12px; } }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exif-js/2.3.0/exif.min.js"></script>
+<!-- Leaflet: free map (no API key) for the photo-built Itinerary route -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>var _googleMapsReady=false;function onGoogleMapsLoaded(){_googleMapsReady=true;}</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC7QKEbQtv6wopLwkqu-QDkBCAO5eVkhHk&libraries=places&callback=onGoogleMapsLoaded" async defer></script>
@@ -1483,6 +1486,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <button class="tab-btn" data-tab="notes" onclick="switchTab(this)" data-i18n="tabNotes">Notes</button>
         <button class="tab-btn" data-tab="blog" onclick="switchTab(this)" data-i18n="tabBlog">Blog</button>
         <button class="tab-btn" data-tab="photos" onclick="switchTab(this)" data-i18n="tabPhotos">Photos</button>
+        <button class="tab-btn" data-tab="itinerary" onclick="switchTab(this)" data-i18n="tabItinerary">Itinerary</button>
         <button class="tab-btn" data-tab="book" onclick="switchTab(this)" data-i18n="tabBook">Memory Book</button>
         <button class="tab-btn" data-tab="share" onclick="switchTab(this)" data-i18n="tabShare">Share</button>
       </div>
@@ -1548,6 +1552,18 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <label style="flex:1;cursor:pointer"><span class="btn btn-ghost btn-full" style="pointer-events:none">+ <span data-i18n="fromLibrary">From library</span></span><input type="file" accept="image/*" multiple style="display:none" onchange="importFromLibrary(this)"></label>
         <button class="btn btn-ghost" style="flex:1" onclick="addPhoto()">+ <span data-i18n="byUrl">By URL</span></button>
       </div>
+    </div>
+
+    <!-- TAB: ITINERARY (auto-built from photo GPS + time) -->
+    <div id="tab-itinerary" class="tab-content" style="display:none">
+      <div style="margin:16px 16px 0;background:var(--ember-lt);border:1px solid var(--ember);border-radius:var(--r-lg);padding:13px 15px;display:flex;gap:11px;align-items:flex-start">
+        <div style="font-size:20px;flex-shrink:0">📍</div>
+        <div style="font-size:12.5px;color:var(--ember-dk);line-height:1.5" data-i18n="itinGpsNote">This itinerary is built from your photos' GPS &amp; time stamps. Import photos that still have their location data (the originals from your camera roll) — photos sent through chat apps usually have it stripped, and then we can't tell where or when they were taken.</div>
+      </div>
+      <div style="padding:14px 16px 4px;text-align:center">
+        <button type="button" id="itin-build-pill" onclick="buildItineraryFromPhotos()" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,var(--ink),#003052);color:#fff;border:none;border-radius:30px;padding:11px 20px;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,28,48,.25)">✨ <span data-i18n="itinBuildPill">Show my itinerary from photos</span></button>
+      </div>
+      <div id="itinerary-body" style="padding:8px 16px 28px"></div>
     </div>
 
     <!-- TAB: NOTES -->
@@ -2663,6 +2679,7 @@ function switchTab(btn){
   document.querySelectorAll('.tab-content').forEach(function(c){c.style.display='none';});
   var target=document.getElementById('tab-'+tab);if(target)target.style.display='';
   if(tab==='plan')renderItin();
+  else if(tab==='itinerary')renderItinerary();
   else if(tab==='budget')renderBudget();
   else if(tab==='weather')loadWeather();
   else if(tab==='pack')renderPack();
@@ -4304,8 +4321,7 @@ function shareGuideDoc(){
     +'.q{font-style:italic;font-size:18px;color:#444;border-left:3px solid #E0633A;padding-left:14px;margin:14px 0}'
     +'h2{font-size:22px;margin:22px 0 6px}h3{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin:24px 0 8px;border-bottom:1px solid #eee;padding-bottom:6px}'
     +'.blog{font-size:15px;line-height:1.7}.pl{padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:14px}ul{margin:0;padding-left:18px}li{font-size:14px;padding:3px 0}'
-    +'.ph{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}.ph img{width:100%;height:100%;aspect-ratio:1/1;object-fit:cover;border-radius:6px;display:block}'
-    +'.ph img:last-child:nth-child(odd){grid-column:1 / -1;aspect-ratio:16/9}'
+    +'.ph{font-size:0;margin-top:6px}.ph img{width:49%;height:230px;object-fit:cover;border-radius:6px;display:inline-block;vertical-align:top;margin:0 2% 8px 0;break-inside:avoid;page-break-inside:avoid}.ph img:nth-child(2n){margin-right:0}'
     +'.foot{margin-top:30px;text-align:center;font-family:Arial,sans-serif;font-size:11px;color:#bbb;letter-spacing:.1em}'
     +'</style></head><body>'
     +'<h1>'+E(tr.flag||'')+' '+E(tr.dest)+'</h1><div class="meta">'+E(tr.dates||'')+' · '+(tr.days||'')+' days'+(owner?' · '+E(owner)+'’s guide':'')+'</div>'
@@ -4321,6 +4337,10 @@ function _ensureHtml2pdf(cb){
   s.onload=function(){ cb(); }; s.onerror=function(){ cb(new Error('pdf-load')); };
   document.head.appendChild(s);
 }
+// A real mobile browser (incl. iOS Safari opening a shared link) — NOT just the Capacitor app.
+// Used to route exports through the OS share sheet, since iOS Safari can't reliably save a blob
+// <a download> to Files and its iframe window.print() only renders one page.
+function _isMobileBrowser(){ try{ return /iphone|ipad|ipod|android/i.test(navigator.userAgent||'') || (/Mac/.test(navigator.platform||'') && (navigator.maxTouchPoints||0) > 1); }catch(e){ return false; } }
 // Generate a real PDF of the shared guide → download on web, share via the OS sheet on the phone
 // (window.print() doesn't work in the iOS WebView, so this is the reliable cross-platform path).
 function shareGuideDownload(){
@@ -4345,7 +4365,10 @@ function shareGuideDownload(){
     html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
       try{ holder.remove(); }catch(e){}
       var file=new File([blob], name+'-trafolio.pdf', {type:'application/pdf'});
-      if(typeof _isNative==='function' && _isNative() && navigator.canShare && navigator.canShare({files:[file]})){
+      // Native app OR any mobile browser (iOS Safari etc.): use the OS share sheet so the user can
+      // "Save to Files" / Print — a blob <a download> doesn't reliably land in Files on iOS. Desktop: download.
+      var _useShare=((typeof _isNative==='function'&&_isNative())||_isMobileBrowser());
+      if(_useShare && navigator.canShare && navigator.canShare({files:[file]})){
         navigator.share({files:[file], title:(tr&&tr.dest)||'Trafolio'}).catch(function(){});
       } else {
         var url=URL.createObjectURL(blob), a=document.createElement('a');
@@ -4357,20 +4380,26 @@ function shareGuideDownload(){
 }
 function shareGuidePrint(){
   var doc=shareGuideDoc(); if(!doc){toast(t('mapShareFail')||'Nothing to print');return;}
-  // The iOS WebView can't open a print dialog, so on the phone "Print" produces a shareable PDF.
-  if(typeof _isNative==='function' && _isNative()){ return shareGuideDownload(); }
+  // Native app OR a mobile browser (iOS Safari etc.): window.print() in an iframe is unreliable
+  // there and only renders ONE page, so produce a real multi-page PDF via the share sheet instead.
+  if((typeof _isNative==='function' && _isNative()) || _isMobileBrowser()){ return shareGuideDownload(); }
   _printGuideIframe(doc);
 }
 function _printGuideIframe(doc){
-  // Hidden-iframe print (works on web/desktop browsers; triggers Save-as-PDF in the print dialog).
+  // Hidden-iframe print for desktop browsers (triggers Save-as-PDF in the print dialog).
   var old=document.getElementById('tf-print-frame'); if(old)old.remove();
   var f=document.createElement('iframe'); f.id='tf-print-frame';
-  f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;opacity:0;pointer-events:none';
+  // Give the iframe a REAL page width + tall height (off-screen) so the print engine lays the whole
+  // document out and paginates it — a 0×0 iframe printed only the first page in some browsers.
+  f.style.cssText='position:fixed;left:-99999px;top:0;width:794px;height:1123px;border:0;background:#fff';
   document.body.appendChild(f);
   var d=f.contentWindow.document; d.open(); d.write(doc); d.close();
   var imgs=(doc.match(/<img src="([^"]+)"/g)||[]).map(function(m){return (m.match(/"([^"]+)"/)||[])[1];}).filter(Boolean);
   var pending=imgs.length, printed=false;
-  function go(){ if(printed)return; printed=true; try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast(t('mapShareFail')||'Print unavailable'); } }
+  function go(){ if(printed)return; printed=true;
+    try{ var h=(d.body?d.body.scrollHeight:0); if(h>0)f.style.height=Math.max(1123,h)+'px'; }catch(e){} // size to full content for pagination
+    try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast(t('mapShareFail')||'Print unavailable'); }
+  }
   if(!pending){ setTimeout(go,400); }
   else { imgs.forEach(function(u){var im=new Image();im.onload=im.onerror=function(){if(--pending<=0)setTimeout(go,300);};im.src=u;}); setTimeout(go,2600); }
 }
@@ -6154,6 +6183,143 @@ async function doItinLocSearch(q){
 }
 document.addEventListener('click',function(e){if(!e.target.closest('#itin-name')&&!e.target.closest('#itin-loc-dropdown')){var dd=document.getElementById('itin-loc-dropdown');if(dd)dd.classList.remove('open');}});
 
+// ─── ITINERARY FROM PHOTOS (auto-built from EXIF gps + time) ──────────
+var _itinGeo={};       // cache: "lat,lng" (3dp) -> {place,region}
+var _itinBuilt=null;   // tripId we last built for, so re-opening the tab doesn't re-geocode
+function _haversineKm(a,b){
+  var R=6371,toR=function(d){return d*Math.PI/180;};
+  var dLat=toR(b.lat-a.lat),dLon=toR(b.lng-a.lng);
+  var s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(toR(a.lat))*Math.cos(toR(b.lat))*Math.sin(dLon/2)*Math.sin(dLon/2);
+  return 2*R*Math.asin(Math.min(1,Math.sqrt(s)));
+}
+function _photosWithGps(){
+  return ((currentTrip&&currentTrip.photos)||[]).filter(function(p){
+    return p&&p.gps&&typeof p.gps.lat==='number'&&typeof p.gps.lng==='number'&&p.dateTime;
+  });
+}
+// Tab opened: show counts + the build pill. We DON'T auto-geocode (it's rate-limited).
+function renderItinerary(){
+  var body=document.getElementById('itinerary-body'); if(!body||!currentTrip)return;
+  if(_itinBuilt===currentTrip.id) return; // already built this session — keep it on screen
+  var all=((currentTrip.photos)||[]).length, withGps=_photosWithGps().length;
+  var msg;
+  if(!all) msg=tt('itinNoPhotos');
+  else if(!withGps) msg=tt('itinNoGps');
+  else msg=withGps+' '+tt('itinReady');
+  body.innerHTML='<div style="padding:26px 14px;text-align:center;color:var(--ink-3);font-size:13.5px;line-height:1.6">'+escHtml(msg)+'</div>';
+}
+async function buildItineraryFromPhotos(){
+  var body=document.getElementById('itinerary-body'); if(!body||!currentTrip)return;
+  var pts=_photosWithGps();
+  if(!pts.length){ _itinBuilt=null; renderItinerary(); return; }
+  var pill=document.getElementById('itin-build-pill'); if(pill){ pill.disabled=true; pill.style.opacity='.6'; }
+
+  // 1) group photos by calendar day, then relabel Day 1..N chronologically
+  pts.sort(function(a,b){return a.dateTime-b.dateTime;});
+  var minDay=new Date(pts[0].dateTime); minDay.setHours(0,0,0,0);
+  function dayNo(d){ var x=new Date(d); x.setHours(0,0,0,0); return Math.round((x-minDay)/86400000)+1; }
+  var byDay={}; pts.forEach(function(p){ var dn=dayNo(p.dateTime); (byDay[dn]=byDay[dn]||[]).push(p); });
+
+  // 2) within each day, cluster nearby photos into "stops" (>1.6 km apart = a new stop)
+  var THRESH=1.6, plan=[];
+  Object.keys(byDay).map(Number).sort(function(a,b){return a-b;}).forEach(function(dn){
+    var list=byDay[dn].slice().sort(function(a,b){return a.dateTime-b.dateTime;}), stops=[];
+    list.forEach(function(p){
+      var last=stops[stops.length-1];
+      if(last && _haversineKm({lat:last.lat,lng:last.lng},p.gps)<THRESH){
+        last.photos.push(p); var n=last.photos.length;
+        last.lat=(last.lat*(n-1)+p.gps.lat)/n; last.lng=(last.lng*(n-1)+p.gps.lng)/n;
+      } else { stops.push({lat:p.gps.lat,lng:p.gps.lng,photos:[p],place:null,region:''}); }
+    });
+    plan.push({day:dn, date:list[0].dateTime, stops:stops});
+  });
+
+  // 3) reverse-geocode each stop centroid (cached + ~1/sec, the free Nominatim limit)
+  var allStops=[]; plan.forEach(function(d){ d.stops.forEach(function(s){ allStops.push(s); }); });
+  body.innerHTML='<div style="padding:26px 14px;text-align:center;color:var(--ink-3);font-size:13px"><div style="font-size:22px;margin-bottom:8px">🗺️</div>'+tt('itinFinding')+' <span id="itin-prog" class="mono"></span></div>';
+  for(var i=0;i<allStops.length;i++){
+    await _itinGeocode(allStops[i]);
+    var pr=document.getElementById('itin-prog'); if(pr)pr.textContent=(i+1)+' / '+allStops.length;
+  }
+
+  renderItineraryPlan(plan);
+  _itinBuilt=currentTrip.id;
+  if(pill){ pill.disabled=false; pill.style.opacity='1'; }
+}
+async function _itinGeocode(stop){
+  var key=stop.lat.toFixed(3)+','+stop.lng.toFixed(3);
+  if(_itinGeo[key]){ stop.place=_itinGeo[key].place; stop.region=_itinGeo[key].region; return; }
+  try{
+    var url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+stop.lat+'&lon='+stop.lng+'&zoom=14&addressdetails=1';
+    var r=await fetch(url,{headers:{'Accept':'application/json'}});
+    if(r.ok){ var nm=_itinPickName(await r.json()); _itinGeo[key]=nm; stop.place=nm.place; stop.region=nm.region; }
+  }catch(e){}
+  await new Promise(function(res){setTimeout(res,1100);});
+}
+function _itinPickName(j){
+  var a=(j&&j.address)||{};
+  var spot=a.tourism||a.attraction||a.leisure||a.beach||a.neighbourhood||a.suburb||a.hamlet||a.village||a.town||a.city_district||a.quarter||a.city||a.municipality||a.county;
+  var region=a.state||a.region||a.island||a.county||a.country;
+  if(!spot) spot=region||(j&&j.name)||tt('itinUnknown');
+  return { place:spot, region:(region&&region!==spot)?region:'' };
+}
+function renderItineraryPlan(plan){
+  var body=document.getElementById('itinerary-body'); if(!body)return;
+  var nDays=plan.length, nStops=0, nPhotos=0;
+  // Number every located stop in travel order so the map pins match the timeline below.
+  var seq=[];
+  plan.forEach(function(d){ d.stops.forEach(function(s){ nStops++; nPhotos+=s.photos.length; if(s.lat!=null){ seq.push(s); s._no=seq.length; } }); });
+
+  var html='<div id="itin-map" style="height:230px;border-radius:14px;overflow:hidden;margin:4px 2px 14px;background:var(--paper-2)"></div>'
+    + '<div style="display:flex;gap:10px;margin:0 2px 18px">'
+    + _itinStat(nDays,tt('days')) + _itinStat(nStops,tt('tabPlaces')) + _itinStat(nPhotos,tt('tabPhotos')) + '</div>';
+  plan.forEach(function(d,di){
+    var dateStr=''; try{ dateStr=new Date(d.date).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}); }catch(e){}
+    html+='<div style="display:flex;gap:13px">'
+      +'<div style="flex:0 0 auto;display:flex;flex-direction:column;align-items:center;width:30px">'
+      +'<div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--ink),#003052);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;font-family:Georgia,serif">'+d.day+'</div>'
+      +(di<plan.length-1?'<div style="flex:1;width:2px;background:var(--paper-3);margin:4px 0"></div>':'')
+      +'</div>'
+      +'<div style="flex:1;min-width:0;padding-bottom:22px">'
+      +'<div style="font-family:\'DM Mono\',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ember);font-weight:700">'+tt('day')+' '+d.day+' · '+escHtml(dateStr)+'</div>';
+    d.stops.forEach(function(s){
+      var badge=s._no?'<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--ember);color:#fff;font-size:10px;font-weight:700;margin-right:6px;vertical-align:1px">'+s._no+'</span>':'';
+      var place=s.place?(escHtml(s.place)+(s.region?' <span style="color:var(--ink-4);font-weight:400">· '+escHtml(s.region)+'</span>':'')):escHtml(tt('itinUnknown'));
+      var tspan=''; try{ var t0=new Date(s.photos[0].dateTime), t1=new Date(s.photos[s.photos.length-1].dateTime);
+        tspan=t0.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})+(s.photos.length>1?(' – '+t1.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'})):''); }catch(e){}
+      html+='<div style="margin-top:11px">'
+        +'<div style="font-family:Georgia,serif;font-size:17px;font-weight:600;color:var(--ink);line-height:1.2">'+badge+place+'</div>'
+        +'<div style="font-size:11.5px;color:var(--ink-4);margin:1px 0 7px">'+escHtml(tspan)+' · '+s.photos.length+' '+escHtml(s.photos.length===1?tt('photo'):tt('tabPhotos'))+'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">'
+        + s.photos.slice(0,12).map(function(p){return '<img loading="lazy" src="'+escHtml(p.url)+'" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:7px;display:block;background:var(--paper-2)">';}).join('')
+        +'</div></div>';
+    });
+    html+='</div></div>';
+  });
+  body.innerHTML=html;
+  setTimeout(function(){ renderItinMap(seq); }, 60);
+}
+var _itinMap=null;
+function renderItinMap(seq){
+  var box=document.getElementById('itin-map');
+  if(!box) return;
+  if(typeof L==='undefined'){ box.style.display='none'; return; }      // Leaflet not loaded (offline) — just skip the map
+  if(!seq||!seq.length){ box.style.display='none'; return; }
+  try{ if(_itinMap){ _itinMap.remove(); _itinMap=null; } }catch(e){}
+  _itinMap=L.map(box,{zoomControl:true,attributionControl:true,scrollWheelZoom:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{maxZoom:19,attribution:'© OpenStreetMap © CARTO'}).addTo(_itinMap);
+  var latlngs=seq.map(function(s){return [s.lat,s.lng];});
+  L.polyline(latlngs,{color:'#E0633A',weight:3,opacity:.85,dashArray:'1 6',lineCap:'round'}).addTo(_itinMap);
+  seq.forEach(function(s){
+    var icon=L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,24],html:'<div style="background:#E0633A;color:#fff;width:26px;height:26px;border-radius:50% 50% 50% 2px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.35);border:2px solid #fff;transform:rotate(45deg)"><span style="transform:rotate(-45deg)">'+s._no+'</span></div>'});
+    L.marker([s.lat,s.lng],{icon:icon}).addTo(_itinMap).bindPopup('<b>'+s._no+'. '+escHtml(s.place||'')+'</b><br>'+s.photos.length+' '+tt('tabPhotos'));
+  });
+  try{ _itinMap.fitBounds(L.latLngBounds(latlngs).pad(0.25)); }catch(e){}
+  if(seq.length===1) _itinMap.setView(latlngs[0],12);
+  setTimeout(function(){ try{_itinMap.invalidateSize();}catch(e){} }, 120);
+}
+function _itinStat(n,l){ return '<div style="flex:1;text-align:center;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:12px;padding:10px 4px"><div style="font-family:Georgia,serif;font-size:21px;font-weight:600">'+n+'</div><div style="font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em">'+escHtml(l)+'</div></div>'; }
+
 // ─── PHOTO IMPORT / EXIF ──────────────────────────────────────────
 var _pendingNoExif=[];
 // Full-screen "working" overlay shown while photos are processed (import can take a while).
@@ -7526,6 +7692,14 @@ const S={
     tabPlan:'Plan',
     tabBudget:'Budget',
     tabPhotos:'Photos',
+    tabItinerary:'Itinerary',
+    itinGpsNote:"This itinerary is built from your photos' GPS & time stamps. Import photos that still have their location data (the originals from your camera roll) — photos sent through chat apps usually have it stripped, and then we can't tell where or when they were taken.",
+    itinBuildPill:'Show my itinerary from photos',
+    itinNoPhotos:'No photos in this trip yet. Import some in the Photos tab first.',
+    itinNoGps:"None of your photos have location data, so I can't map an itinerary. Import the originals from your camera roll (with location kept on).",
+    itinReady:'of your photos have location data. Tap the button above to build your day-by-day itinerary.',
+    itinFinding:'Finding place names…',
+    itinUnknown:'Unknown spot',
     tabNotes:'Notes',
     tabWeather:'Weather',
     tabPack:'Pack',
@@ -17867,7 +18041,8 @@ async function dbLoadUserTrips(){
           return { id:p.id, dbId:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, lat:p.lat, lng:p.lng, photo:p.photo||null, placeId:p.place_id||null, city:p.city||'' };
         });
         var tripPhotos = allPhotos.filter(function(p){ return p.trip_id === t.id; }).map(function(p){
-          return { url:p.url, caption:p.caption||'', day:p.day, dbId:p.id, wide:false, star:!!p.star };
+          return { url:p.url, caption:p.caption||'', day:p.day, dbId:p.id, wide:false, star:!!p.star,
+                   gps:(typeof p.lat==='number'?{lat:p.lat,lng:p.lng}:undefined), dateTime:(p.taken_at?new Date(p.taken_at):undefined) };
         });
         return {
           id: t.id, dbId: t.id, dest: t.dest, country: t.country, flag: t.flag||'🌍',
@@ -17913,7 +18088,7 @@ async function dbLoadUserTrips(){
       try{
         sb.from('photos').select('id,trip_id,url,caption,day,star').eq('user_id', userData.id).like('url','data:%').then(function(b){
           if(!b||!b.data||!b.data.length)return; var changed=false;
-          b.data.forEach(function(p){ var tr=(trips||[]).find(function(t){return t.dbId===p.trip_id||t.id===p.trip_id;}); if(tr){ tr.photos=tr.photos||[]; if(!tr.photos.some(function(x){return x.dbId===p.id;})){ tr.photos.push({url:p.url,caption:p.caption||'',day:p.day,dbId:p.id,wide:false}); changed=true; } } });
+          b.data.forEach(function(p){ var tr=(trips||[]).find(function(t){return t.dbId===p.trip_id||t.id===p.trip_id;}); if(tr){ tr.photos=tr.photos||[]; if(!tr.photos.some(function(x){return x.dbId===p.id;})){ tr.photos.push({url:p.url,caption:p.caption||'',day:p.day,dbId:p.id,wide:false,gps:(typeof p.lat==='number'?{lat:p.lat,lng:p.lng}:undefined),dateTime:(p.taken_at?new Date(p.taken_at):undefined)}); changed=true; } } });
           if(changed){ try{ if(currentTrip&&typeof renderPhotosTab==='function')renderPhotosTab(); if(typeof renderProfile==='function')renderProfile(); }catch(e){} }
         }).catch(function(){});
       }catch(e){}
@@ -18200,8 +18375,16 @@ async function dbSavePhoto(photoObj, tripId){
   if(!realTripId){ console.warn('dbSavePhoto: trip not in cloud yet — kept locally (durable url), will sync later'); return; }
   if(photoObj.dbId) return; // already saved
   try{
-    var row={ trip_id: realTripId, user_id: userData.id, url: photoObj.url, caption: photoObj.caption||'', day: photoObj.day||null };
+    var base={ trip_id: realTripId, user_id: userData.id, url: photoObj.url, caption: photoObj.caption||'', day: photoObj.day||null };
+    // Also persist EXIF location/time so the Itinerary tab survives a reload. These columns are
+    // optional — if they don't exist in the DB yet, we transparently retry without them.
+    var row=Object.assign({}, base);
+    if(photoObj.gps&&typeof photoObj.gps.lat==='number'){ row.lat=photoObj.gps.lat; row.lng=photoObj.gps.lng; }
+    if(photoObj.dateTime){ try{ row.taken_at=new Date(photoObj.dateTime).toISOString(); }catch(e){} }
     var res=await sb.from('photos').insert(row).select();
+    if(res.error && /column|schema|taken_at|\blat\b|\blng\b/i.test(res.error.message||'')){
+      res=await sb.from('photos').insert(base).select(); // columns not added yet — save the basics
+    }
     if(res.error){console.error('dbSavePhoto error:',res.error);}
     else if(res.data&&res.data[0]){photoObj.dbId=res.data[0].id;console.log('Photo saved to DB');}
   }catch(e){console.error('dbSavePhoto error:',e);}
