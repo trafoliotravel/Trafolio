@@ -1303,7 +1303,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     </div>
     <div class="lp-footer-copy" data-i18n="footerCopyright">© 2026 Trafolio. All rights reserved.</div>
     <div class="lp-footer-social">
-      <a onclick="return false" aria-label="Instagram"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
+      <a href="https://instagram.com/trafolio.travel" target="_blank" rel="noopener" aria-label="Instagram @trafolio.travel"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg></a>
       <a onclick="return false" aria-label="X"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.5 8.6L23 22h-6.8l-5.3-7-6 7H2l8-9.2L1.5 2h6.9l4.8 6.4L18.9 2zm-2.4 18h1.9L7.6 4H5.6l10.9 16z"/></svg></a>
       <a onclick="return false" aria-label="TikTok"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3c.3 2 1.5 3.6 3.5 4v2.8c-1.3 0-2.5-.4-3.5-1.1v5.9c0 3.3-2.6 5.9-5.9 5.9S4.2 17.9 4.2 14.6c0-3.1 2.4-5.7 5.5-5.9v2.9c-1.5.2-2.6 1.5-2.6 3 0 1.7 1.3 3 3 3s3-1.3 3-3V3H16z"/></svg></a>
     </div>
@@ -4387,9 +4387,34 @@ function _openPrintable(doc){
   try{ var d=f.contentWindow.document; d.open(); d.write(doc); d.close(); }catch(e){}
   document.getElementById('tf-pr-close').onclick=function(){ try{ov.remove();}catch(e){} };
   document.getElementById('tf-pr-go').onclick=function(){
+    var native=(typeof _isNative==='function'&&_isNative());
+    // iOS/Android WebView does NOT support window.print(), so on the phone we render the (now
+    // VISIBLE, fully-loaded) page to a PDF and hand it to the OS share sheet → "Save to Files".
+    if(native || typeof window.print!=='function'){ _printablePdfShare(f); return; }
     try{ f.contentWindow.focus(); f.contentWindow.print(); }
-    catch(e){ try{ window.print(); }catch(_){ if(typeof toast==='function')toast('Use your browser’s Print to save as PDF'); } }
+    catch(e){ _printablePdfShare(f); }
   };
+}
+// Turn the VISIBLE printable iframe into a real PDF and share/download it (the reliable phone path).
+function _printablePdfShare(frame){
+  if(typeof _ensureHtml2pdf!=='function'){ if(typeof toast==='function')toast('Print unavailable'); return; }
+  if(typeof toast==='function')toast(t('generatingPdf')||'Preparing PDF…');
+  _ensureHtml2pdf(function(err){
+    if(err || typeof html2pdf==='undefined'){ if(typeof toast==='function')toast('Need internet to make the PDF'); return; }
+    var bodyEl; try{ bodyEl=frame.contentWindow.document.body; }catch(e){}
+    if(!bodyEl){ if(typeof toast==='function')toast('Couldn’t read the page'); return; }
+    var h=bodyEl.scrollHeight||bodyEl.offsetHeight||1123;
+    var opt={margin:6,image:{type:'jpeg',quality:.92},html2canvas:{useCORS:true,allowTaint:false,scale:2,backgroundColor:'#ffffff',height:h,windowHeight:h},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
+    html2pdf().set(opt).from(bodyEl).outputPdf('blob').then(function(blob){
+      if(!blob || blob.size<800){ if(typeof toast==='function')toast('Couldn’t make the PDF'); return; }
+      var file=new File([blob],'trafolio.pdf',{type:'application/pdf'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'Trafolio'}).catch(function(){});
+      } else {
+        var u=URL.createObjectURL(blob), a=document.createElement('a'); a.href=u; a.download='trafolio.pdf'; document.body.appendChild(a); a.click(); setTimeout(function(){ try{a.remove();}catch(e){} URL.revokeObjectURL(u); },1500);
+      }
+    }).catch(function(e){ console.warn('printable pdf:',e); if(typeof toast==='function')toast('Couldn’t make the PDF'); });
+  });
 }
 // Generate a real PDF of the shared guide → download on web, share via the OS sheet on the phone
 // (window.print() doesn't work in the iOS WebView, so this is the reliable cross-platform path).
@@ -5991,12 +6016,17 @@ function userPhoto(id){
   return '';
 }
 function avatarBg(u){return u&&u.photo?('background:#ccc center/cover no-repeat url('+u.photo+')'):('background:'+(u?u.color:'#ccc'));}
-function makeAvatarHtml(u,size){size=size||42;var s='width:'+size+'px;height:'+size+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+(size/2.5|0)+'px;font-weight:600;color:white;flex-shrink:0;cursor:pointer;'+avatarBg(u)+';transition:transform .15s';return'<div style="'+s+'" onclick="openUserProfile('+u.id+')" title="@'+u.handle+'">'+(u.photo?'':u.initial)+'</div>';}
+function makeAvatarHtml(u,size){size=size||42;var s='width:'+size+'px;height:'+size+'px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:'+(size/2.5|0)+'px;font-weight:600;color:white;flex-shrink:0;cursor:pointer;'+avatarBg(u)+';transition:transform .15s';return'<div style="'+s+'" onclick="openUserProfile(\''+u.id+'\')" title="@'+u.handle+'">'+(u.photo?'':u.initial)+'</div>';}
 function makeFollowerRow(u,relation){
   var mutStr='';
   var muts=(u.mutuals||[]).slice(0,3);
   if(muts.length){mutStr='<div style="display:flex;align-items:center;gap:4px;margin-top:3px"><div style="font-size:10px;color:var(--ink-4)">Also follows:</div><div style="display:flex;gap:3px">'+muts.map(function(m){return'<div style="width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:white;'+avatarBg(m)+'" title="@'+m.handle+'">'+(m.photo?'':m.initial)+'</div>';}).join('')+'</div></div>';}
-  return'<div class="follower-row">'+makeAvatarHtml(u,42)+'<div style="flex:1;cursor:pointer" onclick="openUserProfile('+u.id+')"><div class="follower-name">'+(u.name||u.handle||'Traveller')+'</div><div class="follower-handle">@'+(u.handle||'')+(u.trips!=null?' · '+u.trips+' trips':'')+'</div>'+mutStr+'</div><button class="follow-btn '+(relation==='following'?'following':'follow')+'" data-uid="'+u.id+'" onclick="toggleFollow('+u.id+',this)">'+(relation==='following'?'Following':'Follow')+'</button></div>';}
+  // The button must reflect the REAL current status (do I follow this person?) — not a static
+  // "relation" passed by the caller. So a follower I already follow back shows "Following".
+  var st=(typeof followStatusOf==='function')?followStatusOf(u.id):(relation||'none');
+  var lbl=(st==='following')?(t('following2')||'Following'):(st==='requested')?(t('requested')||'Requested'):(t('follow')||'Follow');
+  var cls=(st==='following'||st==='requested')?'following':'follow';
+  return'<div class="follower-row">'+makeAvatarHtml(u,42)+'<div style="flex:1;cursor:pointer" onclick="openUserProfile(\''+u.id+'\')"><div class="follower-name">'+(u.name||u.handle||'Traveller')+'</div><div class="follower-handle">@'+(u.handle||'')+(u.trips!=null?' · '+u.trips+' trips':'')+'</div>'+mutStr+'</div><button class="follow-btn '+cls+'" data-uid="'+u.id+'" onclick="toggleFollow(\''+u.id+'\',this)">'+lbl+'</button></div>';}
 function openFollowers(){ if(typeof _markFollowersSeen==='function')_markFollowersSeen();
   var list=document.getElementById('followers-list');if(!list)return;
   var fols=userData.followers||[];
@@ -7000,7 +7030,7 @@ var VIEW_FALLBACK_COVER='https://images.unsplash.com/photo-1469474968028-56623f0
 function renderViewedProfile(o){
   var body=document.getElementById('upm-body'); if(!body)return;
   _viewedUserId=o.id; _lastViewedOpts=o;
-  _viewedUserObj={id:o.id,name:o.name||'',handle:o.handle||'',initial:o.initial||((o.name||'T').trim()[0]||'T').toUpperCase(),photo:o.photo||'',color:o.color||'',_real:true};
+  _viewedUserObj={id:o.id,name:o.name||'',handle:o.handle||'',initial:o.initial||((o.name||'T').trim()[0]||'T').toUpperCase(),photo:o.photo||'',color:o.color||'',_real:true,priv:!!o.isPrivate};
   var trips=o.trips||[], stories=o.stories||[], canView=(o.canView!==false);
   _viewedTrips=trips.map(function(tp){ return {title:tp.dest, img:tp.img||'', images:(tp.images&&tp.images.length?tp.images:(tp.img?[tp.img]:[])), navId:tp.navId, navCity:tp.navCity, places:tp.places||[]}; });
   var avBg=o.avbg || (o.photo?('background:#ccc center/cover no-repeat url('+o.photo+')'):('background:'+(o.color||'linear-gradient(135deg,var(--ember),var(--gold))')));
@@ -7124,7 +7154,7 @@ async function openRealUserProfile(u){
       author:{id:u.id,name:prof.name,initial:(prof.name||'?')[0]}};
   });
   _viewedStories.forEach(function(s,i){ s.id='v'+i; });
-  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', livesIn:prof.livesIn||'', from:prof.from||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:_viewedStories, canView:true, isPrivate:false, followStatus:followStatusOf(u.id) });
+  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', livesIn:prof.livesIn||'', from:prof.from||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:_viewedStories, canView:(!prof.priv||followStatusOf(u.id)==='following'), isPrivate:!!prof.priv, followStatus:followStatusOf(u.id) });
 }
 
 var CITY_PLACES={
@@ -16571,6 +16601,7 @@ function renderFeedMain() {
       userColor: 'linear-gradient(135deg,var(--ember),var(--gold))',
       type: 'story', dest: s.city, flag: cityFlag(s.city), storyId: 'u'+i,
       time: s.date || 'Just now', preview: s.title,
+      photo: (typeof storyPhotoFor==='function')?storyPhotoFor(s):(s.photo||''),
     });
   });
   // Stories from people you follow (loaded from the cloud) — this is what makes a trafollower's
@@ -16584,6 +16615,7 @@ function renderFeedMain() {
       userColor:au.color||'linear-gradient(135deg,var(--ember),var(--gold))',
       type:'story', dest:s.city, flag:cityFlag(s.city), storyId:'f'+i,
       time:s.date||'', preview:s.title,
+      photo: (typeof storyPhotoFor==='function')?storyPhotoFor(s):(s.photo||''),
     });
   });
 
@@ -16618,8 +16650,11 @@ function renderFeedMain() {
       + '<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:16px;font-weight:500;color:var(--ink)">'+escHtml(p.userName||'')+'</div>'
       + '<div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace">'+escHtml(p.dest||'')+(p.flag ? ' '+escHtml(p.flag) : '')+(sub ? ' \xB7 '+sub : '')+'</div></div>'
       + '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4)">'+p.time+'</div></div>'
-      + '<div style="padding:0 16px 14px;font-size:13px;color:var(--ink-3);line-height:1.55;font-style:italic">'+escHtml((p.preview||'').substring(0,140))+'</div>'
-      + cover
+      // Story with a photo → preview text + square photo on the right (matches the profile/Explore
+      // story cards). Other posts keep the full-width cover banner.
+      + ((p.type==='story' && p.photo)
+          ? '<div style="display:flex;gap:12px;align-items:flex-start;padding:0 16px 14px"><div style="flex:1;min-width:0;font-size:13px;color:var(--ink-3);line-height:1.55;font-style:italic">'+escHtml((p.preview||'').substring(0,140))+'</div><div style="width:84px;height:84px;border-radius:10px;overflow:hidden;flex-shrink:0;background:var(--paper-2)"><img src="'+escHtml(p.photo)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'"></div></div>'
+          : ('<div style="padding:0 16px 14px;font-size:13px;color:var(--ink-3);line-height:1.55;font-style:italic">'+escHtml((p.preview||'').substring(0,140))+'</div>'+cover))
       + '<div style="display:flex;align-items:center;gap:16px;padding:10px 16px 12px;border-top:1px solid var(--paper-3)">'
       +   likeBtnFor(p)
       +   '<button class="feed-share" type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-3);display:flex;align-items:center;gap:5px;padding:0">\u2197 '+t('reshareLabel')+'</button>'
@@ -16785,7 +16820,8 @@ function _mapProfileToUser(pr){
   var nm=pr.name||pr.username||'Traveller';
   return {id:pr.id, name:nm, handle:pr.username||'', initial:(nm.trim()[0]||'T').toUpperCase(),
     color:'linear-gradient(135deg,var(--ember),var(--gold))', photo:pr.avatar||'',
-    livesIn:pr.lives_in||'', from:pr.origin||'', trips:0, mutuals:[], _real:true};
+    livesIn:pr.lives_in||'', from:pr.origin||'', trips:0, mutuals:[], _real:true,
+    priv:(pr.is_public===false)}; // private account → following needs an approval request
 }
 async function dbSearchUsers(q){
   if(!sb||!q||q.length<2) return [];
@@ -19667,13 +19703,25 @@ var DOCS={
     '<div class="doc-meta">HELP CENTER</div>'
     +'<h2>Getting started</h2>'
     +'<h3>How do I add a trip?</h3><p>Tap <b>Add Trip</b> in the bottom bar, search for a city or country, set your dates, and save. You can add places, photos and notes afterwards.</p>'
-    +'<h3>How do I add photos?</h3><p>Open a trip, go to the <b>Photos</b> tab and import from your library or camera. Photos are grouped by day and, where available, by location from their EXIF data.</p>'
-    +'<h3>How do highlights / "Your picks" work?</h3><p>In any City Guide, tap the star next to a recommendation to save it. Your starred items are pinned to the top of that guide as a quick reference for your trip.</p>'
-    +'<h2>Sharing & privacy</h2>'
-    +'<h3>Who can see my trips?</h3><p>Each trip has a visibility setting — <b>Public</b>, <b>Trafollowers only</b>, or <b>Private</b>. Before you share, Trafolio lets you select exactly what to include.</p>'
-    +'<h3>Can I share someone else\'s story or trip?</h3><p>Yes — tap the <b>Share</b> button on any story, blog or feed post to share it via your device\'s share sheet or copy a link.</p>'
+    +'<h3>How do I add a place, and what are the categories?</h3><p>Open a trip → <b>Places</b> → <b>Add a place</b>, search for it, and pick a category: <b>Eat, Coffee, Stay, See, Do, Fun</b> or <b>Shop</b>. Each place can have a note, rating and photo.</p>'
+    +'<h3>How do I add photos?</h3><p>Open a trip, go to the <b>Photos</b> tab and import from your library. Use the <b>original</b> photos from your camera roll — photos forwarded through chat apps usually have their location stripped. Photos are grouped by day and, where available, by location.</p>'
+    +'<h2>Itinerary from your photos</h2>'
+    +'<h3>What is the Itinerary tab?</h3><p>Open a trip → <b>Itinerary</b> → tap <b>"Show my itinerary from photos."</b> Trafolio reads your photos\' GPS + time stamps and automatically builds a day‑by‑day itinerary — a route map on top, then Day 1, Day 2… with the places you visited and the photos taken there.</p>'
+    +'<h3>My itinerary is empty — why?</h3><p>It needs photos that still have their <b>GPS location</b>. iPhone photos shared through messaging apps usually lose it. Re‑import the <b>originals</b> from your camera roll and try again.</p>'
+    +'<h2>Stories & feed</h2>'
+    +'<h3>How do I post a story?</h3><p>In <b>Explore</b>, tap <b>Write</b>, pick a city, add a title and a few lines, optionally attach a <b>photo</b> (it shows as a square on the story card), choose who can see it, and post.</p>'
+    +'<h3>How do I delete my story?</h3><p>Open your <b>Profile → Stories</b> and tap the 🗑️ icon on any story of yours.</p>'
+    +'<h3>What\'s the difference between Following, Stories and Blogs?</h3><p><b>Following</b> is your personal feed — only people you follow. <b>Stories</b> shows short posts from travellers across Trafolio (discovery). <b>Blogs</b> shows longer trip write‑ups. You like a story with the ♡ on its card, from inside or outside.</p>'
+    +'<h3>How do notifications work?</h3><p>Tap the 🔔 bell at the top to see who followed you and who liked your stories. Tap a notification to open that traveller\'s profile.</p>'
+    +'<h2>Following & privacy</h2>'
+    +'<h3>Who can see my trips?</h3><p>Each trip has a visibility setting — <b>Public</b>, <b>Trafollowers only</b>, or <b>Private</b>. Before you share, Trafolio lets you select exactly what to include (even "no photos").</p>'
+    +'<h3>Why does following someone say "Requested"?</h3><p>That person has a <b>private</b> account, so your follow needs their approval. They\'ll see your request on their profile under <b>Follow requests</b> and can Accept or Decline.</p>'
+    +'<h2>Sharing & saving</h2>'
+    +'<h3>Can I save a trip someone shared with me?</h3><p>Yes — open their shared trip and tap <b>🔖 Save to favourites</b>. If you\'re not signed in yet, you\'ll be asked to sign in and it saves automatically. Find saved trips in your profile under <b>Saved &amp; starred</b>.</p>'
+    +'<h3>How do I download or print a trip guide / Memory Book as a PDF?</h3><p>On a shared trip tap <b>Download</b> or <b>Print</b>; in a Memory Book use <b>Preview &amp; download</b> or <b>Print</b>. A printable view opens — tap <b>Print / Save PDF</b>, then on a phone choose <b>"Save to Files"</b> (or AirPrint). On a computer, choose "Save as PDF" in the print dialog.</p>'
+    +'<h3>Can I share someone else\'s story or trip?</h3><p>Yes — tap the <b>↗ Share</b> button on any story, blog or feed post to share it via your device\'s share sheet or copy a link.</p>'
     +'<h2>Memory Books</h2>'
-    +'<h3>How do I order a printed book?</h3><p>Open a trip, go to <b>Memory Book</b>, choose a format, lay out your pages, then add it to cart and check out. Printing and delivery are handled by our print partner.</p>'
+    +'<h3>How do I order a printed book?</h3><p>Open a trip, go to <b>Memory Book</b>, choose a format, lay out your pages (or tap <b>Let AI design my book</b>), then add it to cart and check out. Printing and delivery are handled by our print partner.</p>'
     +'<h2>Account & billing</h2>'
     +'<h3>What does Pro include?</h3><p>Pro removes trip limits and unlocks premium features. You can manage or cancel your subscription from your profile at any time.</p>'
     +'<h3>How do I delete my account?</h3><p>Profile → ⋯ menu → <b>Delete account</b>, then confirm twice. Your account is deactivated immediately and your trips, photos, places, stories and profile are permanently erased after a <b>30-day recovery window</b>. To restore within 30 days, email <a href="mailto:'+DOC_CONTACT+'">'+DOC_CONTACT+'</a>.</p>'
@@ -19687,7 +19735,7 @@ var DOCS={
     +'<h2>Response time</h2>'
     +'<p>We aim to reply to all messages within 1–2 business days.</p>'
     +'<h2>Follow Trafolio</h2>'
-    +'<p>Instagram · TikTok · X — <b>@trafolio</b></p>'
+    +'<p>Instagram: <a href="https://instagram.com/trafolio.travel" target="_blank" rel="noopener"><b>@trafolio.travel</b></a><br>TikTok · X — <b>@trafolio</b></p>'
     +'<div class="doc-note">For data access, correction or deletion requests, please use the privacy email above so we can verify and action your request promptly.</div>'
   },
   blog:{ titleKey:'footerBlog', body:
