@@ -1,0 +1,7 @@
+# Cloudflare Pages — SPA fallback for Trafolio share links.
+# Paths like /<username>/<trip-slug> (e.g. /rony_khalaf/bali) are client routes,
+# not files. The 200 ("rewrite") status serves the app shell WITHOUT changing the
+# URL, so the in-page router (_resolveShareRoute) can read /rony_khalaf/bali and
+# load the trip. Existing static files are matched first, so assets aren't affected.
+# (The app's /api/* calls go to a separate origin, so nothing to exclude here.)
+/*    /index.html    200
