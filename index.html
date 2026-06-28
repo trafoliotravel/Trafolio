@@ -422,6 +422,8 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 <!-- Leaflet: free map (no API key) for the photo-built Itinerary route -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- exifr: reads GPS + date from HEIC (iPhone) photos, which the older exif-js cannot -->
+<script src="https://cdn.jsdelivr.net/npm/exifr@7.1.3/dist/full.umd.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>var _googleMapsReady=false;function onGoogleMapsLoaded(){_googleMapsReady=true;}</script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC7QKEbQtv6wopLwkqu-QDkBCAO5eVkhHk&libraries=places&callback=onGoogleMapsLoaded" async defer></script>
@@ -4275,17 +4277,31 @@ async function _openSharedTrip(prof, slug){
           || rows.find(function(x){ return _slugify(x.dest).indexOf(want)===0; })       // dest like "Bali, Indonesia"
           || rows.find(function(x){ return want && _slugify(x.dest).indexOf(want)>=0; });
     if(!row) return false;
+    // PRIVACY: honour the owner's photo-scope choice BEFORE fetching, so excluded photos never
+    // reach the viewer's browser at all (hiding them in the UI alone still leaks the URLs).
+    var _ssel=(row.share_sel&&typeof row.share_sel==='object')?row.share_sel:{};
+    var _scope=_ssel.photoScope || (_ssel.photos===false?'none':'all');
+    var _photosPrivate=(row.photo_visibility==='private');
     var pl=[], ph=[];
     try{ var plr=await sb.from('places').select('*').eq('trip_id',row.id); pl=(plr&&plr.data)||[]; }catch(e){}
-    try{ var phr=await sb.from('photos').select('id,trip_id,url,caption,day,star').eq('trip_id',row.id); ph=(phr&&phr.data)||[]; }catch(e){}
+    if(_scope!=='none' && !_photosPrivate){
+      try{
+        var pq=sb.from('photos').select('id,trip_id,url,caption,day,star').eq('trip_id',row.id);
+        if(_scope==='highlights') pq=pq.eq('star',true);              // only the starred highlights
+        var phr=await pq; ph=(phr&&phr.data)||[];
+      }catch(e){}
+    }
     var places=pl.map(function(p){ return {id:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, photo:p.photo||null, city:p.city||''}; });
     var photos=ph.map(function(p){ return {url:p.url, caption:p.caption||'', day:p.day, wide:false, star:!!p.star}; }).filter(function(p){ return p.url && p.url.indexOf('blob:')!==0; });
+    if(_scope==='highlights') photos=photos.slice(0,8);
     _shareDemo={
       dbId:row.id, dest:(row.dest||row.country||''), country:row.country||'', flag:(row.flag&&row.flag!=='🌍'?row.flag:(flagForCountry(row.country)||cityFlag(row.dest)||'📍')),
       dates: row.date_from ? new Date(row.date_from).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '',
       days: (row.date_from&&row.date_to) ? Math.max(1,Math.round((new Date(row.date_to)-new Date(row.date_from))/86400000)+1) : (row.days||0),
       startDate:row.date_from||'', endDate:row.date_to||'',
-      cover:(row.cover_url||(photos[0]&&photos[0].url)||''), notes:row.notes||'', blog:row.blog||'', blogTitle:row.blog_title||'',
+      // Cover: an explicit cover_url is the owner's public choice; only fall back to an album photo
+      // when photos are actually being shared (never when scope is 'none').
+      cover:(row.cover_url||(_scope!=='none'&&photos[0]&&photos[0].url)||''), notes:row.notes||'', blog:row.blog||'', blogTitle:row.blog_title||'',
       privacy:row.privacy||'public', tripType:row.trip_type||'city', cities:(Array.isArray(row.cities)?row.cities:[]),
       missed:(Array.isArray(row.missed)?row.missed:[]), places:places, photos:photos,
       // The owner's curation (highlighted-photos-only, hidden sections, etc.) — honour it for viewers.
@@ -4416,9 +4432,20 @@ function shareCopyLink(){
   if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(url).then(function(){toast(t('profileLinkCopied'));}).catch(function(){toast(url);}); }
   else toast(url);
 }
+// Hero image for the share page. When the owner chose "no photos", the header must NOT show any
+// of their personal photos (including a cover that is one of those photos) — use a neutral
+// destination image instead. Privacy-first: "no photos" means none, header included.
+function _shareHeroSrc(t){
+  var sel=shareSelOf(t);
+  var stock=(typeof USER_CITY_IMG!=='undefined'&&USER_CITY_IMG[t.dest])||(typeof cityPhotoUrl==='function'&&cityPhotoUrl(t.dest))||(typeof FALLBACK_COVER!=='undefined'?FALLBACK_COVER:'');
+  if(sel.photoScope!=='none') return t.cover||stock;
+  // 'none' → a stored cover URL can't be reliably told apart from a personal photo, so always
+  // fall back to a neutral destination image. Strict by design.
+  return stock;
+}
 function renderSharePage(){
   var t=_shareDemo||currentTrip;if(!t)return;
-  var heroImg=document.getElementById('share-hero-img');if(heroImg)heroImg.src=t.cover;
+  var heroImg=document.getElementById('share-hero-img');if(heroImg)heroImg.src=_shareHeroSrc(t);
   var destTitle=document.getElementById('share-dest-title');if(destTitle)destTitle.textContent=t.flag+' '+t.dest;
   var meta=document.getElementById('share-trip-meta');if(meta)meta.textContent=t.dates.toUpperCase()+' · '+t.days+' '+tt('daysWord').toUpperCase();
   var note=document.getElementById('share-curator-note');if(note)note.textContent='"'+(t.notes||tt('defaultTripNote'))+'"';
@@ -6403,15 +6430,37 @@ function importFromLibrary(input){
 function parseExifDate(str){if(!str)return null;var m=str.match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]);var d=str.match(/^(\d{4}):(\d{2}):(\d{2})/);return d?new Date(+d[1],+d[2]-1,+d[3]):null;}
 function _dms(arr,ref){if(!arr||arr.length<3)return null;var dec=arr[0]+arr[1]/60+arr[2]/3600;if(ref==='S'||ref==='W')dec=-dec;return Math.round(dec*1e6)/1e6;}
 function readExifFromFile(file,cb){
+  // Prefer exifr: it reads HEIC/HEIF (what iPhones shoot), which exif-js cannot — that's why
+  // GPS/date came back empty for iPhone photos before. Fall back to exif-js if exifr is absent.
+  var called=false; function once(v){ if(!called){ called=true; cb(v); } }
+  if(typeof exifr!=='undefined' && exifr && typeof exifr.parse==='function'){
+    var guard=setTimeout(function(){ _readExifJs(file,once); }, 6000); // never hang the import
+    exifr.parse(file,{tiff:true,ifd0:true,exif:true,gps:true}).then(function(out){
+      clearTimeout(guard);
+      var o={};
+      if(out){
+        if(typeof out.latitude==='number'&&!isNaN(out.latitude)&&typeof out.longitude==='number'){ o.lat=out.latitude; o.lng=out.longitude; }
+        var t=out.DateTimeOriginal||out.CreateDate||out.ModifyDate;
+        if(t){ o.dateTime=(t instanceof Date)?t:new Date(t); if(isNaN(+o.dateTime))delete o.dateTime; }
+      }
+      if(o.dateTime||o.lat!=null){ once(o); } else { _readExifJs(file,once); } // try exif-js as a backup
+    }).catch(function(){ clearTimeout(guard); _readExifJs(file,once); });
+    return;
+  }
+  _readExifJs(file,once);
+}
+function _readExifJs(file,cb){
   if(typeof EXIF==='undefined'){cb(null);return;}
-  EXIF.getData(file,function(){
-    var dt=EXIF.getTag(this,'DateTimeOriginal')||EXIF.getTag(this,'DateTime');
-    var lat=_dms(EXIF.getTag(this,'GPSLatitude'),EXIF.getTag(this,'GPSLatitudeRef'));
-    var lng=_dms(EXIF.getTag(this,'GPSLongitude'),EXIF.getTag(this,'GPSLongitudeRef'));
-    var out={dateTime:parseExifDate(dt)};
-    if(lat!=null&&lng!=null){out.lat=lat;out.lng=lng;}
-    cb((out.dateTime||out.lat!=null)?out:null);
-  });
+  try{
+    EXIF.getData(file,function(){
+      var dt=EXIF.getTag(this,'DateTimeOriginal')||EXIF.getTag(this,'DateTime');
+      var lat=_dms(EXIF.getTag(this,'GPSLatitude'),EXIF.getTag(this,'GPSLatitudeRef'));
+      var lng=_dms(EXIF.getTag(this,'GPSLongitude'),EXIF.getTag(this,'GPSLongitudeRef'));
+      var out={dateTime:parseExifDate(dt)};
+      if(lat!=null&&lng!=null){out.lat=lat;out.lng=lng;}
+      cb((out.dateTime||out.lat!=null)?out:null);
+    });
+  }catch(e){ cb(null); }
 }
 function fmtPhotoTime(d){if(!d)return '';try{return d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'})+' · '+d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});}catch(e){return '';}}
 function photoMetaHtml(ph){
@@ -18387,12 +18436,17 @@ async function dbSavePhoto(photoObj, tripId){
     var row=Object.assign({}, base);
     if(photoObj.gps&&typeof photoObj.gps.lat==='number'){ row.lat=photoObj.gps.lat; row.lng=photoObj.gps.lng; }
     if(photoObj.dateTime){ try{ row.taken_at=new Date(photoObj.dateTime).toISOString(); }catch(e){} }
+    var hasExtra=(row.lat!==undefined||row.taken_at!==undefined);
     var res=await sb.from('photos').insert(row).select();
-    if(res.error && /column|schema|taken_at|\blat\b|\blng\b/i.test(res.error.message||'')){
-      res=await sb.from('photos').insert(base).select(); // columns not added yet — save the basics
+    if(res.error && hasExtra){
+      // The optional lat/lng/taken_at columns may not exist yet — NEVER let that block the photo.
+      // Retry with just the core fields so the image always persists (itinerary GPS just won't,
+      // until the columns are added).
+      console.warn('dbSavePhoto: retrying without GPS columns —', res.error.message);
+      res=await sb.from('photos').insert(base).select();
     }
     if(res.error){console.error('dbSavePhoto error:',res.error);}
-    else if(res.data&&res.data[0]){photoObj.dbId=res.data[0].id;console.log('Photo saved to DB');}
+    else if(res.data&&res.data[0]){photoObj.dbId=res.data[0].id;}
   }catch(e){console.error('dbSavePhoto error:',e);}
 }
 
