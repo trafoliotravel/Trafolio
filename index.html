@@ -462,6 +462,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <div onclick="openOrders();closeAvatarMenu()" style="display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer;border-bottom:1px solid var(--paper-3)"><span style="font-size:16px">📦</span><span style="font-size:13px;font-weight:500;color:var(--ink)" data-i18n="ordersRow">Orders</span></div>
         <div onclick="openProfileVisibility();closeAvatarMenu()" style="display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer;border-bottom:1px solid var(--paper-3)"><span style="font-size:16px">🌍</span><span style="font-size:13px;font-weight:500;color:var(--ink)" data-i18n="profileVisibility">Profile visibility</span></div>
         <div onclick="openPasswordChange();closeAvatarMenu()" style="display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer;border-bottom:1px solid var(--paper-3)"><span style="font-size:16px">🔑</span><span style="font-size:13px;font-weight:500;color:var(--ink)">Password</span></div>
+        <div onclick="openInfoHub();closeAvatarMenu()" style="display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer;border-bottom:1px solid var(--paper-3)"><span style="font-size:16px">&#9432;</span><span style="font-size:13px;font-weight:500;color:var(--ink)" data-i18n="aboutLegal">About &amp; legal</span></div>
         <div style="display:flex;align-items:center;gap:11px;padding:9px 16px;border-bottom:1px solid var(--paper-3)"><span style="font-size:16px">🌐</span><select id="avatar-lang-select" aria-label="Language" onchange="setLang(this.value);closeAvatarMenu()" style="flex:1;border:none;background:none;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer;outline:none"><option value="en">English</option><option value="ar">عربي</option><option value="fr">Français</option><option value="es">Español</option><option value="tr">Türkçe</option><option value="it">Italiano</option><option value="zh">中文</option><option value="ja">日本語</option><option value="de">Deutsch</option><option value="pt">Português</option></select></div>
         <div onclick="exitApp();closeAvatarMenu()" style="display:flex;align-items:center;gap:11px;padding:13px 16px;cursor:pointer"><span style="font-size:16px">🚪</span><span style="font-size:13px;font-weight:500;color:#d33">Sign out</span></div>
       </div>
@@ -2012,7 +2013,6 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <div onclick="closeProfileMenu();editProfile()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editProfile">Edit profile</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-cover-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">📷 <span data-i18n="changeCover">Change cover</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-av-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">🖼️ <span data-i18n="changePhoto">Change photo</span></div>
-        <div onclick="closeProfileMenu();openInfoHub()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9432; <span data-i18n="aboutLegal">About &amp; legal</span></div>
         <div onclick="closeProfileMenu();deleteAccount()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:#E8334A">&#128465;&#65039; <span data-i18n="deleteAccount">Delete account</span></div>
       </div>
       <!-- Subtle Trafolio brand mark, bottom-right of the cover (dark pill keeps it legible on any photo) -->
@@ -2147,6 +2147,17 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
   </div>
   <div class="lang-dropdown" id="lang-dropdown" style="bottom:100%;top:auto;margin-bottom:6px;min-width:180px;left:50%;transform:translateX(-50%)"></div>
 </div>
+      <!-- Visible About / Help / legal links on the profile (also in the ⋯ menu up top) -->
+      <div style="margin-top:20px;padding-bottom:30px">
+        <div style="display:flex;justify-content:center;align-items:center;gap:16px;flex-wrap:wrap;font-size:12.5px">
+          <a onclick="openInfoHub()" style="color:var(--ink-3);cursor:pointer"><span data-i18n="aboutLegal">About &amp; legal</span></a>
+          <span style="color:var(--paper-3)">·</span>
+          <a onclick="openDoc('help')" style="color:var(--ink-3);cursor:pointer"><span data-i18n="footerHelp">Help</span></a>
+          <span style="color:var(--paper-3)">·</span>
+          <a onclick="openDoc('contact')" style="color:var(--ink-3);cursor:pointer"><span data-i18n="footerContact">Contact</span></a>
+        </div>
+        <div style="text-align:center;font-size:10px;color:var(--ink-4);margin-top:10px;font-family:'DM Mono',monospace">© 2026 Trafolio</div>
+      </div>
     </div>
   </div>
   </div>
@@ -2506,7 +2517,7 @@ function refreshCurrentScreen(){
   var jobs=[];
   function add(fn){ if(typeof fn==='function'){ try{ var r=fn(); if(r&&r.then)jobs.push(r); }catch(e){} } }
   if(id==='s-profile'){ add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); add(typeof dbLoadStories!=='undefined'&&dbLoadStories); add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); }
-  else if(id==='s-explore'){ add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadFeedBlogs!=='undefined'&&dbLoadFeedBlogs); }
+  else if(id==='s-explore'){ add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadFeedBlogs!=='undefined'&&dbLoadFeedBlogs); add(typeof dbLoadExplorePlaces!=='undefined'&&dbLoadExplorePlaces); }
   else if(id==='s-feed'){ add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadInbox!=='undefined'&&dbLoadInbox); }
   else if(id==='s-trip'){ add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); }
   else { add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); }
@@ -4327,32 +4338,60 @@ function _shareRouteFail(silent){
   if(!silent && typeof toast==='function') toast('That shared link could not be found.');
   try{ if(window.appMode){ showScreen('s-profile'); } else if(!document.querySelector('.screen.active')){ showScreen('s-home'); } }catch(e){}
 }
-// Build a clean printable document of the shared guide, honouring the share selection.
+// Printable document of the shared guide — built to MATCH the on-screen share page layout
+// (hero image + title overlay, "X's guide", curator quote, place cards with category dots & star
+// ratings, 2-column photo grid). Honours the share selection. Do NOT reinvent this layout.
 function shareGuideDoc(){
   var tr=shareTripData(); if(!tr)return '';
   var sel=shareSelOf(tr); var E=escHtml;
   var owner=(tr.author&&tr.author.name)||userData.name||'';
+  var hero=(typeof _shareHeroSrc==='function')?_shareHeroSrc(tr):(tr.cover||'');
+  var CAT={eat:['🍴','#E0633A'],coffee:['☕','#8A5A2B'],stay:['🛎️','#3B7EA1'],see:['🏛️','#4A8C5F'],do:['🎫','#7B2FBE'],fun:['🎡','#C9911C'],view:['🌅','#E0633A'],shop:['🛍️','#B5179E']};
   var notes=(sel.everything||sel.notes)&&tr.notes?'<p class="q">"'+E(tr.notes)+'"</p>':'';
-  var blog=(sel.everything||sel.blog)&&((tr.blogTitle||'')||(tr.blog||''))?'<h2>'+E(tr.blogTitle||'')+'</h2><div class="blog">'+(tr.blog||'')+'</div>':'';
+  // Places — same row design as the share page (category dot + name + note + star rating).
   var places=(tr.places||[]).filter(function(p){return sel.everything||!sel.cats||sel.cats[p.cat]!==false;});
-  var placesHtml=places.length?'<h3>Places</h3>'+places.map(function(p){return '<div class="pl"><b>'+E(p.name)+'</b>'+(p.note?' — '+E(p.note):'')+'</div>';}).join(''):'';
-  var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<h3>Things we missed</h3><ul>'+tr.missed.map(function(m){return '<li style="white-space:pre-wrap">'+E(m)+'</li>';}).join('')+'</ul>':'';
+  var placesHtml='';
+  if(places.length){
+    placesHtml='<div class="sec"><div class="sec-h">PLACES</div>'+places.map(function(p){
+      var c=CAT[p.cat]||['📍','#888'];
+      var stars=''; for(var i=1;i<=5;i++)stars+='<span style="color:'+(i<=(p.rating||0)?'#E0633A':'#d9d9d9')+'">★</span>';
+      return '<div class="pl"><div class="dot" style="background:'+c[1]+'1f;color:'+c[1]+'">'+c[0]+'</div>'
+        +'<div class="pl-main"><div class="pl-name">'+E(p.name)+'</div>'+(p.note?'<div class="pl-note">'+E(p.note)+'</div>':'')+'</div>'
+        +'<div class="pl-stars">'+stars+'</div></div>';
+    }).join('')+'</div>';
+  }
+  var blog=(sel.everything||sel.blog)&&((tr.blogTitle||'')||(tr.blog||''))?'<div class="sec"><div class="sec-h">'+E((tr.blogTitle||'BLOG').toUpperCase())+'</div><div class="blog">'+(tr.blog||'')+'</div></div>':'';
+  var missed=(sel.everything||sel.missed)&&(tr.missed||[]).length?'<div class="sec"><div class="sec-h">THINGS WE MISSED</div>'+tr.missed.map(function(m){return '<div class="pl"><div class="pl-main"><div class="pl-name" style="font-weight:400;font-style:italic;white-space:pre-wrap">○ '+E(m)+'</div></div></div>';}).join('')+'</div>':'';
   var _gphs=(typeof sharePhotosFor==='function')?sharePhotosFor(tr):((sel.everything||sel.photos)?(tr.photos||[]):[]);
-  // Cap the exported album so the PDF canvas stays under mobile limits (highlights are already ≤8).
   var _gpics=bbSortedPhotos(_gphs,tr).slice(0,40);
-  var photos=_gpics.length?'<h3>Photos</h3><div class="ph">'+_gpics.map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div>':'';
+  var photos=_gpics.length?'<div class="sec"><div class="sec-h">PHOTOS</div><div class="ph">'+_gpics.map(function(p){return '<img src="'+E(p.url)+'">';}).join('')+'</div></div>':'';
   return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>'+E(tr.dest)+' — Trafolio</title><style>'
-    +'*{box-sizing:border-box}body{font-family:Georgia,"Times New Roman",serif;color:#1a2b3a;max-width:760px;margin:0 auto;padding:40px 28px;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
-    +'h1{font-size:30px;margin:0 0 2px}.meta{font-family:Arial,sans-serif;font-size:12px;color:#888;letter-spacing:.08em;text-transform:uppercase;margin:0 0 18px}'
-    +'.q{font-style:italic;font-size:18px;color:#444;border-left:3px solid #E0633A;padding-left:14px;margin:14px 0}'
-    +'h2{font-size:22px;margin:22px 0 6px}h3{font-family:Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#888;margin:24px 0 8px;border-bottom:1px solid #eee;padding-bottom:6px}'
-    +'.blog{font-size:15px;line-height:1.7}.pl{padding:7px 0;border-bottom:1px solid #f0f0f0;font-size:14px}ul{margin:0;padding-left:18px}li{font-size:14px;padding:3px 0}'
-    +'.ph{font-size:0;margin-top:6px}.ph img{width:49%;height:230px;object-fit:cover;border-radius:6px;display:inline-block;vertical-align:top;margin:0 2% 8px 0;break-inside:avoid;page-break-inside:avoid}.ph img:nth-child(2n){margin-right:0}'
-    +'.foot{margin-top:30px;text-align:center;font-family:Arial,sans-serif;font-size:11px;color:#bbb;letter-spacing:.1em}'
-    +'</style></head><body>'
-    +'<h1>'+E(tr.flag||'')+' '+E(tr.dest)+'</h1><div class="meta">'+E(tr.dates||'')+' · '+(tr.days||'')+' days'+(owner?' · '+E(owner)+'’s guide':'')+'</div>'
-    + notes + blog + placesHtml + missed + photos
-    + '<div class="foot">TRAFOLIO.TRAVEL</div></body></html>';
+    +'*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}'
+    +'body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1d2530;background:#fff}'
+    +'.wrap{max-width:760px;margin:0 auto}'
+    +'.hero{position:relative;height:330px;overflow:hidden;background:#001C30}'
+    +'.hero>img{width:100%;height:100%;object-fit:cover;opacity:.82;display:block}'
+    +'.hero .ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.88),rgba(0,28,48,.12) 58%,transparent)}'
+    +'.hero .cap{position:absolute;left:0;right:0;bottom:0;padding:24px 28px;color:#fff}'
+    +'.hero .by{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.1em;color:rgba(255,255,255,.72)}'
+    +'.hero h1{font-family:Georgia,"Times New Roman",serif;font-size:40px;font-weight:500;margin:8px 0 4px;letter-spacing:-.02em;line-height:1.05}'
+    +'.hero .dt{font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.08em;color:rgba(255,255,255,.62)}'
+    +'.body{padding:20px 28px 36px}'
+    +'.q{font-family:Georgia,serif;font-style:italic;font-size:18px;color:#46525f;line-height:1.5;margin:8px 0 18px}'
+    +'.sec{margin-top:22px;break-inside:auto}'
+    +'.sec-h{font-family:"DM Mono",monospace;font-size:10px;letter-spacing:.16em;color:#9aa6b2;text-transform:uppercase;border-bottom:1px solid #eee;padding-bottom:7px;margin-bottom:6px}'
+    +'.pl{display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-bottom:1px solid #f1f1f1;break-inside:avoid;page-break-inside:avoid}'
+    +'.dot{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}'
+    +'.pl-main{flex:1;min-width:0}.pl-name{font-size:15px;font-weight:600;color:#1d2530}.pl-note{font-size:13px;color:#6b7785;margin-top:2px;line-height:1.45}'
+    +'.pl-stars{font-size:12px;letter-spacing:1px;flex-shrink:0}'
+    +'.blog{font-family:Georgia,serif;font-size:15px;line-height:1.7;color:#2b3640}'
+    +'.ph{font-size:0}.ph img{width:49%;height:200px;object-fit:cover;border-radius:10px;display:inline-block;vertical-align:top;margin:0 2% 8px 0;break-inside:avoid;page-break-inside:avoid}.ph img:nth-child(2n){margin-right:0}'
+    +'.foot{text-align:center;font-family:"DM Mono",monospace;font-size:11px;letter-spacing:.14em;color:#c2c2c2;padding:22px 0 30px}'
+    +'</style></head><body><div class="wrap">'
+    +'<div class="hero">'+(hero?'<img src="'+E(hero)+'">':'')+'<div class="ov"></div><div class="cap"><div class="by">'+E(String(owner||'').toUpperCase())+'’S GUIDE</div><h1>'+E((tr.flag?tr.flag+' ':'')+tr.dest)+'</h1><div class="dt">'+E(String(tr.dates||'').toUpperCase())+(tr.days?' · '+tr.days+' DAYS':'')+'</div></div></div>'
+    +'<div class="body">'+notes+placesHtml+blog+missed+photos+'</div>'
+    +'<div class="foot">TRAFOLIO.TRAVEL</div>'
+    +'</div></body></html>';
 }
 // Print / Save-as-PDF the shared guide (browser print dialog offers "Save as PDF").
 // Lazy-load the PDF library only when the user actually exports (keeps startup light).
@@ -4404,7 +4443,11 @@ function _printablePdfShare(frame){
     var bodyEl; try{ bodyEl=frame.contentWindow.document.body; }catch(e){}
     if(!bodyEl){ if(typeof toast==='function')toast('Couldn’t read the page'); return; }
     var h=bodyEl.scrollHeight||bodyEl.offsetHeight||1123;
-    var opt={margin:6,image:{type:'jpeg',quality:.92},html2canvas:{useCORS:true,allowTaint:false,scale:2,backgroundColor:'#ffffff',height:h,windowHeight:h},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
+    // Scale down for long guides so the rendered canvas stays under the iOS ~16-megapixel limit —
+    // otherwise tall documents get truncated to ~2 pages instead of paginating fully.
+    var w=bodyEl.scrollWidth||794, scale=2;
+    while(scale>1 && (w*scale)*(h*scale) > 14000000){ scale-=0.25; }
+    var opt={margin:6,image:{type:'jpeg',quality:.9},html2canvas:{useCORS:true,allowTaint:false,scale:scale,backgroundColor:'#ffffff',height:h,windowHeight:h},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
     html2pdf().set(opt).from(bodyEl).outputPdf('blob').then(function(blob){
       if(!blob || blob.size<800){ if(typeof toast==='function')toast('Couldn’t make the PDF'); return; }
       var file=new File([blob],'trafolio.pdf',{type:'application/pdf'});
@@ -16768,11 +16811,36 @@ function placeRaters(name, baseRating){
   }
   return {count:n, avg:sum/n};
 }
+// Every place we know about — YOUR trips + OTHER travellers' places (from the cloud) + demo
+// city guides — each carrying the REAL ratings people gave it (so the average/count is real).
 function allKnownPlaces(){
   var seen={},out=[];
-  (trips||[]).forEach(function(tp){(tp.places||[]).forEach(function(p){var k=p.name.toLowerCase();if(!seen[k]){seen[k]=1;out.push({name:p.name,city:tp.dest,rating:p.rating});}});});
-  if(typeof CITY_PLACES!=='undefined'){for(var city in CITY_PLACES){CITY_PLACES[city].forEach(function(p){var k=p.n.toLowerCase();if(!seen[k]){seen[k]=1;out.push({name:p.n,city:city,emoji:p.e});}});}}
+  function add(name,city,rating,emoji){
+    var k=String(name||'').toLowerCase().trim(); if(!k)return;
+    if(!seen[k]){ seen[k]={name:name,city:city||'',emoji:emoji||'',ratings:[]}; out.push(seen[k]); }
+    if(!seen[k].city && city) seen[k].city=city;
+    if(!seen[k].emoji && emoji) seen[k].emoji=emoji;
+    if(typeof rating==='number' && rating>0) seen[k].ratings.push(rating);
+  }
+  (trips||[]).forEach(function(tp){(tp.places||[]).forEach(function(p){ add(p.name, p.city||tp.dest, p.rating); });});
+  (typeof feedPlaces!=='undefined'?feedPlaces:[]).forEach(function(p){ add(p.name, p.city, p.rating); }); // other travellers' places
+  if(typeof CITY_PLACES!=='undefined'){for(var city in CITY_PLACES){CITY_PLACES[city].forEach(function(p){ add(p.n, city, 0, p.e); });}}
   return out;
+}
+// Places from OTHER users' PUBLIC trips, loaded from the cloud so Explore → Places shows what the
+// whole community visited & rated — not just your own. Cached in feedPlaces.
+var feedPlaces=[];
+async function dbLoadExplorePlaces(){
+  if(!sb) return;
+  try{
+    var tr=await sb.from('trips').select('id,dest,country,privacy').neq('privacy','private').limit(300);
+    if(!tr||tr.error||!tr.data||!tr.data.length) return;
+    var tmap={}, ids=[]; tr.data.forEach(function(t){ tmap[t.id]={dest:t.dest,country:t.country}; ids.push(t.id); });
+    var pl=await sb.from('places').select('name,cat,rating,city,trip_id').in('trip_id',ids).limit(2000);
+    if(!pl||pl.error||!pl.data) return;
+    feedPlaces=pl.data.map(function(p){ var tm=tmap[p.trip_id]||{}; return {name:p.name, cat:p.cat||'see', rating:p.rating||0, city:p.city||tm.dest||''}; });
+    if(_exploreTab==='places' && typeof renderExploreContent==='function') renderExploreContent();
+  }catch(e){ console.warn('dbLoadExplorePlaces:',e); }
 }
 function renderPlacesTab(body){
   var q=(_exploreQuery||'').toLowerCase().trim();
@@ -16791,13 +16859,14 @@ function renderPlacesTab(body){
     +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">'+t('tabPlaces')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-4);line-height:1.5;margin-bottom:6px">'+t('placesRatedHint')+'</div></div>';
   if(!places.length){ body.innerHTML=head+'<div style="padding:20px;text-align:center;color:var(--ink-4)">'+(q?t('placeSearchEmpty'):t('noResults'))+'</div>'; return; }
-  body.innerHTML=head + places.slice(0,40).map(function(p){
-    var ag=placeRaters(p.name,p.rating);
+  body.innerHTML=head + places.slice(0,60).map(function(p){
+    // REAL ratings from everyone who visited this place (you + other travellers), not a fabrication.
+    var rts=p.ratings||[], cnt=rts.length, avg=cnt?(rts.reduce(function(a,b){return a+b;},0)/cnt):0;
     var ratingLine;
-    if(ag.count){
-      var st=[1,2,3,4,5].map(function(i){return '<span style="color:'+(i<=Math.round(ag.avg)?'#F5A623':'var(--paper-3)')+'">★</span>';}).join('');
+    if(cnt){
+      var st=[1,2,3,4,5].map(function(i){return '<span style="color:'+(i<=Math.round(avg)?'#F5A623':'var(--paper-3)')+'">★</span>';}).join('');
       ratingLine='<div style="display:flex;align-items:center;gap:7px;margin-top:4px"><span style="font-size:13px">'+st+'</span>'
-        +'<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+ag.avg.toFixed(1)+' \xB7 '+ag.count+' '+(ag.count===1?t('followerRated1'):t('followerRatedN'))+'</span></div>';
+        +'<span style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+avg.toFixed(1)+' \xB7 '+cnt+' '+(cnt===1?t('followerRated1'):t('followerRatedN'))+'</span></div>';
     }else{
       ratingLine='<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4);margin-top:4px">'+t('notRatedYet')+'</div>';
     }
