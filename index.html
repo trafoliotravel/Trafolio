@@ -2651,6 +2651,7 @@ function openShareSheet(){
   if(currentTrip && !canShareTrip(currentTrip)){ openPaywall(t('paywallShare')); return; }
   var btn=document.querySelector('#trip-tabs .tab-btn[data-tab="share"]');
   if(btn)switchTab(btn);
+  if(currentTrip){ shareSelOf(currentTrip); _persistShareSel(); } // sync the current curation to the cloud so the shared link honours it
   renderShareTab();
   var content=document.getElementById('tab-share');
   if(content)content.scrollIntoView({behavior:'smooth',block:'start'});
@@ -2989,18 +2990,30 @@ function sharePhotosFor(t){
   if(sel.photoScope==='highlights'){ var hl=arr.filter(function(p){return p.star;}); return hl.slice(0,8); }
   return arr; // 'all'
 }
+// Persist the share selection (photoScope + section toggles) to the cloud so the SHARED LINK
+// honours it — previously shareSel lived only in localStorage, so viewers always saw everything
+// (e.g. "highlighted photos only" was ignored and all photos showed). Needs trips.share_sel.
+var _shareSelDbT=null;
+function _persistShareSel(){
+  if(!currentTrip)return;
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof dbUpdateTrip!=='function')return;
+  var tr=currentTrip;
+  if(_shareSelDbT)clearTimeout(_shareSelDbT);
+  _shareSelDbT=setTimeout(function(){ dbUpdateTrip(tr,{share_sel:tr.shareSel||{}}); },600);
+}
 function setSharePhotoScope(v){
   if(!currentTrip)return;
   if(photoVisOf()==='private'){ toast(t('photosPrivateLocked')); return; }
-  var s=shareSelOf(currentTrip); s.photoScope=v; s.photos=(v!=='none'); s.everything=false; _syncShareEverything(s); renderShareTab();
+  var s=shareSelOf(currentTrip); s.photoScope=v; s.photos=(v!=='none'); s.everything=false; _syncShareEverything(s); _persistShareSel(); renderShareTab();
 }
 function _syncShareEverything(s){s.everything=(s.photoScope==='all')&&s.notes&&s.blog&&s.missed&&['eat','stay','see','do','fun','view','shop'].every(function(c){return s.cats[c];});}
-function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.photoScope='all';s.notes=true;s.blog=true;s.missed=true;['eat','stay','see','do','fun','view','shop'].forEach(function(c){s.cats[c]=true;});}renderShareTab();}
-function toggleShareBlog(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.blog=!s.blog;_syncShareEverything(s);renderShareTab();}
-function toggleShareCat(c){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.cats[c]=!s.cats[c];_syncShareEverything(s);renderShareTab();}
-function toggleSharePhotos(){if(!currentTrip)return;if(photoVisOf()==='private'){toast(t('photosPrivateLocked'));return;}var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);renderShareTab();}
-function toggleShareNotes(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.notes=!s.notes;_syncShareEverything(s);renderShareTab();}
-function toggleShareMissed(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.missed=!s.missed;_syncShareEverything(s);renderShareTab();}
+function toggleShareEverything(){if(!currentTrip)return;var s=shareSelOf(currentTrip);if(s.everything){s.everything=false;}else{s.everything=true;s.photos=true;s.photoScope='all';s.notes=true;s.blog=true;s.missed=true;['eat','stay','see','do','fun','view','shop'].forEach(function(c){s.cats[c]=true;});}_persistShareSel();renderShareTab();}
+function toggleShareBlog(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.blog=!s.blog;_syncShareEverything(s);_persistShareSel();renderShareTab();}
+function toggleShareCat(c){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.cats[c]=!s.cats[c];_syncShareEverything(s);_persistShareSel();renderShareTab();}
+function toggleSharePhotos(){if(!currentTrip)return;if(photoVisOf()==='private'){toast(t('photosPrivateLocked'));return;}var s=shareSelOf(currentTrip);s.everything=false;s.photos=!s.photos;_syncShareEverything(s);_persistShareSel();renderShareTab();}
+function toggleShareNotes(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.notes=!s.notes;_syncShareEverything(s);_persistShareSel();renderShareTab();}
+function toggleShareMissed(){if(!currentTrip)return;var s=shareSelOf(currentTrip);s.everything=false;s.missed=!s.missed;_syncShareEverything(s);_persistShareSel();renderShareTab();}
 var BOOK_PAGES=15; // legacy / cart fallback
 // Pricing covers 24–40 face pages (face = everything except the cover and the end/back page).
 var BOOK_FACE_MIN=24, BOOK_FACE_MAX=40;
@@ -4258,6 +4271,8 @@ async function _openSharedTrip(prof, slug){
       cover:(row.cover_url||(photos[0]&&photos[0].url)||''), notes:row.notes||'', blog:row.blog||'', blogTitle:row.blog_title||'',
       privacy:row.privacy||'public', tripType:row.trip_type||'city', cities:(Array.isArray(row.cities)?row.cities:[]),
       missed:(Array.isArray(row.missed)?row.missed:[]), places:places, photos:photos,
+      // The owner's curation (highlighted-photos-only, hidden sections, etc.) — honour it for viewers.
+      shareSel:(row.share_sel && typeof row.share_sel==='object') ? row.share_sel : undefined,
       author:{ id:prof.id, name:prof.name||prof.username||'Traveler' }
     };
     window._shareViewActive=true;
@@ -17866,6 +17881,7 @@ async function dbLoadUserTrips(){
           blog: t.blog||'', blogTitle: t.blog_title||'',
           notes: t.notes||'', missed: (Array.isArray(t.missed)?t.missed:[]),
           book: (Array.isArray(t.book)?t.book:null),
+          shareSel: (t.share_sel && typeof t.share_sel==='object') ? t.share_sel : undefined,
           places: tripPlaces, photos: tripPhotos, itin:[], actualItin:[], expenses:[]
         };
       });
