@@ -2136,6 +2136,20 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 const SUPABASE_URL = 'https://kmihuvrhitdabdpusyky.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_S0V20D0pwQfwc4BCeUSFuQ_ikV4w0xP';
 const sb = (window.supabase) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+// ── Shared-link routing ───────────────────────────────────────────────────
+// A shared trip URL is trafolio.travel/<username>/<trip-slug> (e.g. /rony_khalaf/bali).
+// Detect it SYNCHRONOUSLY at load so enterApp() (session restore) won't clobber the share
+// view before the async resolver below fetches the trip. _resolveShareRoute() runs from boot.
+window._shareRoute=null; window._shareViewActive=false;
+(function(){
+  try{
+    var raw=(location.pathname||'').replace(/^\/+|\/+$/g,'');
+    if(!raw || raw==='index.html') return;
+    if(/\.(html?|js|css|png|jpe?g|gif|svg|ico|json|webmanifest|map|txt|xml|woff2?|ttf)$/i.test(raw)) return; // real asset
+    var parts=raw.split('/').map(function(s){ try{return decodeURIComponent(s);}catch(e){return s;} });
+    if(parts[0]){ window._shareRoute={uname:parts[0], slug:parts[1]||''}; window._shareViewActive=true; }
+  }catch(e){}
+})();
 // Backend base URL for the /api/* endpoints (Stripe, Prodigi, Google auth).
 // Leave '' when the app is served by server.js (same origin). For the iPhone app
 // (loads from capacitor://localhost) or a split web host, set this to your deployed
@@ -2372,6 +2386,13 @@ function showScreen(id,_fromBack){
   // Always (re)render content for the screen being shown
   if(id==='s-feed'&&typeof renderFeed==='function')renderFeed();
   if(id==='s-explore'&&typeof renderExploreContent==='function')renderExploreContent();
+  // Refetch other users' stories/blogs whenever the Feed/Explore screens open, so newly-posted
+  // content from people appears without a manual pull-to-refresh or re-login (was the reason
+  // a freshly-posted story wasn't visible to another account).
+  if(id==='s-feed'||id==='s-explore'){
+    if(typeof dbLoadFeedStories==='function')dbLoadFeedStories();
+    if(typeof dbLoadFeedBlogs==='function')dbLoadFeedBlogs();
+  }
   if(id==='s-concierge'&&typeof renderConcierge==='function')renderConcierge();
   if(id==='s-dash'&&typeof renderDash==='function')renderDash();
   if(id==='s-profile'&&typeof renderProfile==='function')renderProfile();
@@ -2441,7 +2462,7 @@ function refreshCurrentScreen(){
   function add(fn){ if(typeof fn==='function'){ try{ var r=fn(); if(r&&r.then)jobs.push(r); }catch(e){} } }
   if(id==='s-profile'){ add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); add(typeof dbLoadStories!=='undefined'&&dbLoadStories); add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); }
   else if(id==='s-explore'){ add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadFeedBlogs!=='undefined'&&dbLoadFeedBlogs); }
-  else if(id==='s-feed'){ add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); add(typeof dbLoadInbox!=='undefined'&&dbLoadInbox); }
+  else if(id==='s-feed'){ add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadInbox!=='undefined'&&dbLoadInbox); }
   else if(id==='s-trip'){ add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); }
   else { add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); }
   return Promise.all(jobs).then(function(){
@@ -2518,7 +2539,7 @@ function enterApp(){
   // Capture the saved view BEFORE showScreen('s-profile') below overwrites it (showScreen
   // calls _saveView), so resume can return to the city guide / trip / feed etc., not just profile.
   var _savedViewRaw=null; try{ if(typeof _viewKey==='function')_savedViewRaw=localStorage.getItem(_viewKey()); }catch(e){}
-  _shareDemo=null; // never carry the Tokyo landing example into the real app
+  if(!window._shareViewActive) _shareDemo=null; // never carry the Tokyo landing example into the real app (but keep a pending share view)
   if(typeof _loadChats==='function')_loadChats();
   document.getElementById('nav-right-auth').style.display='none';
   document.getElementById('nav-right-app').style.display='flex';
@@ -2532,9 +2553,9 @@ function enterApp(){
   if(typeof renderFeed==='function')renderFeed();
   if(typeof renderExploreContent==='function')renderExploreContent();
   if(typeof renderConcierge==='function')renderConcierge();
-  showScreen('s-profile');setActiveNav('bnav-profile');
+  if(!window._shareViewActive){ showScreen('s-profile');setActiveNav('bnav-profile'); } else { setActiveNav('bnav-profile'); } // a shared link wins over the default profile screen
   buildLangBar();
-  if(typeof _restoreView==='function')setTimeout(function(){ _restoreView(_savedViewRaw); },60);
+  if(!window._shareViewActive && typeof _restoreView==='function')setTimeout(function(){ _restoreView(_savedViewRaw); },60);
   if(typeof dbLoadSocial==='function')setTimeout(dbLoadSocial,1200);
   if(typeof dbLoadInbox==='function')setTimeout(dbLoadInbox,1600);
   if(typeof startRealtime==='function')setTimeout(startRealtime,1900);
@@ -4194,6 +4215,62 @@ function renderShPhotos(t){var grid=document.getElementById('share-photo-strip')
 function shareFilter(el){document.querySelectorAll('#share-filter-strip .filter-pill').forEach(function(p){p.classList.remove('active');});el.classList.add('active');var _t=_shareDemo||currentTrip;if(_t)renderShPlaces(_t,el.dataset.f);}
 // The trip currently shown on the share page (demo example, open trip, or first trip).
 function shareTripData(){ return _shareDemo||currentTrip||null; }
+// ── Resolve a shared-link route (/<username>/<trip-slug>) into the public share view ──
+function _slugify(s){ return String(s||'').toLowerCase().trim().replace(/[\s_]+/g,'-').replace(/[^a-z0-9-]/g,''); }
+async function _resolveShareRoute(){
+  var r=window._shareRoute;
+  if(!r || !sb){ _shareRouteFail(true); return; }
+  try{
+    // Username → profile (case-insensitive). usernames are stored lowercased, but be lenient.
+    var pr=await sb.from('profiles').select('id,name,username,avatar').ilike('username', r.uname).limit(1);
+    var prof=(pr&&pr.data&&pr.data[0])||null;
+    if(!prof){ _shareRouteFail(); return; }
+    if(r.slug){
+      var ok=await _openSharedTrip(prof, r.slug);
+      if(!ok) _shareRouteFail();
+    } else {
+      // Bare /username (no trip): open their public profile if we can, else fall through.
+      if(typeof openRealUserProfile==='function'){ window._shareViewActive=false; openRealUserProfile({id:prof.id,name:prof.name||prof.username,handle:prof.username||'',_real:true}); }
+      else _shareRouteFail();
+    }
+  }catch(e){ _shareRouteFail(); }
+}
+// Load one public trip (by owner + slug) with its places & photos, then show the share page.
+async function _openSharedTrip(prof, slug){
+  try{
+    var tr=await sb.from('trips').select('*').eq('user_id', prof.id).neq('privacy','private').limit(80);
+    var rows=(tr&&tr.data)||[];
+    var want=_slugify(slug);
+    var row=rows.find(function(x){ return _slugify(x.dest)===want; })
+          || rows.find(function(x){ return _slugify(x.dest).indexOf(want)===0; })       // dest like "Bali, Indonesia"
+          || rows.find(function(x){ return want && _slugify(x.dest).indexOf(want)>=0; });
+    if(!row) return false;
+    var pl=[], ph=[];
+    try{ var plr=await sb.from('places').select('*').eq('trip_id',row.id); pl=(plr&&plr.data)||[]; }catch(e){}
+    try{ var phr=await sb.from('photos').select('id,trip_id,url,caption,day,star').eq('trip_id',row.id); ph=(phr&&phr.data)||[]; }catch(e){}
+    var places=pl.map(function(p){ return {id:p.id, cat:p.cat||'see', name:p.name, note:p.note||'', rating:p.rating||0, photo:p.photo||null, city:p.city||''}; });
+    var photos=ph.map(function(p){ return {url:p.url, caption:p.caption||'', day:p.day, wide:false, star:!!p.star}; }).filter(function(p){ return p.url && p.url.indexOf('blob:')!==0; });
+    _shareDemo={
+      dbId:row.id, dest:(row.dest||row.country||''), country:row.country||'', flag:(row.flag&&row.flag!=='🌍'?row.flag:(flagForCountry(row.country)||cityFlag(row.dest)||'📍')),
+      dates: row.date_from ? new Date(row.date_from).toLocaleDateString('en-GB',{month:'short',year:'numeric'}) : '',
+      days: (row.date_from&&row.date_to) ? Math.max(1,Math.round((new Date(row.date_to)-new Date(row.date_from))/86400000)+1) : (row.days||0),
+      startDate:row.date_from||'', endDate:row.date_to||'',
+      cover:(row.cover_url||(photos[0]&&photos[0].url)||''), notes:row.notes||'', blog:row.blog||'', blogTitle:row.blog_title||'',
+      privacy:row.privacy||'public', tripType:row.trip_type||'city', cities:(Array.isArray(row.cities)?row.cities:[]),
+      missed:(Array.isArray(row.missed)?row.missed:[]), places:places, photos:photos,
+      author:{ id:prof.id, name:prof.name||prof.username||'Traveler' }
+    };
+    window._shareViewActive=true;
+    if(typeof showScreen==='function') showScreen('s-share');
+    else if(typeof renderSharePage==='function') renderSharePage();
+    return true;
+  }catch(e){ return false; }
+}
+function _shareRouteFail(silent){
+  window._shareViewActive=false; window._shareRoute=null;
+  if(!silent && typeof toast==='function') toast('That shared link could not be found.');
+  try{ if(window.appMode){ showScreen('s-profile'); } else if(!document.querySelector('.screen.active')){ showScreen('s-home'); } }catch(e){}
+}
 // Build a clean printable document of the shared guide, honouring the share selection.
 function shareGuideDoc(){
   var tr=shareTripData(); if(!tr)return '';
@@ -4363,7 +4440,7 @@ function renderProfileStories(){
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
       +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+cityFlag(s.city)+' '+escHtml((s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div>'
       +'<span class="story-vis-badge">'+vm.icon+' '+escHtml(vm.label)+'</span>'
-      +'<span style="margin-left:auto;font-size:11px;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</span></div>'
+      +'<button type="button" class="pstory-like" onclick="event.stopPropagation();toggleStoryLike(\'u\'+'+i+')" style="margin-left:auto;background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</button></div>'
       +'<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:4px">'+escHtml(s.title||'')+'</div>'
       +'<div style="font-size:12.5px;color:var(--ink-3);line-height:1.5;font-style:italic">'+escHtml((s.body||'').substring(0,110))+'…</div>'
       +'</div>'+sthumb
@@ -6609,7 +6686,11 @@ function renderViewedProfile(o){
   }
   if(stories.length){
     html+='<div style="border-top:8px solid var(--paper-2);padding:16px 20px 12px"><div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px">'+t('tabStories')+'</div>';
-    html+=stories.map(function(s,si){ return '<div style="padding:12px 0;border-bottom:1px solid var(--paper-3)"><div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink);margin-bottom:4px">'+escHtml(s.title||'')+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(String(s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div></div>'; }).join('');
+    html+=stories.map(function(s,si){ return '<div onclick="openCityStory(\''+s.id+'\',\''+escHtml(String(s.city||'').replace(/\x27/g,""))+'\')" style="padding:12px 0;border-bottom:1px solid var(--paper-3);cursor:pointer">'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
+      +'<div style="font-family:Cormorant Garamond,serif;font-size:17px;font-weight:500;color:var(--ink);flex:1;min-width:0">'+escHtml(s.title||'')+'</div>'
+      +'<button type="button" onclick="event.stopPropagation();toggleStoryLike(\''+s.id+'\')" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0;flex-shrink:0;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</button></div>'
+      +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+escHtml(String(s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div></div>'; }).join('');
     html+='</div>';
   }
   body.innerHTML=html;
@@ -6639,7 +6720,7 @@ async function openRealUserProfile(u){
   var body=document.getElementById('upm-body'); if(!body) return;
   body.innerHTML='<div style="text-align:center;padding:46px 20px;color:var(--ink-4)">'+t('searching')+'</div>';
   openModal('sheet-user-profile');
-  var prof=u, utrips=[], allPhotos=[], allPlaces=[], folCount=0, followingCount=0;
+  var prof=u, utrips=[], allPhotos=[], allPlaces=[], folCount=0, followingCount=0, uStories=[];
   if(sb && u.id){
     try{
       var pr=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
@@ -6651,6 +6732,13 @@ async function openRealUserProfile(u){
       if(ph&&ph.data) allPhotos=ph.data;
       var pl=await sb.from('places').select('*').eq('user_id',u.id);
       if(pl&&pl.data) allPlaces=pl.data;
+      // Their stories (so they actually show on the profile, with a like). Honour visibility:
+      // public always; trafollowers-only only if I follow them; private never.
+      try{
+        var iFollow=(userData.following||[]).some(function(f){return f&&f.id===u.id;});
+        var stres=await sb.from('stories').select('*').eq('user_id',u.id).order('created_at',{ascending:false}).limit(50);
+        if(stres&&stres.data){ uStories=stres.data.filter(function(s){ var v=s.visibility||'public'; if(v==='private')return false; if(v==='friends'||v==='followers')return iFollow; return true; }); }
+      }catch(e){}
       try{ var frr=await sb.from('follows').select('follower_id').eq('following_id',u.id); if(frr&&frr.data)folCount=frr.data.length; }catch(e){}
       try{ var fgg=await sb.from('follows').select('following_id').eq('follower_id',u.id); if(fgg&&fgg.data)followingCount=fgg.data.length; }catch(e){}
     }catch(e){}
@@ -6671,7 +6759,15 @@ async function openRealUserProfile(u){
     return {dest:(tt.dest||tt.country||''), flag:(flagForCountry(tt.country)||cityFlag(tt.dest)||'📍'), img:(cover||pics[0]||''), images:imgs, places:tplaces};
   });
   var placesTotal=allPlaces.length;
-  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', livesIn:prof.livesIn||'', from:prof.from||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:[], canView:true, isPrivate:false, followStatus:followStatusOf(u.id) });
+  // Map their stories into resolvable objects (id 'v'+i → getStoryById) so the like button works.
+  _viewedStories=uStories.map(function(s){
+    return {dbId:s.id, city:s.city, flag:s.flag||cityFlag(s.city), title:s.title, body:s.body,
+      visibility:s.visibility||'public', photo:s.photo||null, likes:s.likes||0, liked:false,
+      date:s.created_at?new Date(s.created_at).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):'',
+      author:{id:u.id,name:prof.name,initial:(prof.name||'?')[0]}};
+  });
+  _viewedStories.forEach(function(s,i){ s.id='v'+i; });
+  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', livesIn:prof.livesIn||'', from:prof.from||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:_viewedStories, canView:true, isPrivate:false, followStatus:followStatusOf(u.id) });
 }
 
 var CITY_PLACES={
@@ -16071,6 +16167,8 @@ var _feedTab='feed';
 function switchFeedTab(tab){
   _feedTab=tab;
   ['feed-tab-feed','feed-tab-stories','feed-tab-blogs'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.toggle('active', id==='feed-tab-'+tab);});
+  if((tab==='feed'||tab==='stories') && typeof dbLoadFeedStories==='function') dbLoadFeedStories(); // Following + Stories tabs carry others' stories
+  if(tab==='blogs' && typeof dbLoadFeedBlogs==='function') dbLoadFeedBlogs();
   renderFeed();
 }
 // Dispatcher: the Feed has Following / Stories / Blogs tabs.
@@ -16095,6 +16193,19 @@ function renderFeedMain() {
       time: s.date || 'Just now', preview: s.title,
     });
   });
+  // Stories from people you follow (loaded from the cloud) — this is what makes a trafollower's
+  // new story show up in your Following feed. They carry the real author id so they land under
+  // "Trafollowers" (isFollowed) below.
+  (typeof feedStories!=='undefined'?feedStories:[]).forEach(function(s, i){
+    var au=s.author||{};
+    posts.unshift({
+      id:'fs'+i, userId:au.id||0,
+      userName:au.name||'Traveler', userInitial:(au.name||'?')[0],
+      userColor:au.color||'linear-gradient(135deg,var(--ember),var(--gold))',
+      type:'story', dest:s.city, flag:cityFlag(s.city), storyId:'f'+i,
+      time:s.date||'', preview:s.title,
+    });
+  });
 
   if (!posts.length) {
     body.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:32px;margin-bottom:10px">&#128101;</div><div>'+t('noFollowing')+'</div></div>';
@@ -16106,6 +16217,13 @@ function renderFeedMain() {
   var discoverBanner = '';
   if(followCount===0){
     discoverBanner = '<div onclick="showScreen(\'s-explore\');setActiveNav(\'bnav-explore\')" style="margin:12px 16px;padding:14px 16px;background:linear-gradient(135deg,var(--ember-lt),var(--paper-2));border-radius:14px;cursor:pointer;display:flex;align-items:center;gap:12px"><span style="font-size:22px">🌍</span><div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--ink)">Discover travellers to follow</div><div style="font-size:12px;color:var(--ink-3);margin-top:2px">Follow people to fill your feed with their trips & recs</div></div><span style="color:var(--ember);font-size:18px">›</span></div>';
+  }
+  // A story post gets a heart you can tap right in the feed (no need to open it first).
+  function likeBtnFor(p){
+    if(p.type!=='story' || !p.storyId) return '';
+    var st=(typeof getStoryById==='function')?getStoryById(p.storyId):null;
+    var lk=st&&st.liked, lc=(st&&st.likes)||0;
+    return '<button class="feed-like" type="button" onclick="event.stopPropagation();toggleStoryLike(\''+p.storyId+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;color:'+(lk?'#E8334A':'var(--ink-3)')+';display:flex;align-items:center;gap:5px;padding:0">'+(lk?'♥':'♡')+' '+lc+'</button>';
   }
   // Helper: build a single feed card's HTML
   function feedCardHtml(p, i){
@@ -16123,6 +16241,7 @@ function renderFeedMain() {
       + '<div style="padding:0 16px 14px;font-size:13px;color:var(--ink-3);line-height:1.55;font-style:italic">'+escHtml((p.preview||'').substring(0,140))+'</div>'
       + cover
       + '<div style="display:flex;align-items:center;gap:16px;padding:10px 16px 12px;border-top:1px solid var(--paper-3)">'
+      +   likeBtnFor(p)
       +   '<button class="feed-share" type="button" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-3);display:flex;align-items:center;gap:5px;padding:0">\u2197 '+t('reshareLabel')+'</button>'
       + '</div>'
       + '</div>';
@@ -16687,8 +16806,10 @@ function getStoryById(id){
   id=String(id);
   if(id.charAt(0)==='u'){ return userStories[parseInt(id.slice(1),10)]||null; }
   if(id.charAt(0)==='f'){ return (typeof feedStories!=='undefined'?feedStories:[])[parseInt(id.slice(1),10)]||null; }
+  if(id.charAt(0)==='v'){ return (typeof _viewedStories!=='undefined'?_viewedStories:[])[parseInt(id.slice(1),10)]||null; }
   return cityStories.find(function(s){ return String(s.id)===id; })||null;
 }
+var _viewedStories=[];
 function buildStoriesHTML(cityFilter) {
   var all = cityStories.filter(Boolean).map(function(s){return s;})
     .concat(userStories.map(function(s,i){ s.id='u'+i; return s; }))
@@ -16752,6 +16873,12 @@ function refreshStoriesList(){
   var sb=document.getElementById('explore-body');
   if(sb && (_exploreTab==='stories'||_exploreTab==='cities')) renderExploreContent();
   if(typeof renderProfileStories==='function' && document.getElementById('s-profile') && document.getElementById('s-profile').classList.contains('active')) renderProfileStories();
+  // If a viewed traveller's profile is open, repaint it so its story like-count updates too.
+  var up=document.getElementById('sheet-user-profile');
+  if(up && up.classList.contains('on') && _lastViewedOpts && typeof renderViewedProfile==='function') renderViewedProfile(_lastViewedOpts);
+  // Repaint the Following feed too (it now carries trafollowers' stories).
+  var sf=document.getElementById('s-feed');
+  if(sf && sf.classList.contains('active') && typeof renderFeed==='function') renderFeed();
 }
 
 // ── Story reader ──────────────────────────────────────────────────────────
@@ -17557,7 +17684,7 @@ async function dbSaveTrip(trip){
     privacy: trip.privacy||'public'
   };
   // Optional newer columns — if the migration hasn't run, retry without them so trip-saving never breaks.
-  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[], requires_pro: !!trip.requiresPro, trip_with: trip.with||''});
+  var row=Object.assign({}, base, {trip_type: trip.tripType||'city', cities: trip.cities||[], requires_pro: !!trip.requiresPro, trip_with: trip.with||'', blog: trip.blog||'', blog_title: trip.blogTitle||''});
   try{
     var res=await sb.from('trips').insert(row).select();
     if(res.error && /trip_type|cities|requires_pro|trip_with|column|schema cache/i.test(res.error.message||'')){
@@ -17837,9 +17964,17 @@ async function sbUploadImage(srcUrl, prefix){
 // Generic trip-field update by DB id.
 async function dbUpdateTrip(trip, fields){
   if(!sb||!userData.id||!trip) return;
-  var id=trip.dbId||trip.id; if(!id) return;
-  try{ await sb.from('trips').update(fields).eq('id', id); }
-  catch(e){ console.error('dbUpdateTrip error:',e); }
+  // Target the trip's REAL cloud id — never the local numeric id (which matches no row, so the
+  // update would silently no-op). Cloud-save the trip first if it isn't there yet.
+  var id=trip.dbId; if(!id && typeof ensureTripDbId==='function'){ try{ id=await ensureTripDbId(trip); }catch(e){} }
+  id=id||trip.dbId; if(!id) return;
+  try{
+    var r=await sb.from('trips').update(fields).eq('id', id);
+    if(r&&r.error){
+      // e.g. blog/blog_title columns missing → run the migration in SUPABASE_DATA_SETUP.md.
+      console.warn('dbUpdateTrip:',r.error.message);
+    }
+  }catch(e){ console.error('dbUpdateTrip error:',e); }
 }
 function dbSaveBook(trip){ if(trip) dbUpdateTrip(trip, {book: trip.book||[]}); }
 async function dbSaveStory(story){
@@ -19433,6 +19568,8 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
     }
   }catch(e){}
   initGoogleAuth();
+  // Shared trip/profile link (/<username>/<slug>) → resolve + show the public share view.
+  if(window._shareRoute && typeof _resolveShareRoute==='function'){ setTimeout(_resolveShareRoute, 0); }
 })();
 </script>
 
