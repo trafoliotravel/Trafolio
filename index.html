@@ -2200,6 +2200,11 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
   // show the profile-setup screen (bio / from / lives-in) with a warm welcome. Name + avatar are
   // already filled from the Google account.
   function _startOnboarding(){
+    // CRITICAL: this can fire LATE (the profile read is async). If the user has already finished
+    // setup (tapped "Let's go"), do NOT yank them back to s-prefs — that was the "Let's go doesn't
+    // let me in" bounce. Also skip if they've already navigated into the app.
+    if(window._onboardingDone) return;
+    var _cur=document.querySelector('.screen.active'); if(_cur && _cur.id!=='s-prefs' && _cur.id!=='s-auth' && typeof appMode!=='undefined' && appMode) return;
     try{
       var first=((userData.name||'there').split(' ')[0]);
       if(typeof initPPills==='function') initPPills();
@@ -6865,6 +6870,7 @@ function doAuth(){
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){setAuthErr('Please enter a valid email address.');return;}
   var hasSb = (typeof sb!=='undefined' && sb && sb.auth);
   if(_amode!=='login'){
+    window._onboardingDone=false; // fresh signup → this person still needs the setup step
     var name=(document.getElementById('auth-name').value||'').trim();
     var uname=(document.getElementById('auth-uname').value||'').trim();
     if(!name){setAuthErr('Please enter your name.');return;}
@@ -6954,6 +6960,7 @@ function sendWelcomeEmail(name,email){
 function dismissWelcomeEmail(){closeModal();showScreen('s-prefs');initPPills();}
 function initPPills(){document.querySelectorAll('.ppill').forEach(function(pill){if(pill._init)return;pill._init=true;pill.addEventListener('click',function(){var g=this.dataset.g;var multi=this.classList.contains('ppm');var on=this.classList.contains('on');function clr(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';var d=p.querySelector('.pdot');if(d)d.style.background=p.dataset.c||'var(--ember)';}function sel(p){var c=p.dataset.c||'var(--ember)';p.classList.add('on');p.style.background=c;p.style.borderColor=c;p.style.color='white';var d=p.querySelector('.pdot');if(d)d.style.background='rgba(255,255,255,.4)';}if(!multi){document.querySelectorAll('.ppill[data-g="'+g+'"]').forEach(function(x){clr(x);});if(!on)sel(this);}else{if(on)clr(this);else sel(this);}});});}
 function savePrefs(){
+  window._onboardingDone=true; // setup complete — block any late async onboarding from bouncing back
   var c=document.querySelector('.ppill[data-g="currency"].on');if(c)userData.currency=c.dataset.v;
   var bio=document.getElementById('pref-bio'); if(bio&&bio.value.trim())userData.bio=bio.value.trim();
   var from=document.getElementById('ep-pfrom'); if(from&&from.value.trim())userData.from=from.value.trim();
@@ -20001,7 +20008,7 @@ function _saveView(){
   if(typeof appMode==='undefined'||!appMode)return;
   try{
     var scr=document.querySelector('.screen.active'); var sid=scr?scr.id:'';
-    if(!sid||sid==='s-home')return;
+    if(!sid||sid==='s-home'||sid==='s-prefs'||sid==='s-auth'||sid==='s-onboard')return; // don't record pre-app screens as a resume target
     var pe=document.querySelector('.prof-tab.active');
     var v={screen:sid, tab:(typeof currentTab!=='undefined'?currentTab:''), ptab:pe?pe.getAttribute('data-ptab'):'',
            tripId:(sid==='s-trip'&&currentTrip)?currentTrip.id:null,
@@ -20014,6 +20021,9 @@ function _saveView(){
 function _restoreView(raw){
   try{
     var v=JSON.parse(((typeof raw!=='undefined'&&raw!=null)?raw:localStorage.getItem(_viewKey()))||'null'); if(!v||!v.screen)return;
+    // Never "resume" onto a pre-app screen. After signup the last view is s-prefs (the setup step);
+    // restoring it bounced the user straight back after they tapped "Let's go" → "can't get in".
+    if(v.screen==='s-prefs'||v.screen==='s-auth'||v.screen==='s-home'||v.screen==='s-onboard')return;
     var go=function(){ try{ if(v.y) window.scrollTo(0,v.y); }catch(e){} };
     if(v.screen==='s-trip'){
       var _vt=(trips||[]).find(function(t){ return t.id===v.tripId || (v.tripDbId!=null&&t.dbId===v.tripDbId) || (v.tripKey && (String(t.dest||'').toLowerCase()+'|'+(t.startDate||''))===v.tripKey); });
