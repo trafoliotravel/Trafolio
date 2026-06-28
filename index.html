@@ -4443,11 +4443,13 @@ function _printablePdfShare(frame){
     var bodyEl; try{ bodyEl=frame.contentWindow.document.body; }catch(e){}
     if(!bodyEl){ if(typeof toast==='function')toast('Couldn’t read the page'); return; }
     var h=bodyEl.scrollHeight||bodyEl.offsetHeight||1123;
-    // Scale down for long guides so the rendered canvas stays under the iOS ~16-megapixel limit —
-    // otherwise tall documents get truncated to ~2 pages instead of paginating fully.
-    var w=bodyEl.scrollWidth||794, scale=2;
-    while(scale>1 && (w*scale)*(h*scale) > 14000000){ scale-=0.25; }
-    var opt={margin:6,image:{type:'jpeg',quality:.9},html2canvas:{useCORS:true,allowTaint:false,scale:scale,backgroundColor:'#ffffff',height:h,windowHeight:h},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
+    var w=bodyEl.scrollWidth||794;
+    // Scale down for long guides so the rendered canvas stays under iOS limits BOTH ways: the
+    // single-canvas HEIGHT cap (~8192px — exceeding it silently CLIPS the bottom, which is why the
+    // guide cut off after a few items) AND the total-area cap. Lower res beats losing content.
+    var scale=2, MAXDIM=7800, MAXAREA=14000000;
+    while(scale>0.45 && ( (h*scale) > MAXDIM || (w*scale)*(h*scale) > MAXAREA )){ scale-=0.1; }
+    var opt={margin:6,image:{type:'jpeg',quality:.9},html2canvas:{useCORS:true,allowTaint:false,scale:scale,backgroundColor:'#ffffff',height:h,windowHeight:h,width:w,windowWidth:w},jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},pagebreak:{mode:['css','legacy']}};
     html2pdf().set(opt).from(bodyEl).outputPdf('blob').then(function(blob){
       if(!blob || blob.size<800){ if(typeof toast==='function')toast('Couldn’t make the PDF'); return; }
       var file=new File([blob],'trafolio.pdf',{type:'application/pdf'});
@@ -4488,8 +4490,11 @@ function shareGuideDownload(){
     function _gen(){
       // Measure AFTER images have loaded — otherwise scrollHeight excludes their height and the
       // capture is a near-blank, single short page (this was the "empty file" bug).
-      var _hh=holder.scrollHeight||holder.offsetHeight||1123;
-      var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,allowTaint:false,scale:1.5,backgroundColor:'#ffffff',height:_hh,windowHeight:_hh}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
+      var _hh=holder.scrollHeight||holder.offsetHeight||1123, _hw=holder.scrollWidth||760;
+      // Keep the single canvas under height + area limits so long guides render in FULL (no clipping).
+      var _hs=2, _MD=7800, _MA=14000000;
+      while(_hs>0.45 && ( (_hh*_hs) > _MD || (_hw*_hs)*(_hh*_hs) > _MA )){ _hs-=0.1; }
+      var opt={margin:8, image:{type:'jpeg',quality:.92}, html2canvas:{useCORS:true,allowTaint:false,scale:_hs,backgroundColor:'#ffffff',height:_hh,windowHeight:_hh,width:_hw,windowWidth:_hw}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy']}};
       html2pdf().set(opt).from(holder).outputPdf('blob').then(function(blob){
         try{ holder.remove(); }catch(e){}
         if(!blob || blob.size<800){ toast(t('mapShareFail')||'Couldn’t generate PDF'); return; } // guard against a blank export
