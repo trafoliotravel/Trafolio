@@ -5574,7 +5574,7 @@ function onFromChange(){var fromVal=document.getElementById('at-from').value;var
 function onToChange(){var toVal=document.getElementById('at-to').value;var fromVal=document.getElementById('at-from').value;if(!toVal||!fromVal)return;if(toVal<fromVal){document.getElementById('at-to').value=fromVal;toast(t('endDateBefore'));}}
 
 // ─── ADD PLACE ────────────────────────────────────────────────────
-function openAddPlace(){document.getElementById('pl-name').value='';document.getElementById('pl-note').value='';_selectedGPlace=null;var _psr=document.getElementById('pl-search-results');if(_psr){_psr.innerHTML='';_psr.style.display='none';}var _pgl=document.getElementById('pl-gmaps-link');if(_pgl)_pgl.style.display='none';selectedCat='eat';selectedRating=4;document.querySelectorAll('.cat-opt').forEach(function(c){c.classList.toggle('on',c.dataset.cat==='eat');});document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=4);});_placePhoto=null;var _pv=document.getElementById('pl-photo-preview');if(_pv)_pv.style.display='none';var _plb=document.getElementById('pl-photo-label');if(_plb)_plb.textContent='Add a photo';clearPlacePhotoSuggest();renderPlaceCityField();openModal('sheet-add-place');}
+function openAddPlace(){document.getElementById('pl-name').value='';document.getElementById('pl-note').value='';_selectedGPlace=null;var _psr=document.getElementById('pl-search-results');if(_psr){_psr.innerHTML='';_psr.style.display='none';}var _pgl=document.getElementById('pl-gmaps-link');if(_pgl)_pgl.style.display='none';selectedCat='eat';selectedRating=4;document.querySelectorAll('.cat-opt').forEach(function(c){c.classList.toggle('on',c.dataset.cat==='eat');});document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=4);});_placePhoto=null;var _pv=document.getElementById('pl-photo-preview');if(_pv)_pv.style.display='none';var _plb=document.getElementById('pl-photo-label');if(_plb)_plb.textContent='Add a photo';clearPlacePhotoSuggest();renderPlaceCityField();try{if(window._googleMapsReady&&window.google&&google.maps&&google.maps.importLibrary&&!_gpBroken())google.maps.importLibrary('places');}catch(e){}openModal('sheet-add-place');}
 function selectCat(el){selectedCat=el.dataset.cat;document.querySelectorAll('.cat-opt').forEach(function(c){c.classList.toggle('on',c===el);});}
 function setRating(el){selectedRating=parseInt(el.dataset.r);document.querySelectorAll('#rating-row .rstar').forEach(function(d){d.classList.toggle('on',parseInt(d.dataset.r)<=selectedRating);});}
 
@@ -7130,7 +7130,15 @@ function renderViewedProfile(o){
     html+='</div>';
     html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:4px 0 16px">';
     html+=trips.map(function(tp,idx){
-      return '<div onclick="openViewedTrip('+idx+')" style="position:relative;aspect-ratio:1;overflow:hidden;border-radius:6px;cursor:pointer;background:var(--paper-3)">'+(tp.img?'<img src="'+escHtml(tp.img)+'" style="width:100%;height:100%;object-fit:cover" onerror="imgErr(this)">':'')+'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div><div style="position:absolute;bottom:6px;left:8px;right:8px;color:#fff;font-family:Cormorant Garamond,serif;font-size:14px;font-weight:500;line-height:1.1">'+(tp.flag||'')+' '+escHtml(tp.dest||'')+'</div></div>';
+      var twv=(typeof tripWithMeta==='function')?tripWithMeta(tp.with):null;
+      return '<div onclick="openViewedTrip('+idx+')" style="position:relative;aspect-ratio:1;overflow:hidden;border-radius:6px;cursor:pointer;background:var(--paper-3)">'
+        +(tp.img?'<img src="'+escHtml(tp.img)+'" style="width:100%;height:100%;object-fit:cover" onerror="imgErr(this)">':'')
+        +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
+        +(twv?'<div title="'+escHtml(twv[1])+'" style="position:absolute;top:6px;left:6px;width:22px;height:22px;border-radius:50%;background:rgba(0,28,48,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:12px;line-height:1">'+twv[0]+'</div>':'')
+        +'<div style="position:absolute;bottom:6px;left:8px;right:8px;color:#fff">'
+        +'<div style="font-family:Cormorant Garamond,serif;font-size:14px;font-weight:500;line-height:1.1">'+(tp.flag||'')+' '+escHtml(tp.dest||'')+'</div>'
+        +(tp.dates?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.85);margin-top:1px">'+escHtml(tp.dates)+'</div>':'')
+        +'</div></div>';
     }).join('');
     html+='</div></div>';
   }
@@ -7213,7 +7221,8 @@ async function openRealUserProfile(u){
     var pics=allPhotos.filter(function(p){return p.trip_id===tt.id;}).map(function(p){return p.url;}).filter(function(x){return x && x.indexOf('blob:')!==0;});
     var imgs = pics.length?pics:(cover?[cover]:[]);
     var tplaces=allPlaces.filter(function(pp){return pp.trip_id===tt.id;});
-    return {dest:(tt.dest||tt.country||''), flag:(flagForCountry(tt.country)||cityFlag(tt.dest)||'📍'), img:(cover||pics[0]||''), images:imgs, places:tplaces};
+    return {dest:(tt.dest||tt.country||''), flag:(flagForCountry(tt.country)||cityFlag(tt.dest)||'📍'), img:(cover||pics[0]||''), images:imgs, places:tplaces,
+      dates:(tt.date_from?new Date(tt.date_from).toLocaleDateString('en-GB',{month:'short',year:'numeric'}):''), with:(tt.trip_with||'')};
   });
   var placesTotal=allPlaces.length;
   // Map their stories into resolvable objects (id 'v'+i → getStoryById) so the like button works.
@@ -17868,36 +17877,114 @@ function doSocialAuth(provider){
 // "stopped working" until reload). Use a 60s cooldown instead so it self-heals.
 function _gpBroken(){ return !!(window._googlePlacesBrokenUntil && Date.now() < window._googlePlacesBrokenUntil); }
 function _gpFail(){ window._googlePlacesBrokenUntil = Date.now() + 60000; }
+// ── Faster place search ──────────────────────────────────────────────────────
+// Old flow waited up to 3.5s on Google before even trying the fallback, ran one network
+// round-trip per keystroke with no caching, and used searchByText (built for complete
+// queries, not type-ahead). New flow: (1) INSTANT local matches from the user's own places
+// + the built-in city list (0 latency, dropdown never empty), (2) Google + Photon fired in
+// PARALLEL — whichever returns first shows, richer results upgrade in place, no dead wait,
+// (3) per-query cache + a sequence guard so stale responses never clobber a newer query.
+var _plSeq=0, _plShownRank={}, _plCache={};
+function _placeBias(){ return (currentTrip&&(currentTrip.country||currentTrip.dest))||''; }
+function _placeIcon(types){ types=(types||[]).join(',').toLowerCase();
+  if(/restaurant|food/.test(types))return '🍽';
+  if(/cafe|coffee/.test(types))return '☕';
+  if(/\bbar\b|pub/.test(types))return '🍸';
+  if(/lodging|hotel/.test(types))return '🏨';
+  if(/museum/.test(types))return '🏛';
+  if(/park|garden/.test(types))return '🌳';
+  if(/store|shop|mall/.test(types))return '🛍';
+  return '📍'; }
+// Instant, network-free suggestions: the user's own saved places + the built-in city list.
+function _localPlaceMatches(q){
+  var ql=q.toLowerCase(), out=[], seen={};
+  function add(name,addr,lat,lng,rating,emoji){ var k=(name||'').toLowerCase(); if(!name||seen[k])return; seen[k]=1;
+    out.push({name:name,addr:addr||'',lat:(lat!=null?lat:null),lng:(lng!=null?lng:null),rating:rating||0,types:[],emoji:emoji||'',source:'local'}); }
+  (trips||[]).forEach(function(tr){ if(!tr||!tr.places)return; tr.places.forEach(function(p){ if(p&&(p.name||'').toLowerCase().indexOf(ql)>=0) add(p.name,tr.dest||'',p.lat,p.lng,p.rating); }); });
+  try{ if(typeof CITY_PLACES!=='undefined' && currentTrip){ var cp=CITY_PLACES[currentTrip.dest]||CITY_PLACES[currentTrip.country]; if(cp)cp.forEach(function(p){ if((p.n||'').toLowerCase().indexOf(ql)>=0) add(p.n,currentTrip.dest||'',null,null,0,p.e); }); } }catch(e){}
+  return out.slice(0,6);
+}
+// Unified result renderer. rank = local(0) < photon(1) < google(2): a higher-rank source can
+// replace what's shown, but a slower lower-rank response can't downgrade it.
+function _renderPlaceResults(items,res,seq,rank){
+  if(!res || seq!==_plSeq) return;
+  if(rank < (_plShownRank[seq]==null?-1:_plShownRank[seq])) return;
+  _plShownRank[seq]=rank;
+  res.innerHTML=''; res.style.display='block';
+  items.slice(0,8).forEach(function(it){
+    var icon=it.emoji||_placeIcon(it.types);
+    var star=it.rating?(' <span style="color:#F5A623;font-size:11px">★ '+(Math.round(it.rating*10)/10)+'</span>'):'';
+    var d=document.createElement('div');
+    d.style.cssText='padding:11px 14px;border-bottom:1px solid var(--paper-3);cursor:pointer;display:flex;align-items:center;gap:10px';
+    d.innerHTML='<div style="font-size:18px;width:28px;text-align:center">'+icon+'</div>'
+      +'<div style="min-width:0"><div style="font-size:14px;font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(it.name)+star+'</div>'
+      +(it.addr?'<div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escHtml(it.addr)+'</div>':'')+'</div>';
+    (function(p){ d.addEventListener('click',function(){
+      var ni=document.getElementById('pl-name'); if(ni)ni.value=p.name;
+      res.innerHTML=''; res.style.display='none';
+      _selectedGPlace={ name:p.name, address:p.addr, formatted_address:p.addr, place_id:p.placeId||null,
+        lat:(p.lat!=null?p.lat:null), lng:(p.lng!=null?p.lng:null), rating:p.rating||0 };
+      if(p._gphotos && p._gphotos.length && !_placePhoto){
+        try{ var urls=p._gphotos.slice(0,2).map(function(ph){return ph.getURI?ph.getURI({maxWidth:800,maxHeight:600}):'';}).filter(Boolean);
+          if(urls.length&&typeof renderPlacePhotoSuggestions==='function')renderPlacePhotoSuggestions(urls); }catch(e){}
+      }
+    }); })(it);
+    res.appendChild(d);
+  });
+}
+// Photon (komoot) — built for as-you-type, fast, free. Replaces Nominatim as the open fallback.
+function doPhotonSearch(q,bias,res,seq){
+  var lang=/^(en|fr|de|it)$/.test(currentLang)?currentLang:'en';
+  var url='https://photon.komoot.io/api/?limit=8&lang='+lang+'&q='+encodeURIComponent(q+(bias?(' '+bias):''));
+  fetch(url).then(function(r){return r.json();}).then(function(data){
+    if(seq!==_plSeq)return;
+    var feats=(data&&data.features)||[];
+    var items=feats.map(function(f){ var p=f.properties||{}, g=(f.geometry&&f.geometry.coordinates)||[];
+      var nm=p.name||p.street||p.city||q;
+      var addr=[p.street,p.city,p.state,p.country].filter(Boolean).join(', ');
+      return {name:nm,addr:addr,lat:g[1],lng:g[0],rating:0,types:[p.osm_value||p.osm_key||''],source:'photon'};
+    }).filter(function(x){return x.name;});
+    if(!items.length)return;
+    _plCache[q.toLowerCase()+'|'+bias]={items:items,rank:1};
+    _renderPlaceResults(items,res,seq,1);
+  }).catch(function(){});
+}
 function onPlaceSearch(val){
-  _selectedGPlace=null;var q=(val||'').trim();var res=document.getElementById('pl-search-results');
-  var glink=document.getElementById('pl-gmaps-link');if(glink)glink.style.display='none';
+  _selectedGPlace=null;
+  var q=(val||'').trim();
+  var res=document.getElementById('pl-search-results');
+  var glink=document.getElementById('pl-gmaps-link'); if(glink)glink.style.display='none';
   if(!res)return;
   clearTimeout(_plSearchTimer);
-  if(!q){res.innerHTML='';res.style.display='none';return;}
-  res.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">'+t('searching')+'</div>';
-  res.style.display='block';
-  _plSearchTimer=setTimeout(function(){doPlaceSearch(q);},380);
+  if(!q){ res.innerHTML=''; res.style.display='none'; return; }
+  var seq=++_plSeq; _plShownRank[seq]=-1;
+  // 1) INSTANT local results — never an empty/slow dropdown while the network runs.
+  var loc=_localPlaceMatches(q);
+  if(loc.length){ _renderPlaceResults(loc,res,seq,0); }
+  else { res.innerHTML='<div style="padding:10px 14px;font-size:12px;color:var(--ink-4)">'+t('searching')+'</div>'; res.style.display='block'; }
+  // 2) cached network result → instant.
+  var ck=q.toLowerCase()+'|'+_placeBias();
+  if(_plCache[ck]){ _renderPlaceResults(_plCache[ck].items,res,seq,_plCache[ck].rank); return; }
+  // 3) network search, lightly debounced.
+  _plSearchTimer=setTimeout(function(){ doPlaceSearch(q,seq); }, 220);
 }
-function doPlaceSearch(q){
+function doPlaceSearch(q,seq){
+  if(seq==null)seq=_plSeq;
   var res=document.getElementById('pl-search-results');if(!res)return;
-  var dest=currentTrip?currentTrip.dest:'';
-  var country=currentTrip&&currentTrip.country?currentTrip.country:'';
-  var bias=country||dest||'';
-  var nominatimQ=q+(bias?' '+bias:'');
-  // PRIMARY: Google Places (New) — far better POI coverage than OpenStreetMap, so places that
-  // exist on Google actually show up. Uses Place.searchByText (the legacy AutocompleteService/
-  // PlacesService is disabled on keys created after Mar 2025). Nominatim stays as the fallback
-  // for when Google is unavailable / returns nothing, so search never goes dead.
+  var bias=_placeBias();
+  // Photon AND Google fire in PARALLEL — no blocking wait. Photon (fast, free, as-you-type)
+  // usually paints first; Google upgrades the list in place when it lands. The seq guard +
+  // rank ordering keep the freshest, richest result on screen and ignore stale responses.
+  doPhotonSearch(q,bias,res,seq);
   if(window._googleMapsReady && window.google && google.maps && google.maps.importLibrary && !_gpBroken()){
-    doGooglePlacesNew(q,bias,res,nominatimQ);
-  } else {
-    doNominatimSearch(nominatimQ,res);
+    doGooglePlacesNew(q,bias,res,seq);
   }
 }
-// Google Places (New) text search → rich, accurate POI results in one call (no getDetails needed).
-function doGooglePlacesNew(q,bias,res,nominatimQ){
+// Google Places (New) text search → rich, accurate POI results (rating + photos) in one call.
+function doGooglePlacesNew(q,bias,res,seq){
   var settled=false;
-  var fb=setTimeout(function(){ if(settled)return; settled=true; _gpFail(); doNominatimSearch(nominatimQ,res); },3500);
+  // If Google never answers, just mark it broken for 60s — Photon is already showing results.
+  var fb=setTimeout(function(){ if(settled)return; settled=true; _gpFail(); },3000);
   google.maps.importLibrary('places').then(function(lib){
     var Place=lib.Place;
     if(!Place||!Place.searchByText) throw new Error('Place.searchByText unavailable');
@@ -17907,12 +17994,20 @@ function doGooglePlacesNew(q,bias,res,nominatimQ){
       maxResultCount:8,
       language:currentLang
     }).then(function(r){
-      if(settled)return; settled=true; clearTimeout(fb);
-      var places=r&&r.places;
-      if(!places||!places.length){ doNominatimSearch(nominatimQ,res); return; } // nothing on Google → try OSM
-      renderGooglePlaceResults(places,res);
+      settled=true; clearTimeout(fb);
+      if(seq!==_plSeq)return;
+      var places=(r&&r.places)||[]; if(!places.length)return;
+      var items=places.map(function(p){ var loc=p.location; return {
+        name:(typeof p.displayName==='string')?p.displayName:((p.displayName&&p.displayName.text)||''),
+        addr:p.formattedAddress||'', placeId:p.id||null,
+        lat:(loc&&typeof loc.lat==='function')?loc.lat():((loc&&loc.lat)||null),
+        lng:(loc&&typeof loc.lng==='function')?loc.lng():((loc&&loc.lng)||null),
+        rating:p.rating||0, types:p.types||[], _gphotos:p.photos||[], source:'google' };
+      });
+      _plCache[q.toLowerCase()+'|'+bias]={items:items,rank:2};
+      _renderPlaceResults(items,res,seq,2);
     });
-  }).catch(function(){ if(settled)return; settled=true; clearTimeout(fb); _gpFail(); doNominatimSearch(nominatimQ,res); });
+  }).catch(function(){ if(settled)return; settled=true; clearTimeout(fb); _gpFail(); });
 }
 function renderGooglePlaceResults(places,res){
   res.innerHTML='';
