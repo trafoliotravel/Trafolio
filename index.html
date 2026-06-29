@@ -2319,6 +2319,14 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
     } else { try{ localResume(); }catch(e){} }
   }).catch(function(e){ console.log('Session check error:', e); try{ localResume(); }catch(e2){} });
 
+  // Shared-trip link (/username/trip): show a clean loader IMMEDIATELY (not the landing page)
+  // and resolve the share NOW — don't wait for the end-of-init setTimeout or the auth/session
+  // dance, which is why a shared link used to flash the landing for several seconds first.
+  if(window._shareViewActive){
+    try{ _shareBootLoading(); }catch(e){}
+    if(typeof _resolveShareRoute==='function') _resolveShareRoute();
+  }
+
   // Listen for auth changes (handles sign in / sign out / OAuth redirect)
   sb.auth.onAuthStateChange(function(event, session){
     if(event === 'SIGNED_IN' && session && session.user){
@@ -4284,8 +4292,10 @@ function shareTripData(){ return _shareDemo||currentTrip||null; }
 // ── Resolve a shared-link route (/<username>/<trip-slug>) into the public share view ──
 function _slugify(s){ return String(s||'').toLowerCase().trim().replace(/[\s_]+/g,'-').replace(/[^a-z0-9-]/g,''); }
 async function _resolveShareRoute(){
+  if(window._shareResolveStarted) return; // boot + end-of-init both call this; run once
+  window._shareResolveStarted=true;
   var r=window._shareRoute;
-  if(!r || !sb){ _shareRouteFail(true); return; }
+  if(!r || !sb){ window._shareResolveStarted=false; _shareRouteFail(true); return; }
   try{
     // Username → profile (case-insensitive). usernames are stored lowercased, but be lenient.
     var pr=await sb.from('profiles').select('id,name,username,avatar').ilike('username', r.uname).limit(1);
@@ -4296,7 +4306,7 @@ async function _resolveShareRoute(){
       if(!ok) _shareRouteFail();
     } else {
       // Bare /username (no trip): open their public profile if we can, else fall through.
-      if(typeof openRealUserProfile==='function'){ window._shareViewActive=false; openRealUserProfile({id:prof.id,name:prof.name||prof.username,handle:prof.username||'',_real:true}); }
+      if(typeof openRealUserProfile==='function'){ window._shareViewActive=false; try{ _shareBootLoadingHide(); }catch(e){} openRealUserProfile({id:prof.id,name:prof.name||prof.username,handle:prof.username||'',_real:true}); }
       else _shareRouteFail();
     }
   }catch(e){ _shareRouteFail(); }
@@ -4345,14 +4355,29 @@ async function _openSharedTrip(prof, slug){
     window._shareViewActive=true;
     if(typeof showScreen==='function') showScreen('s-share');
     else if(typeof renderSharePage==='function') renderSharePage();
+    try{ _shareBootLoadingHide(); }catch(e){}
     return true;
   }catch(e){ return false; }
 }
 function _shareRouteFail(silent){
   window._shareViewActive=false; window._shareRoute=null;
+  try{ _shareBootLoadingHide(); }catch(e){}
   if(!silent && typeof toast==='function') toast('That shared link could not be found.');
-  try{ if(window.appMode){ showScreen('s-profile'); } else if(!document.querySelector('.screen.active')){ showScreen('s-home'); } }catch(e){}
+  try{ if(window.appMode){ showScreen('s-profile'); } else { showScreen('s-home'); } }catch(e){}
 }
+// Full-screen branded loader shown the instant a /username/trip link opens, so the viewer sees a
+// clean "Opening shared trip…" splash instead of the landing page flashing for several seconds.
+function _shareBootLoading(){
+  if(document.getElementById('share-boot-ov'))return;
+  if(!document.getElementById('share-boot-style')){ var st=document.createElement('style'); st.id='share-boot-style'; st.textContent='@keyframes _tspin{to{transform:rotate(360deg)}}'; document.head.appendChild(st); }
+  var d=document.createElement('div'); d.id='share-boot-ov';
+  d.style.cssText='position:fixed;inset:0;z-index:6000;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+  d.innerHTML='<div style="font-family:Cormorant Garamond,serif;font-size:34px;font-weight:500;color:#001C30">Trafo<em style="font-style:italic;color:#00A8E8">l</em>io</div>'
+    +'<div style="width:30px;height:30px;border:3px solid #C8E4F8;border-top-color:#00A8E8;border-radius:50%;animation:_tspin .8s linear infinite"></div>'
+    +'<div style="font-size:12px;color:#8AACBF;letter-spacing:.04em">Opening shared trip…</div>';
+  document.body.appendChild(d);
+}
+function _shareBootLoadingHide(){ var d=document.getElementById('share-boot-ov'); if(d)d.remove(); }
 // Printable document of the shared guide — built to MATCH the on-screen share page layout
 // (hero image + title overlay, "X's guide", curator quote, place cards with category dots & star
 // ratings, 2-column photo grid). Honours the share selection. Do NOT reinvent this layout.
@@ -17040,6 +17065,13 @@ function renderPeopleTab(body) {
   }
 }
 // A single traveller row (avatar + info + follow), reused by the list and the recommendation rails.
+// Open the right profile view: real Trafolio members (UUID ids) go through openRealUserProfile
+// (cloud fetch); demo/seed users use openUserProfile. Was always calling openUserProfile, so real
+// members in Explore weren't clickable.
+function _openPersonProfile(u){
+  if(u && u._real && typeof openRealUserProfile==='function') openRealUserProfile(u);
+  else if(typeof openUserProfile==='function') openUserProfile(u.id);
+}
 function peopleRow(u){
   var isF = (userData.following||[]).some(function(f){ return f.id === u.id; });
   var muts = (u.mutuals||[]).length;
@@ -17047,11 +17079,11 @@ function peopleRow(u){
   row.style.cssText = 'display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--paper-3)';
   var av = makeAv(u.initial, u.color, 46, u.photo);
   av.style.cursor = 'pointer';
-  av.addEventListener('click', function() { openUserProfile(u.id); });
+  av.addEventListener('click', function() { _openPersonProfile(u); });
   var loc = (u.livesIn?('📍 '+u.livesIn):'') + (u.from?((u.livesIn?' \xB7 ':'')+t('fromPrefix')+' '+u.from):'');
   var info = document.createElement('div');
   info.style.cssText = 'flex:1;min-width:0;cursor:pointer';
-  info.addEventListener('click', function() { openUserProfile(u.id); });
+  info.addEventListener('click', function() { _openPersonProfile(u); });
   info.innerHTML = '<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink)">'+u.name+'</div>'
     + '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+u.handle+' \xB7 '+u.trips+' '+t('trips').toLowerCase()+(muts?' \xB7 '+muts+' '+t('mutual'):'')+'</div>'
     + (loc ? '<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4);margin-top:1px">'+escHtml(loc)+'</div>' : '');
@@ -17161,7 +17193,7 @@ function renderCitiesTab(body) {
     travellers.forEach(function(u) {
       var row = document.createElement('div');
       row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--paper-3);cursor:pointer';
-      row.addEventListener('click', function() { openUserProfile(u.id); });
+      row.addEventListener('click', function() { _openPersonProfile(u); });
       var av = makeAv(u.initial, u.color, 36, u.photo);
       var info = document.createElement('div');
       info.style.flex = '1';
@@ -18559,8 +18591,29 @@ async function dbLoadUserTrips(){
         if(t.dbId!=null && cloudIds[t.dbId]) return false;
         return !cloudKeys[(String(t.dest||'').toLowerCase())+'|'+(t.startDate||'')];
       });
+      // Item-level merge: fold any just-added LOCAL places/photos (whose cloud INSERT is still in
+      // flight, so this query didn't return them) into their matching cloud trip. Without this a
+      // freshly added place/photo briefly DISAPPEARS on reload, then reappears once it syncs.
+      var _lByDb={}, _lByKey={};
+      localTrips.forEach(function(lt){ if(lt.dbId!=null)_lByDb[lt.dbId]=lt; _lByKey[(String(lt.dest||'').toLowerCase())+'|'+(lt.startDate||'')]=lt; });
+      dbTrips.forEach(function(ct){
+        var lt=(ct.dbId!=null&&_lByDb[ct.dbId])||_lByKey[(String(ct.dest||'').toLowerCase())+'|'+(ct.startDate||'')];
+        if(!lt)return;
+        var pIds={},pNames={}; (ct.places||[]).forEach(function(p){ if(p.dbId!=null)pIds[p.dbId]=1; pNames[String(p.name||'').toLowerCase()]=1; });
+        (lt.places||[]).forEach(function(p){ var has=(p.dbId!=null&&pIds[p.dbId])||(p.dbId==null&&pNames[String(p.name||'').toLowerCase()]); if(!has)ct.places.push(p); });
+        var phIds={},phUrls={}; (ct.photos||[]).forEach(function(ph){ if(ph.dbId!=null)phIds[ph.dbId]=1; if(ph.url)phUrls[ph.url]=1; });
+        (lt.photos||[]).forEach(function(ph){ var has=(ph.dbId!=null&&phIds[ph.dbId])||(ph.url&&phUrls[ph.url]); if(!has)ct.photos.push(ph); });
+      });
       trips = dbTrips.concat(localOnly);
+      // Keep the OPEN trip pointing at the rebuilt live object (it now carries the merged places/
+      // photos), so the trip detail re-renders with the new item present instead of flickering.
+      if(typeof currentTrip!=='undefined' && currentTrip){
+        var _ckey=(String(currentTrip.dest||'').toLowerCase())+'|'+(currentTrip.startDate||'');
+        var _ct=trips.find(function(t){ return (currentTrip.dbId!=null&&t.dbId===currentTrip.dbId) || t.id===currentTrip.id || ((String(t.dest||'').toLowerCase())+'|'+(t.startDate||''))===_ckey; });
+        if(_ct) currentTrip=_ct;
+      }
       renderDash();
+      try{ if(typeof currentTrip!=='undefined'&&currentTrip){ if(typeof renderPlaces==='function'){var _f=document.querySelector('#places-filter .filter-pill.active'); renderPlaces(_f?_f.dataset.f:(typeof currentFilter!=='undefined'?currentFilter:'all'));} if(typeof renderPhotosTab==='function')renderPhotosTab(); } }catch(e){}
       if(localOnly.length && typeof dbSyncLocalTrips==='function') dbSyncLocalTrips(localOnly);
       if(typeof migrateBase64Photos==='function') setTimeout(migrateBase64Photos, 3500); // one-time: move old base64 photos to Storage
       // Heavy legacy base64 photos: fetch in the background so the first paint is fast, then merge in.
