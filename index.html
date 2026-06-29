@@ -5002,8 +5002,8 @@ function renderTravelMap(){
     var head=c.iso
       ? '<img src="https://flagcdn.com/'+String(c.iso).toLowerCase()+'.svg" alt="'+escHtml(c.name||'')+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'flex\'"><span style="display:none;width:100%;height:100%;align-items:center;justify-content:center;line-height:1">'+escHtml(c.flag||'📍')+'</span>'
       : '<span style="line-height:1;display:block">'+escHtml(c.flag||'📍')+'</span>';
-    pin.innerHTML='<div style="width:22px;height:22px;border-radius:50%;border:2px solid var(--ember);background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:13px;box-shadow:0 1px 4px rgba(0,0,0,.3)">'+head+'</div>'
-      +'<div style="width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:7px solid var(--ember);margin:-1px auto 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))"></div>';
+    pin.innerHTML='<div style="width:11px;height:11px;border-radius:50%;border:1px solid var(--ember);background:#fff;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:7px;box-shadow:0 1px 2px rgba(0,0,0,.3)">'+head+'</div>'
+      +'<div style="width:0;height:0;border-left:2px solid transparent;border-right:2px solid transparent;border-top:4px solid var(--ember);margin:-1px auto 0;filter:drop-shadow(0 1px 1px rgba(0,0,0,.3))"></div>';
     map.appendChild(pin);
   });
   var nc=pts.cityCount;
@@ -7087,7 +7087,7 @@ function _viewTripDetail(i){
   if(tp.images&&tp.images.length){ html+='<button onclick="openStoryViewerIdx('+i+')" class="btn btn-ember btn-full" style="margin-bottom:16px">📸 '+t('viewPhotos')+' ('+tp.images.length+')</button>'; }
   html+='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:10px">'+t('tabPlaces')+(places.length?' · '+places.length:'')+'</div>';
   if(places.length){
-    html+=places.map(function(pl){ return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--paper-3)"><span style="font-size:18px;flex-shrink:0">'+((CAT[pl.cat]||'📍'))+'</span><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;color:var(--ink)">'+escHtml(pl.name||'')+'</div>'+(pl.note?'<div style="font-size:12px;color:var(--ink-4)">'+escHtml(pl.note)+'</div>':'')+'</div>'+(pl.rating?'<span style="font-size:11px;color:var(--ink-4)">'+('★'.repeat(Math.max(0,Math.min(5,pl.rating))))+'</span>':'')+'</div>'; }).join('');
+    html+=places.map(function(pl){ var murl=gmapsUrl(pl,{dest:tp.title||''}); return '<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--paper-3)"><span style="font-size:18px;flex-shrink:0">'+((CAT[pl.cat]||'📍'))+'</span><div style="flex:1;min-width:0"><a href="javascript:void(0)" data-map="'+murl+'" title="Locate on Google Maps" onclick="event.stopPropagation();event.preventDefault();window.open(this.getAttribute(\'data-map\'),\'_blank\',\'noopener\');return false;" style="font-size:14px;font-weight:600;color:var(--ink);text-decoration:none">'+escHtml(pl.name||'')+' <span style="font-size:11px">📍</span></a>'+(pl.note?'<div style="font-size:12px;color:var(--ink-4)">'+escHtml(pl.note)+'</div>':'')+'</div>'+(pl.rating?'<span style="font-size:11px;color:var(--ink-4)">'+('★'.repeat(Math.max(0,Math.min(5,pl.rating))))+'</span>':'')+'</div>'; }).join('');
   } else {
     html+='<div style="padding:24px;text-align:center;color:var(--ink-4);font-size:13px">'+t('noPlacesYet')+'</div>';
   }
@@ -7324,8 +7324,12 @@ function openChat(id){
   if(typeof updateMsgBadge==='function')updateMsgBadge(_totalUnread());
   if(!conversations[_chatUser])conversations[_chatUser]=[];
   var h=document.getElementById('chat-header');
-  if(h)h.innerHTML='<div style="width:42px;height:42px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>'
-    +'<div style="flex:1"><div style="font-family:Cormorant Garamond,serif;font-size:21px;font-weight:500;line-height:1.1">'+escHtml(u.name)+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+escHtml(u.handle)+'</div></div>';
+  // Tapping the header (avatar + name) opens the other person's profile.
+  if(h)h.innerHTML='<div onclick="openChatUserProfile()" style="display:flex;align-items:center;gap:11px;flex:1;min-width:0;cursor:pointer">'
+    +'<div style="width:42px;height:42px;border-radius:50%;'+avatarBg(u)+';display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;flex-shrink:0">'+(u.photo?'':u.initial)+'</div>'
+    +'<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:21px;font-weight:500;line-height:1.1">'+escHtml(u.name)+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+escHtml(u.handle)+'</div></div>'
+    +'<div style="color:var(--ink-4);font-size:20px;padding:0 2px;flex-shrink:0">&#8250;</div>'
+    +'</div>';
   renderChat();
   if(_isRealChatPartner(_chatUser) && typeof dbLoadConversation==='function'){
     var _cu=_chatUser;
@@ -7333,6 +7337,14 @@ function openChat(id){
   }
   closeModal();openModal('sheet-chat');
   setTimeout(function(){var i=document.getElementById('chat-input');if(i)i.focus();},260);
+}
+// Tap the chat header → open the other person's profile.
+function openChatUserProfile(){
+  if(_chatUser==null)return;
+  var u=_resolveUser(_chatUser); if(!u)return;
+  if(typeof closeModal==='function')closeModal();
+  if(typeof openRealUserProfile==='function')openRealUserProfile(u);
+  else if(typeof openUserProfile==='function')openUserProfile(_chatUser);
 }
 function renderChat(){
   var box=document.getElementById('chat-messages');if(!box||_chatUser==null)return;
