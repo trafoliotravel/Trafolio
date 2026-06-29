@@ -4708,7 +4708,7 @@ function dbDeleteStory(story){
 }
 // Companion ("who's coming") icon + label for a trip card.
 function tripWithMeta(w){
-  var m={ solo:['🧍', t('solo')||'Solo'], couple:['💑', t('couple')||'Couple'], family:['👨‍👩‍👧‍👦', t('family')||'Family'], friends:['👯', t('friends')||'Friends'] };
+  var m={ solo:['🧍', t('solo')||'Solo'], couple:['💑', t('couple')||'Couple'], family:['👨‍👩‍👧‍👦', t('family')||'Family'], friends:['👯', t('friends')||'Friends'], business:['💼', t('business')||'Business'] };
   return m[w]||null;
 }
 function renderProfileGrid(){
@@ -4729,10 +4729,11 @@ function renderProfileGrid(){
     +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover'+(locked?';filter:grayscale(.35)':'')+'">'
     +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
     +(locked?'<div title="'+tt('lockedTripHint')+'" style="position:absolute;top:6px;right:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,28,48,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:12px">🔒</div>':'')
+    // Companion type (solo / couple / family / friends / business) — small logo-only badge in the top-left corner.
+    +(function(){ var tw=tripWithMeta(t.with); return tw?'<div title="'+escHtml(tw[1])+'" style="position:absolute;top:6px;left:6px;width:24px;height:24px;border-radius:50%;background:rgba(0,28,48,.62);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1">'+tw[0]+'</div>':''; })()
     +'<div style="position:absolute;bottom:6px;left:8px;right:8px">'
     +'<div style="font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500;line-height:1.1">'+escHtml(t.flag)+' '+escHtml(t.dest)+'</div>'
     +(t.dates?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:rgba(255,255,255,.85);margin-top:1px">'+escHtml(t.dates)+'</div>':'')
-    +(function(){ var tw=tripWithMeta(t.with); return tw?'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.04em;color:rgba(255,255,255,.8);margin-top:1px">'+tw[0]+' '+escHtml(tw[1])+'</div>':''; })()
     +'</div>'
     +'</div>';
   }).join('');
@@ -5053,9 +5054,10 @@ function shareTravelMap(){
       var cities=_pts.cities, countryCount=_pts.countryCount;
       if(!window._hideMapPins) Object.keys(cities).forEach(function(dest){
         var c=cities[dest], x=(c.co[1]+180)/360*MW, y=TOP+(90-c.co[0])/180*MAPH;
-        var hx=x, hy=y-24*scale, r=12*scale;
-        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-7*scale,hy+5*scale);ctx.lineTo(hx+7*scale,hy+5*scale);ctx.closePath();ctx.fillStyle='#E0633A';ctx.fill();
-        ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=3;ctx.strokeStyle='#E0633A';ctx.stroke();
+        // Pin + flag 30% smaller (less overlap when cities are close), same teardrop+flag design.
+        var hx=x, hy=y-16.8*scale, r=8.4*scale;
+        ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(hx-4.9*scale,hy+3.5*scale);ctx.lineTo(hx+4.9*scale,hy+3.5*scale);ctx.closePath();ctx.fillStyle='#E0633A';ctx.fill();
+        ctx.beginPath();ctx.arc(hx,hy,r,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.lineWidth=2;ctx.strokeStyle='#E0633A';ctx.stroke();
         ctx.textBaseline='middle';ctx.textAlign='left';
         ctx.font=Math.round(r*1.5)+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';ctx.fillStyle='#0a1a26';
         var _fl=c.flag||'📍'; var _fw=ctx.measureText(_fl).width; if(!_fw||_fw>r*4.5)_fw=r*1.7;
@@ -5189,18 +5191,28 @@ function shareWrapped(){
   var y2=970;
   function mini(num,label,x){ ctx.fillStyle='#fff'; ctx.font='800 74px Georgia, serif'; ctx.fillText(String(num),x,y2); ctx.font='600 24px "DM Mono",monospace'; ctx.fillStyle='rgba(255,255,255,.85)'; ctx.fillText(label,x,y2+40); }
   mini(nCities,'CITIES',W*0.24); mini(nPlaces,'PLACES',W*0.5); mini(nPhotos,'PHOTOS',W*0.76);
-  // Flags row UNDER the stats — white rounded chips, one per visited country (dynamic per profile).
+  // Flags UNDER the stats — white rounded chips, one per visited country. Shows ALL of them
+  // (was capped at 12): more countries → more columns + smaller chips, and the whole block
+  // shrinks to fit the available band so even a heavy traveller's flags all appear.
   if(uflags.length){
-    var ff=uflags.slice(0,12), per=6, cw=78, ch=60, gap=13;
-    var rows=[]; for(var i=0;i<ff.length;i+=per)rows.push(ff.slice(i,i+per));
-    var totalH=rows.length*ch+(rows.length-1)*gap, startY=1120-totalH/2;
+    var ff=uflags.slice(0,60); // sane safety cap
+    var N=ff.length;
+    var per=(N<=12?6:(N<=24?8:10));          // columns scale with count
+    var gap=12, maxRowW=980;
+    var cw=Math.min(80, Math.floor((maxRowW-(per-1)*gap)/per));
+    var ch=Math.round(cw*0.74);
+    var rows=[]; for(var i=0;i<N;i+=per)rows.push(ff.slice(i,i+per));
+    var bandTop=1050, bandBottom=1258, maxH=bandBottom-bandTop;
+    var totalH=rows.length*ch+(rows.length-1)*gap;
+    if(totalH>maxH){ var s=maxH/totalH; ch=Math.floor(ch*s); cw=Math.floor(cw*s); gap=Math.max(5,Math.floor(gap*s)); totalH=rows.length*ch+(rows.length-1)*gap; }
+    var startY=(bandTop+bandBottom)/2 - totalH/2;
+    var fontPx=Math.max(20, Math.round(ch*0.72));
+    ctx.textAlign='center'; ctx.textBaseline='middle';
     rows.forEach(function(r,ri){
       var rowW=r.length*cw+(r.length-1)*gap, sx=W/2-rowW/2, y=startY+ri*(ch+gap);
       r.forEach(function(fl,ci){ var x=sx+ci*(cw+gap);
-        ctx.fillStyle='rgba(255,255,255,.93)'; rr(x,y,cw,ch,15); ctx.fill();
-        // Draw the flag dead-centre of its chip: explicit center/middle alignment, exact box centre.
-        ctx.textAlign='center'; ctx.textBaseline='middle';
-        ctx.font='46px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
+        ctx.fillStyle='rgba(255,255,255,.93)'; rr(x,y,cw,ch,Math.round(cw*0.2)); ctx.fill();
+        ctx.font=fontPx+'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",serif';
         try{ctx.fillText(fl, x+cw/2, y+ch/2);}catch(e){}
       });
     });
