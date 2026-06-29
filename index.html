@@ -2199,12 +2199,14 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
   // Onboarding for a brand-new user (Google/Facebook sign-ups previously skipped this entirely):
   // show the profile-setup screen (bio / from / lives-in) with a warm welcome. Name + avatar are
   // already filled from the Google account.
-  function _startOnboarding(){
+  function _startOnboarding(force){
     // CRITICAL: this can fire LATE (the profile read is async). If the user has already finished
     // setup (tapped "Let's go"), do NOT yank them back to s-prefs — that was the "Let's go doesn't
-    // let me in" bounce. Also skip if they've already navigated into the app.
+    // let me in" bounce. Also skip if they've already navigated into the app — UNLESS force=true,
+    // which the brand-new OAuth/Google path passes (we KNOW they're new, so onboard even though
+    // enterApp() already showed s-dash; otherwise Google users never get the welcome + setup).
     if(window._onboardingDone) return;
-    var _cur=document.querySelector('.screen.active'); if(_cur && _cur.id!=='s-prefs' && _cur.id!=='s-auth' && typeof appMode!=='undefined' && appMode) return;
+    if(!force){ var _cur=document.querySelector('.screen.active'); if(_cur && _cur.id!=='s-prefs' && _cur.id!=='s-auth' && typeof appMode!=='undefined' && appMode) return; }
     try{
       var first=((userData.name||'there').split(' ')[0]);
       if(typeof initPPills==='function') initPPills();
@@ -2290,7 +2292,8 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
             else console.log('New profile created');
             dbLoadUserTrips();
           }).catch(function(e){ console.error('Profile upsert failed:', e); dbLoadUserTrips(); });
-          _startOnboarding();
+          window._onboardingDone=false; // brand-new OAuth/Google user → must still do setup
+          _startOnboarding(true);       // force: enterApp() already showed s-dash, but onboard anyway
         }
       }).catch(function(e){
         console.error('Profile read failed:', e);
@@ -2451,6 +2454,8 @@ function showScreen(id,_fromBack){
     if(typeof dbLoadFeedStories==='function')dbLoadFeedStories();
     if(typeof dbLoadFeedBlogs==='function')dbLoadFeedBlogs();
   }
+  if(id==='s-explore'&&typeof dbLoadExploreUsers==='function')dbLoadExploreUsers(); // real members in People tab
+  if(id==='s-explore'&&typeof dbLoadExplorePlaces==='function')dbLoadExplorePlaces();
   if(id==='s-concierge'&&typeof renderConcierge==='function')renderConcierge();
   if(id==='s-dash'&&typeof renderDash==='function')renderDash();
   if(id==='s-profile'&&typeof renderProfile==='function')renderProfile();
@@ -2525,7 +2530,7 @@ function refreshCurrentScreen(){
   var jobs=[];
   function add(fn){ if(typeof fn==='function'){ try{ var r=fn(); if(r&&r.then)jobs.push(r); }catch(e){} } }
   if(id==='s-profile'){ add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); add(typeof dbLoadStories!=='undefined'&&dbLoadStories); add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); }
-  else if(id==='s-explore'){ add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadFeedBlogs!=='undefined'&&dbLoadFeedBlogs); add(typeof dbLoadExplorePlaces!=='undefined'&&dbLoadExplorePlaces); }
+  else if(id==='s-explore'){ add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadFeedBlogs!=='undefined'&&dbLoadFeedBlogs); add(typeof dbLoadExplorePlaces!=='undefined'&&dbLoadExplorePlaces); add(typeof dbLoadExploreUsers!=='undefined'&&dbLoadExploreUsers); }
   else if(id==='s-feed'){ add(typeof dbLoadSocial!=='undefined'&&dbLoadSocial); add(typeof dbLoadFeedStories!=='undefined'&&dbLoadFeedStories); add(typeof dbLoadInbox!=='undefined'&&dbLoadInbox); }
   else if(id==='s-trip'){ add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); }
   else { add(typeof dbLoadUserTrips!=='undefined'&&dbLoadUserTrips); }
@@ -2850,6 +2855,8 @@ function refreshTripHeroMeta(){
   if(!currentTrip)return;var el=document.getElementById('trip-hero-meta');if(!el)return;
   var hm=currentTrip.dates.toUpperCase()+' · '+currentTrip.days+' DAYS · '+(currentTrip.country||'').toUpperCase();
   if(currentTrip.tripType==='country'&&currentTrip.cities&&currentTrip.cities.length)hm+=' · '+currentTrip.cities.length+' '+(currentTrip.cities.length===1?t('cityWord'):t('citiesWord')).toUpperCase();
+  var tw=(typeof tripWithMeta==='function')?tripWithMeta(currentTrip.with):null;
+  if(tw)hm+=' · '+tw[0]+' '+String(tw[1]).toUpperCase();
   el.textContent=hm;
 }
 function renderCitiesBar(){
@@ -5427,15 +5434,19 @@ async function redeemPromo(){
   // 1) Secure server path (only when we have a Supabase user to attribute the redemption to).
   if(sb && userData.id){
     try{
-      var r=await fetch(API_BASE+'/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code})});
-      if(r.status===404 || r.status===409){ // server says: invalid / fully redeemed → respect it, no bypass
+      // Hard 5s timeout so a slow/unreachable endpoint can't leave Apply stuck on "…".
+      var _ctrl=new AbortController(); var _to=setTimeout(function(){try{_ctrl.abort();}catch(e){}},5000);
+      var r=await fetch(API_BASE+'/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code}),signal:_ctrl.signal});
+      clearTimeout(_to);
+      if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.ok){ promoGrant(msg); return; } }
+      else if(r.status===409){ // server says: fully redeemed (real per-code cap) → respect it
         var de=await r.json().catch(function(){return{};});
         if(msg){msg.textContent=(de&&de.error)||t('promoInvalid');msg.style.color='#E8334A';}
         return;
       }
-      if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.ok){ promoGrant(msg); return; } }
-      // any other status (503 not configured, 5xx) → fall through to the local fallback
-    }catch(e){ /* network error → fall through to local fallback */ }
+      // 404 (endpoint not deployed) / 503 / 5xx / timeout → fall through to the local fallback below
+      // so a valid code still works when the backend isn't wired up (e.g. on the website build).
+    }catch(e){ /* network error / abort → fall through to local fallback */ }
   }
   // 2) Fallback: code is valid locally → grant Pro and bypass checkout.
   if(PROMO_LOCAL.indexOf(lc)>=0){ promoGrant(msg); return; }
@@ -6597,7 +6608,7 @@ function importFromLibrary(input){
   // Process with LIMITED CONCURRENCY. Loading + canvas-compressing 100+ photos all at
   // once exhausts memory on phones and reloads the tab. A small pool keeps peak memory
   // bounded; each blob URL is revoked as soon as it's been re-encoded to a data-URL.
-  var CONC=4, idx=0, active=0, finished=false;
+  var CONC=(total>80?4:6), idx=0, active=0, finished=false;  // more parallelism for normal-size batches
   function finishOne(){
     active--; processed++;
     if(summ)summ.textContent=t('readingPrefix')+' '+processed+'/'+total+'…';
@@ -16965,6 +16976,19 @@ async function dbSearchUsers(q){
     return users;
   }catch(e){ return []; }
 }
+// Real Trafolio members for the DEFAULT Explore → People list (not just when searching), so new
+// sign-ups appear alongside the demo travellers. Cached in exploreUsers.
+var exploreUsers=[];
+async function dbLoadExploreUsers(){
+  if(!sb) return;
+  try{
+    var res=await sb.from('profiles').select('id,name,username,avatar,lives_in,origin,is_public').limit(60);
+    if(res.error){ res=await sb.from('profiles').select('id,name,username,avatar').limit(60); } // minimal retry if columns differ
+    if(res.error||!res.data) return;
+    exploreUsers=res.data.filter(function(pr){ return pr.id && pr.id!==userData.id && pr.is_public!==false; }).map(_mapProfileToUser);
+    if(_exploreTab==='people' && typeof renderExploreContent==='function') renderExploreContent();
+  }catch(e){ console.warn('dbLoadExploreUsers:',e); }
+}
 function renderPeopleTab(body) {
   var q = _exploreQuery.toLowerCase();
   var list = allUsers.filter(function(u) {
@@ -16997,6 +17021,16 @@ function renderPeopleTab(body) {
     if(userData.from && fromHome.length) body.appendChild(peopleRail(t('peopleFrom').replace('{place}',userData.from), fromHome, '🏠'));
   }
 
+  // Real Trafolio members (new sign-ups) — shown in the default list, not only when searching.
+  if(!q && typeof exploreUsers!=='undefined' && exploreUsers.length){
+    var rh=document.createElement('div');
+    rh.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-dk);padding:14px 20px 8px">🧭 '+t('tabPeople')+' · Trafolio</div>';
+    body.appendChild(rh);
+    exploreUsers.forEach(function(u){ body.appendChild(peopleRow(u)); });
+    var dh=document.createElement('div');
+    dh.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);padding:14px 20px 8px">'+(tt('suggestedTravelers')||'Suggested')+'</div>';
+    body.appendChild(dh);
+  }
   // Demo travellers (suggested).
   list.forEach(function(u) { body.appendChild(peopleRow(u)); });
 
@@ -19082,19 +19116,34 @@ async function dbSaveWishlist(){
 }
 function renderFavorites(){
   var box=document.getElementById('profile-favorites');if(!box)return;
-  var favs=trips.filter(function(tr){return tr.starred;});
-  if(!favs.length){
-    box.innerHTML='<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:30px;margin-bottom:10px">⭐</div><div style="font-size:14px;margin-bottom:4px">No favorites yet</div><div style="font-size:12px">Tap the star on any trip to add it here.</div></div>';
+  // Favourites = trips you SAVED from other travellers ("Save to favourites" → savedTrips) PLUS
+  // your own starred trips. Previously this tab only showed starred trips, so anything saved from
+  // someone else's shared trip never appeared here — that's why favourites "weren't showing".
+  var saved=(typeof savedTrips!=='undefined'&&Array.isArray(savedTrips))?savedTrips:[];
+  var starred=trips.filter(function(tr){return tr.starred;});
+  if(!saved.length && !starred.length){
+    box.innerHTML='<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:30px;margin-bottom:10px">⭐</div><div style="font-size:14px;margin-bottom:4px">'+(tt('noFavTitle')||'No favourites yet')+'</div><div style="font-size:12px">'+(tt('noFavSub')||'Save trips you discover, or star your own.')+'</div></div>';
     return;
   }
-  box.innerHTML=favs.map(function(t){
-    return '<div style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;border-radius:6px" onclick="openTrip('+t.id+')">'
-    +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover">'
-    +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
-    +'<div style="position:absolute;bottom:6px;left:8px;font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500">'+t.flag+' '+t.dest+'</div>'
-    +'<div style="position:absolute;top:6px;right:8px;font-size:14px">⭐</div>'
-    +'</div>';
-  }).join('');
+  var html='';
+  saved.forEach(function(x){
+    var cover=x.cover||(typeof FALLBACK_COVER!=='undefined'?FALLBACK_COVER:'');
+    html+='<div style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;border-radius:6px" onclick="openUserCity('+x.uid+',\''+String(x.city).replace(/'/g,"\\'")+'\');openModal(\'sheet-user-profile\')">'
+      +'<img src="'+cover+'" onerror="this.onerror=null;this.src=FALLBACK_COVER" alt="" style="width:100%;height:100%;object-fit:cover">'
+      +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
+      +'<div style="position:absolute;bottom:6px;left:8px;right:8px;font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+cityFlag(x.city)+' '+escHtml(x.city)+'</div>'
+      +'<div style="position:absolute;top:6px;right:8px;font-size:13px">🔖</div>'
+      +'</div>';
+  });
+  starred.forEach(function(t){
+    html+='<div style="position:relative;aspect-ratio:1;overflow:hidden;cursor:pointer;border-radius:6px" onclick="openTrip('+t.id+')">'
+      +'<img src="'+t.cover+'" alt="" style="width:100%;height:100%;object-fit:cover">'
+      +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.7),transparent)"></div>'
+      +'<div style="position:absolute;bottom:6px;left:8px;font-family:Cormorant Garamond,serif;font-size:15px;color:white;font-weight:500">'+t.flag+' '+escHtml(t.dest)+'</div>'
+      +'<div style="position:absolute;top:6px;right:8px;font-size:14px">⭐</div>'
+      +'</div>';
+  });
+  box.innerHTML=html;
 }
 
 function onProfileSearch(q){
