@@ -5635,7 +5635,9 @@ function toggleAddDial(ev){
   }); });
 }
 function closeAddDial(){
-  var d=document.getElementById('add-dial'); if(d){ d.classList.remove('open'); d.style.display='none'; d.innerHTML=''; setTimeout(function(){ if(d&&!d.classList.contains('open'))d.style.display=''; },10); }
+  // MUST stay display:none when closed — otherwise this full-screen fixed overlay (inset:0,
+  // z-index:130) keeps capturing every click and the whole app/website appears frozen.
+  var d=document.getElementById('add-dial'); if(d){ d.classList.remove('open'); d.innerHTML=''; d.style.display='none'; d.style.pointerEvents='none'; }
   var btn=document.getElementById('bnav-add-btn'); if(btn)btn.style.transform='';
 }
 function openAddTrip(){
