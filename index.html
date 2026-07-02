@@ -19232,16 +19232,16 @@ async function dbSaveTripPost(trip){
     days:trip.days||0, places_count:(trip.places||[]).length, trip_with:trip.with||'',
     caption:trip.feedCaption||'',
     visibility:trip.feedVisibility||'public', kind:trip.feedKind||'added', updated_at:new Date().toISOString() };
+  var tid=String(realTripId);
   try{
-    var r=await sb.from('trip_posts').upsert(row,{onConflict:'user_id,trip_id'});
-    if(r&&r.error){
-      console.warn('dbSaveTripPost upsert:',r.error.message);
-      // onConflict needs a unique index on (user_id,trip_id); if it's missing, fall back to delete+insert.
-      try{ await sb.from('trip_posts').delete().eq('user_id',userData.id).eq('trip_id',realTripId); }catch(_){}
-      var r2=await sb.from('trip_posts').insert(row);
-      if(r2&&r2.error){ console.warn('dbSaveTripPost insert:',r2.error.message); return {ok:false,reason:r2.error.message}; }
-    }
-    return {ok:true};
+    // Update the existing feed row first (so edits stick); if there is none, insert a new one.
+    // Deterministic and doesn't depend on a unique index or a DELETE policy — only needs UPDATE + INSERT RLS.
+    var up=await sb.from('trip_posts').update(row).eq('user_id',userData.id).eq('trip_id',tid).select();
+    if(up&&up.error){ console.warn('dbSaveTripPost update:',up.error.message); return {ok:false,reason:up.error.message}; }
+    if(up&&up.data&&up.data.length){ return {ok:true}; }      // updated an existing post
+    var ins=await sb.from('trip_posts').insert(row);
+    if(ins&&ins.error){ console.warn('dbSaveTripPost insert:',ins.error.message); return {ok:false,reason:ins.error.message}; }
+    return {ok:true};                                          // inserted a new post
   }
   catch(e){ console.warn('dbSaveTripPost',e); return {ok:false,reason:String(e)}; }
 }
@@ -20900,7 +20900,17 @@ function restoreState(){
   }catch(e){ return false; }
 }
 var _persistT=null;
-function persistSoon(){ if(_persistT)clearTimeout(_persistT); _persistT=setTimeout(persistState,600); }
+function persistSoon(){ if(_persistT)clearTimeout(_persistT); _persistT=setTimeout(persistState,600); _scheduleFeedResync(); }
+// If the currently-open trip has been posted to the feed, push its latest state (places, cover,
+// companion, dates…) to the cloud trip_posts row so edits show up in the feed on every device —
+// without the user having to re-tap "Update in feed". Debounced so rapid edits collapse to one save.
+var _feedResyncT=null;
+function _scheduleFeedResync(){
+  if(typeof currentTrip==='undefined'||!currentTrip)return;
+  var tr=currentTrip; if(!tr.feedVisibility||tr.feedVisibility==='private')return;
+  if(_feedResyncT)clearTimeout(_feedResyncT);
+  _feedResyncT=setTimeout(function(){ if(typeof dbSaveTripPost==='function')dbSaveTripPost(tr); },1500);
+}
 window.addEventListener('beforeunload', persistState);
 window.addEventListener('pagehide', persistState);
 document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='hidden') persistState(); });
