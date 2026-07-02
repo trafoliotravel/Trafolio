@@ -409,6 +409,8 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
 .top-search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink-4);pointer-events:none}
 /* Desktop: make the travel-map flag pins 25% smaller, anchored at the tip */
 @media(min-width:768px){#travel-map .tm-pin{transform:translate(-50%,-100%) scale(1.6)!important;transform-origin:bottom center}}
+.explore-places-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 16px 22px}
+@media(min-width:768px){.explore-places-grid{grid-template-columns:repeat(4,1fr);gap:12px;padding:8px 20px 24px}}
 
 .trip-grid-dash-responsive{grid-template-columns:1fr 1fr}
 @media(min-width:768px){.trip-grid-dash-responsive{grid-template-columns:1fr 1fr 1fr 1fr}}
@@ -689,7 +691,17 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     </div>
   </div>
   <div id="et-multicity-hint" style="display:none;font-size:12px;color:var(--ink-3);background:var(--ember-lt);border-radius:var(--r-md);padding:10px 12px;margin-bottom:12px" data-i18n="multiCityHint">Multi-city trip — add the cities you visited from the Places tab.</div>
-  <button class="btn btn-ember btn-full" style="margin-top:6px" onclick="saveEditTrip()" data-i18n="saveChanges">Save changes</button>
+  <div class="add-form-field" style="margin-top:2px">
+    <label class="add-form-label" data-i18n="whosComing">Who's coming?</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="et-with-pills">
+      <div class="fpill" data-w="solo" onclick="selEditTripWith(this)">&#129399; <span data-i18n="solo">Solo</span></div>
+      <div class="fpill" data-w="couple" onclick="selEditTripWith(this)">&#128145; <span data-i18n="couple">Couple</span></div>
+      <div class="fpill" data-w="friends" onclick="selEditTripWith(this)">&#128107; <span data-i18n="friends">Friends</span></div>
+      <div class="fpill" data-w="family" onclick="selEditTripWith(this)">&#128106; <span data-i18n="family">Family</span></div>
+      <div class="fpill" data-w="business" onclick="selEditTripWith(this)">&#128188; <span data-i18n="business">Business</span></div>
+    </div>
+  </div>
+  <button class="btn btn-ember btn-full" style="margin-top:12px" onclick="saveEditTrip()" data-i18n="saveChanges">Save changes</button>
 </div>
 
 <!-- ADD CITY (multi-city / country trips) -->
@@ -1481,7 +1493,6 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <button class="btn-icon" onclick="showScreen('s-dash');setActiveNav('bnav-profile')">&#8592;</button>
         <div style="position:relative;display:flex;gap:8px;align-items:center">
           <input type="file" id="trip-cover-input" accept="image/*" style="display:none" onchange="editTripCover(this)">
-          <button class="btn-icon" onclick="openShareSheet()" title="Share" aria-label="Share" data-i18n-title="shareLabel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
           <button class="btn-icon" onclick="toggleTripMenu(event)" title="Options" aria-label="Trip options">&#8943;</button>
           <div id="trip-menu" style="display:none;position:absolute;top:46px;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;box-shadow:0 10px 28px rgba(0,28,48,.18);overflow:hidden;width:210px;z-index:42;text-align:left">
             <div onclick="closeTripMenu();openEditTrip()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editTrip">Edit trip</span></div>
@@ -1497,6 +1508,10 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
           <div id="trip-hero-dest" style="font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:400;color:white;letter-spacing:-0.015em;line-height:1.1"></div>
           <div id="trip-hero-meta" style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,.5);margin-top:5px;letter-spacing:.06em"></div>
         </div>
+        <button onclick="openShareSheet()" title="Share trip" aria-label="Share trip" style="background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;padding:0;flex-shrink:0">
+          <span style="width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.2);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;color:#fff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" style="display:block"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></span>
+          <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:rgba(255,255,255,.95)" data-i18n="shareTripBtn">Share Trip</span>
+        </button>
       </div>
     </div>
     <div class="tab-bar-wrap" id="trip-tabs-wrap">
@@ -1508,7 +1523,6 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <button class="tab-btn" data-tab="photos" onclick="switchTab(this)" data-i18n="tabPhotos">Photos</button>
         <button class="tab-btn" data-tab="itinerary" onclick="switchTab(this)" data-i18n="tabItinerary">Itinerary</button>
         <button class="tab-btn" data-tab="book" onclick="switchTab(this)" data-i18n="tabBook">Memory Book</button>
-        <button class="tab-btn" data-tab="share" onclick="switchTab(this)" data-i18n="tabShare">Share</button>
       </div>
       <button class="tab-arrow tab-arrow-r" type="button" aria-label="Scroll tabs right" onclick="scrollTripTabs(1)">&#8250;</button>
     </div>
@@ -1527,7 +1541,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <div class="filter-pill" data-f="shop" onclick="filterPlaces(this)">🛍️ <span data-i18n="shop">Shop</span></div>
       </div>
       <div id="places-list" style="padding:0 20px"></div>
-      <div style="padding:20px"><button class="btn btn-ghost btn-full" onclick="openAddPlace()">+ <span data-i18n="addPlace">Add a place</span></button></div>
+      <div style="padding:20px;position:sticky;bottom:calc(env(safe-area-inset-bottom,0px) + 78px);z-index:30;pointer-events:none"><button class="btn btn-ghost btn-full" onclick="openAddPlace()" style="pointer-events:auto;background:var(--paper);box-shadow:0 6px 20px rgba(0,28,48,.18)">+ <span data-i18n="addPlace">Add a place</span></button></div>
     </div>
 
     <!-- TAB: PHOTOS -->
@@ -1594,13 +1608,23 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <button type="button" id="notes-emoji-btn" onclick="toggleNotesEmoji(event)" style="display:inline-flex;align-items:center;gap:6px;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:20px;padding:6px 12px;font-size:13px;color:var(--ink-3);cursor:pointer">😊 <span data-i18n="addEmoji">Add emoji</span></button>
         <div id="notes-emoji-picker" style="display:none;position:absolute;bottom:40px;left:0;background:#fff;border:1px solid var(--paper-3);border-radius:14px;box-shadow:0 8px 28px rgba(0,28,48,.18);padding:8px;width:248px;max-height:180px;overflow-y:auto;z-index:50;flex-wrap:wrap;gap:2px"></div>
       </div>
-      <div style="margin-top:24px">
-        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:12px" data-i18n="thingsMissed">Things we missed</div>
+      <div style="margin-top:28px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:14px;letter-spacing:-0.01em" data-i18n="thingsMissed">Things we missed</div>
         <div id="missed-list"></div>
         <div style="margin-top:10px">
-          <textarea class="inp" id="missed-inp" rows="3" placeholder="Add something you wish you'd done&#8230;" data-i18n-ph="missedPh" style="font-size:13px;padding:11px 14px;line-height:1.6;resize:vertical;width:100%;min-height:64px"></textarea>
+          <textarea class="inp" id="missed-inp" rows="4" placeholder="Add something you wish you'd done&#8230;" data-i18n-ph="missedPh" style="font-size:15px;padding:13px 16px;line-height:1.65;resize:vertical;width:100%;min-height:104px"></textarea>
           <div style="display:flex;justify-content:flex-end;margin-top:8px">
             <button class="btn btn-ghost btn-sm" onclick="addMissed()" data-i18n="addBtn">Add</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:34px">
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:14px;letter-spacing:-0.01em" data-i18n="appsUsed">Apps we used locally</div>
+        <div id="apps-list"></div>
+        <div style="margin-top:10px">
+          <textarea class="inp" id="apps-inp" rows="4" placeholder="Add a local app that helped &#8212; ride-hailing, food, transit, payments&#8230;" data-i18n-ph="appsPh" style="font-size:15px;padding:13px 16px;line-height:1.65;resize:vertical;width:100%;min-height:104px"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:8px">
+            <button class="btn btn-ghost btn-sm" onclick="addApp()" data-i18n="addBtn">Add</button>
           </div>
         </div>
       </div>
@@ -1660,7 +1684,13 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
       <div style="padding:20px 20px 0">
         <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:14px" data-i18n="include">What to include</div>
         <div id="share-filters" style="display:flex;flex-direction:column;gap:10px"></div>
-        <button class="btn btn-ghost btn-full" style="margin-top:20px" onclick="_shareDemo=null;showScreen('s-share')" data-i18n="previewShared">Preview shared page &#8594;</button>
+        <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--paper-3)">
+          <div style="font-size:14px;font-weight:600;color:var(--ink);margin-bottom:2px">📣 <span data-i18n="shareToFeed">Share to your feed</span></div>
+          <div style="font-size:12px;color:var(--ink-4);margin-bottom:10px" data-i18n="shareToFeedSub">Post this trip to your followers' feed, using the visibility above and what you chose to share.</div>
+          <div id="share-feed-status" style="font-size:12px;color:var(--ember-dk);margin-bottom:10px;display:none"></div>
+          <button class="btn btn-ember btn-full" id="share-feed-btn" onclick="postTripToFeed()" data-i18n="postToFeed">Post to feed</button>
+        </div>
+        <button class="btn btn-ghost btn-full" style="margin-top:14px" onclick="_shareDemo=null;showScreen('s-share')" data-i18n="previewShared">Preview shared page &#8594;</button>
       </div>
     </div>
 
@@ -2137,7 +2167,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
       <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-4)" data-i18n="tabStories">Stories</div>
       <button onclick="openWriteStory()" style="background:none;border:none;cursor:pointer;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.06em;color:var(--ember);font-weight:600" data-i18n="writeBtn">WRITE</button>
     </div>
-    <div id="profile-stories" style="padding:6px 20px 24px"></div>
+    <div id="profile-stories" style="padding:6px 0 24px"></div>
     </div><!-- /ptab-stories -->
     <div id="ptab-wishlist" style="display:none">
       <div style="padding:14px 20px 4px;display:flex;align-items:center;justify-content:space-between">
@@ -2480,6 +2510,7 @@ function showScreen(id,_fromBack){
     if(typeof dbLoadFeedStories==='function')dbLoadFeedStories();
     if(typeof dbLoadFeedBlogs==='function')dbLoadFeedBlogs();
   }
+  if(id==='s-feed'&&typeof dbLoadFeedTripPosts==='function')dbLoadFeedTripPosts(); // trips posted to the feed
   if(id==='s-explore'&&typeof dbLoadExploreUsers==='function')dbLoadExploreUsers(); // real members in People tab
   if(id==='s-explore'&&typeof dbLoadExplorePlaces==='function')dbLoadExplorePlaces();
   if(id==='s-concierge'&&typeof renderConcierge==='function')renderConcierge();
@@ -2745,11 +2776,13 @@ function openTrip(id){
 }
 function openShareSheet(){
   if(currentTrip && !canShareTrip(currentTrip)){ openPaywall(t('paywallShare')); return; }
-  var btn=document.querySelector('#trip-tabs .tab-btn[data-tab="share"]');
-  if(btn)switchTab(btn);
+  // Share is no longer a tab — activate its content directly (from the hero "Share Trip" button).
+  currentTab='share';
+  document.querySelectorAll('#trip-tabs .tab-btn').forEach(function(b){b.classList.remove('active');});
+  document.querySelectorAll('.tab-content').forEach(function(c){c.style.display='none';});
+  var content=document.getElementById('tab-share'); if(content)content.style.display='';
   if(currentTrip){ shareSelOf(currentTrip); _persistShareSel(); } // sync the current curation to the cloud so the shared link honours it
   renderShareTab();
-  var content=document.getElementById('tab-share');
   if(content)content.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function switchTab(btn){
@@ -2881,7 +2914,7 @@ function bbShotFail(img){
 // ─── MULTI-CITY (country) trips ──────────────────────────────────
 function refreshTripHeroMeta(){
   if(!currentTrip)return;var el=document.getElementById('trip-hero-meta');if(!el)return;
-  var hm=currentTrip.dates.toUpperCase()+' · '+currentTrip.days+' DAYS · '+(currentTrip.country||'').toUpperCase();
+  var hm=String(currentTrip.dates||'').toUpperCase()+' · '+(currentTrip.days||0)+' DAYS · '+(currentTrip.country||'').toUpperCase();
   if(currentTrip.tripType==='country'&&currentTrip.cities&&currentTrip.cities.length)hm+=' · '+currentTrip.cities.length+' '+(currentTrip.cities.length===1?t('cityWord'):t('citiesWord')).toUpperCase();
   var tw=(typeof tripWithMeta==='function')?tripWithMeta(currentTrip.with):null;
   if(tw)hm+=' · '+tw[0]+' '+String(tw[1]).toUpperCase();
@@ -3033,10 +3066,13 @@ function deleteTripPhoto(i){
 var _notesDbT=null;
 function saveNotes(){if(currentTrip)currentTrip.notes=document.getElementById('trip-notes-input').value;if(typeof persistSoon==='function')persistSoon();
   if(currentTrip&&typeof dbSaveTripNotes==='function'){var tr=currentTrip;if(_notesDbT)clearTimeout(_notesDbT);_notesDbT=setTimeout(function(){dbSaveTripNotes(tr);},800);}}
-function renderNotesTab(){var inp=document.getElementById('trip-notes-input');if(inp)inp.value=currentTrip?(currentTrip.notes||''):'';renderMissedList();}
-function addMissed(){var inp=document.getElementById('missed-inp');var val=(inp?inp.value:'').trim();if(!val||!currentTrip)return;if(!currentTrip.missed)currentTrip.missed=[];currentTrip.missed.push(val);inp.value='';renderMissedList();}
-function renderMissedList(){var list=document.getElementById('missed-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.missed||[]).map(function(m,i){return'<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:13px;color:var(--ink-2);font-style:italic;white-space:pre-wrap;line-height:1.6">'+(typeof escHtml==='function'?escHtml(m):m)+'</div><button onclick="removeMissed('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:13px;flex-shrink:0">×</button></div>';}).join('');}
-function removeMissed(i){if(currentTrip&&currentTrip.missed){currentTrip.missed.splice(i,1);renderMissedList();}}
+function renderNotesTab(){var inp=document.getElementById('trip-notes-input');if(inp)inp.value=currentTrip?(currentTrip.notes||''):'';renderMissedList();renderAppsList();}
+function addMissed(){var inp=document.getElementById('missed-inp');var val=(inp?inp.value:'').trim();if(!val||!currentTrip)return;if(!currentTrip.missed)currentTrip.missed=[];currentTrip.missed.push(val);inp.value='';renderMissedList();if(typeof persistSoon==='function')persistSoon();}
+function renderMissedList(){var list=document.getElementById('missed-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.missed||[]).map(function(m,i){return'<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:15px;color:var(--ink-2);font-style:italic;white-space:pre-wrap;line-height:1.65">'+(typeof escHtml==='function'?escHtml(m):m)+'</div><button onclick="removeMissed('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:15px;flex-shrink:0">×</button></div>';}).join('');}
+function removeMissed(i){if(currentTrip&&currentTrip.missed){currentTrip.missed.splice(i,1);renderMissedList();if(typeof persistSoon==='function')persistSoon();}}
+function addApp(){var inp=document.getElementById('apps-inp');var val=(inp?inp.value:'').trim();if(!val||!currentTrip)return;if(!currentTrip.apps)currentTrip.apps=[];currentTrip.apps.push(val);inp.value='';renderAppsList();if(typeof persistSoon==='function')persistSoon();}
+function renderAppsList(){var list=document.getElementById('apps-list');if(!list||!currentTrip)return;list.innerHTML=(currentTrip.apps||[]).map(function(m,i){return'<div style="display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid var(--paper-3)"><div style="flex:1;font-size:15px;color:var(--ink-2);white-space:pre-wrap;line-height:1.65">'+(typeof escHtml==='function'?escHtml(m):m)+'</div><button onclick="removeApp('+i+')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:15px;flex-shrink:0">×</button></div>';}).join('');}
+function removeApp(i){if(currentTrip&&currentTrip.apps){currentTrip.apps.splice(i,1);renderAppsList();if(typeof persistSoon==='function')persistSoon();}}
 function renderShareTab(){
   var urlEl=document.getElementById('share-url-display');
   if(urlEl&&currentTrip)urlEl.textContent='trafolio.travel/'+userData.username+'/'+currentTrip.dest.toLowerCase().replace(/\s+/g,'-');
@@ -3072,7 +3108,174 @@ function renderShareTab(){
   var nMissed=(currentTrip.missed||[]).length;
   var missedRow='<label onclick="toggleShareMissed()" style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 0;border-bottom:1px solid var(--paper-3)'+dim+'"><div style="width:32px;height:32px;border-radius:8px;background:var(--paper-3);display:flex;align-items:center;justify-content:center;font-size:15px">🗒️</div><div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--ink)">'+t('shareMissed')+'</div><div style="font-size:12px;color:var(--ink-4)">'+(nMissed?nMissed+' · ':'')+t('shareMissedSub')+'</div></div>'+shareCheck(mon)+'</label>';
   cont.innerHTML=master+rows+missedRow+blogRow+notesRow+photoRow; // order: places → blog → tips → photos
+  if(typeof _updateShareFeedStatus==='function')_updateShareFeedStatus();
 }
+function _visLabel(v){ return v==='followers'?(tt('followersShort')||'Trafollowers'):(tt('publicLabel')||'Public'); }
+function _updateShareFeedStatus(){
+  var el=document.getElementById('share-feed-status'), btn=document.getElementById('share-feed-btn'); if(!el||!currentTrip)return;
+  if(currentTrip.feedVisibility && currentTrip.feedVisibility!=='private'){
+    el.style.display='block';
+    el.innerHTML='✓ '+(tt('sharedToFeed')||'Shared to your feed')+' · '+((currentTrip.feedVisibility==='followers')?'👥 ':'🌍 ')+_visLabel(currentTrip.feedVisibility);
+    if(btn)btn.textContent=(tt('updateInFeed')||'Update in feed');
+  } else { el.style.display='none'; if(btn)btn.textContent=(tt('postToFeed')||'Post to feed'); }
+}
+// Post the current trip to the Following feed, using its Share-tab visibility (Public/Trafollowers).
+function postTripToFeed(){
+  if(!currentTrip){ if(typeof toast==='function')toast('Open a trip first'); return; }
+  var vis=currentTrip.privacy||'public';
+  if(vis==='private'){ if(typeof toast==='function')toast(tt('feedPrivateNote')||'Private trips aren’t posted. Set visibility to Public or Trafollowers above.'); return; }
+  // Let the user add/edit a short caption that appears under the flag on the feed photo.
+  try{ var _cap=prompt((tt('feedCaptionPrompt')||'Add a caption for your feed (optional):'), currentTrip.feedCaption||''); if(_cap!==null)currentTrip.feedCaption=String(_cap).trim(); }catch(e){}
+  var now=Date.now();
+  var kind = currentTrip.feedPostedAt ? 'updated' : 'added';
+  // Throttle: don't spam a new feed entry if you re-post within ~20h (still updates visibility).
+  var throttled = currentTrip.feedPostedAt && (now - currentTrip.feedPostedAt) < 20*60*60*1000;
+  currentTrip.feedVisibility=vis; currentTrip.feedKind=kind;
+  if(!throttled) currentTrip.feedPostedAt=now;
+  if(typeof dbSaveTripPost==='function'){ dbSaveTripPost(currentTrip).then(function(res){ if(res&&res.ok===false && typeof toast==='function'){ toast('⚠️ '+(tt('feedPostFailed')||'Posted locally, but it couldn’t reach the cloud feed — your followers may not see it yet. Check your connection.')); } }); }
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof toast==='function')toast('📣 '+(kind==='updated'?(tt('feedUpdated')||'Trip update shared to your feed'):(tt('feedShared')||'Trip shared to your feed'))+' · '+_visLabel(vis));
+  _updateShareFeedStatus();
+  var fs=document.getElementById('s-feed'); if(fs&&fs.classList.contains('active')&&typeof renderFeed==='function')renderFeed();
+}
+function openFeedTrip(p){
+  if(p._own){ if(typeof openTrip==='function')openTrip(p._tripId); return; }
+  if(sb && p._postUserId){
+    sb.from('profiles').select('id,name,username,avatar').eq('id',p._postUserId).maybeSingle().then(function(pr){
+      var prof=pr&&pr.data;
+      if(prof && typeof _openSharedTrip==='function'){ window._shareViewActive=true; _openSharedTrip(prof, p._postDest); }
+      else if(typeof openRealUserProfile==='function'){ openRealUserProfile({id:p._postUserId,name:p.userName,handle:'',_real:true}); }
+    });
+  } else if(p.userId && typeof openUserProfile==='function'){ openUserProfile(p.userId); }
+}
+// ── Trip feed card + likes/comments ───────────────────────────────────────────
+var _tripLikes={}, _tripComments={};
+function _tripKey(p){ return String(p&&p._key||'').replace(/[^a-z0-9|]/gi,''); }
+function _tripPostLike(k){ var e=_tripLikes[k]; return e?{liked:!!e.liked,count:e.count||0}:{liked:false,count:0}; }
+function toggleTripLike(k,ev){ if(ev&&ev.stopPropagation)ev.stopPropagation(); var e=_tripLikes[k]||{liked:false,count:0};
+  if(e.liked){ e.liked=false; e.count=Math.max(0,(e.count||0)-1); } else { e.liked=true; e.count=(e.count||0)+1; }
+  _tripLikes[k]=e; if(typeof persistSoon==='function')persistSoon(); if(typeof dbSaveTripLike==='function')dbSaveTripLike(k,e.liked);
+  if(typeof renderFeed==='function')renderFeed();
+}
+function _tripCommentList(k){ return _tripComments[k]||[]; }
+function _tripFeedCard(p,i){
+  var kq=_tripKey(p);
+  var avPhoto = p.userId ? userPhoto(p.userId) : (userData.photo||'');
+  var avStyle = avPhoto ? ('background:#e6e6e6 center/cover no-repeat url(\''+avPhoto+'\')') : ('background:'+p.userColor);
+  var tw=(typeof tripWithMeta==='function')?tripWithMeta(p.with):null;
+  var lk=_tripPostLike(kq), cc=(_tripCommentList(kq)||[]).length;
+  var action=(p.kind==='updated')?(tt('updatedTripAction')||'updated a trip'):(tt('addedTripAction')||'added a trip');
+  var cover = p.cover ? '<img src="'+escHtml(p.cover)+'" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">' : '';
+  var compTxt = tw ? (' · '+String(tw[1]).toUpperCase()+' '+String(tt('tripWord')||'Trip').toUpperCase()) : ''; // e.g. "· FAMILY TRIP"
+  return '<div class="feed-card" data-feedidx="'+i+'" style="background:#fff;border-radius:var(--r-lg);border:1px solid var(--paper-3);overflow:hidden;margin-bottom:12px;cursor:pointer">'
+    +'<div style="display:flex;align-items:center;gap:10px;padding:12px 14px 8px">'
+      +'<div class="feed-av" data-uid="'+(p.userId||0)+'" style="width:36px;height:36px;border-radius:50%;'+avStyle+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#fff;flex-shrink:0">'+(avPhoto?'':escHtml(p.userInitial||''))+'</div>'
+      +'<div style="flex:1;min-width:0"><span style="font-family:Cormorant Garamond,serif;font-size:16px;font-weight:500;color:var(--ink)">'+escHtml(p.userName||'')+'</span> <span style="font-size:12px;color:var(--ink-4)">'+action+'</span></div>'
+    +'</div>'
+    // Caption spans full width under the avatar/header (not indented under the name).
+    + (p.caption?'<div style="padding:0 14px 10px;font-size:14px;color:var(--ink);line-height:1.5">'+escHtml(p.caption)+'</div>':'')
+    +'<div style="position:relative;height:180px;background:linear-gradient(135deg,#7B2FBE,#00A8E8)">'
+      + cover
+      +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.8),rgba(0,28,48,.05) 60%,transparent)"></div>'
+      + (tw?'<div title="'+escHtml(tw[1])+'" style="position:absolute;top:10px;left:10px;width:26px;height:26px;border-radius:50%;background:rgba(0,28,48,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:14px">'+tw[0]+'</div>':'')
+      +'<div style="position:absolute;left:12px;right:12px;bottom:10px">'
+        +'<div style="font-family:Cormorant Garamond,serif;font-size:23px;font-weight:600;color:#fff;line-height:1.05;text-shadow:0 1px 4px rgba(0,0,0,.55)">'+escHtml(p.flag||'')+' '+escHtml(p.dest||'')+'</div>'
+        +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:#fff;opacity:.85;margin-top:4px">'+(p.days||0)+' '+String(t('days')).toUpperCase()+' · '+(p.places||0)+' '+String(t('places')).toUpperCase()+compTxt+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:flex;align-items:center;gap:18px;padding:10px 16px 12px">'
+      +'<button type="button" onclick="event.stopPropagation();toggleTripLike(\''+kq+'\',event)" style="background:none;border:none;cursor:pointer;font-size:14px;color:'+(lk.liked?'#E8334A':'var(--ink-3)')+';display:flex;align-items:center;gap:6px;padding:0">'+(lk.liked?'♥':'♡')+' '+lk.count+'</button>'
+      +'<button type="button" onclick="event.stopPropagation();openTripComments(\''+kq+'\')" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-3);display:flex;align-items:center;gap:6px;padding:0">💬 '+cc+'</button>'
+      +'<span style="margin-left:auto;color:var(--ember);font-size:12px;font-weight:600">'+(tt('viewTrip')||'View trip')+' →</span>'
+    +'</div>'
+  +'</div>';
+}
+// ---- Comment model helpers (replies + likes; backward-compatible with old flat {name,text,ts}) ----
+var _cmtReply=null; // {k, cid, name} when composing a reply
+function _cmtId(pfx){ return (pfx||'c')+Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
+function _normComment(c){ if(!c)return c; if(!c.id)c.id=_cmtId('c'); if(typeof c.likes!=='number')c.likes=c.likes||0; c.liked=!!c.liked; if(!Array.isArray(c.replies))c.replies=[]; c.replies.forEach(function(r){ if(!r.id)r.id=_cmtId('r'); if(typeof r.likes!=='number')r.likes=r.likes||0; r.liked=!!r.liked; }); return c; }
+function _normCommentList(k){ var arr=_tripComments[k]||[]; arr.forEach(_normComment); _tripComments[k]=arr; return arr; }
+// Tag candidates: trafollowers (following + followers) first, then other members.
+function _tagCandidates(){ var out=[], seen={};
+  function add(u,pri){ if(!u||typeof u!=='object')return; var h=String(u.handle||u.username||'').replace(/^@/,''); var nm=u.name||u.handle||''; if(!h&&!nm)return; var key=(h||nm).toLowerCase(); if(seen[key])return; seen[key]=1; out.push({name:nm,handle:h,pri:pri}); }
+  (userData.following||[]).forEach(function(u){ add(u,0); });
+  (userData.followers||[]).forEach(function(u){ add(u,0); });
+  (typeof exploreUsers!=='undefined'?exploreUsers:[]).forEach(function(u){ add(u,1); });
+  return out;
+}
+function _renderMentions(txt){ var s=(typeof escHtml==='function'?escHtml(txt):String(txt||'')); return s.replace(/(^|\s)@([\w.]+)/g,'$1<span style="color:var(--ember);font-weight:600">@$2</span>'); }
+// Permissions: you can DELETE a comment if it's yours OR you own the post; you can EDIT only your own.
+var _cmtEdit=null; // {k,id} of the comment/reply currently being edited
+function _cmtIsMine(c){ return !!c && (c.uid===userData.id || (!c.uid && String(c.name||'')===String(userData.name||'You'))); }
+function _iOwnPostKey(k){ var me=String(userData.id||'me').replace(/[^a-z0-9|]/gi,''); return String(k||'').indexOf(me+'|')===0; }
+function _cmtFind(k,id){ var arr=_tripComments[k]||[]; for(var i=0;i<arr.length;i++){ if(arr[i].id===id)return{c:arr[i],arr:arr,idx:i}; var r=arr[i].replies||[]; for(var j=0;j<r.length;j++){ if(r[j].id===id)return{c:r[j],arr:r,idx:j}; } } return null; }
+function _cmtRowHtml(k,c,isReply,parentId,ownPost){
+  var sz=isReply?24:30, tgt=isReply?parentId:c.id;
+  var av='<div style="width:'+sz+'px;height:'+sz+'px;border-radius:50%;background:var(--ember-lt);color:var(--ember-dk);display:flex;align-items:center;justify-content:center;font-size:'+(isReply?11:12)+'px;font-weight:600;flex-shrink:0">'+escHtml(String(c.name||'?').charAt(0).toUpperCase())+'</div>';
+  var editing=_cmtEdit&&_cmtEdit.k===k&&_cmtEdit.id===c.id, mine=_cmtIsMine(c), canDel=mine||ownPost;
+  var nameHtml='<div style="font-size:12px;font-weight:600;color:var(--ink)">'+escHtml(c.name||'')+'</div>';
+  if(editing){
+    var editForm='<div style="display:flex;gap:6px;margin-top:4px"><input id="cmt-edit-inp" class="inp" value="'+escHtml(c.text||'')+'" style="flex:1;font-size:13px;padding:6px 10px" onkeydown="if(event.key===\'Enter\')saveEditComment(\''+k+'\');else if(event.key===\'Escape\')cancelEditComment(\''+k+'\')"><button class="btn btn-ember" style="padding:6px 12px;font-size:12px" onclick="saveEditComment(\''+k+'\')">Save</button><button style="background:none;border:none;color:var(--ink-4);font-size:12px;cursor:pointer" onclick="cancelEditComment(\''+k+'\')">Cancel</button></div>';
+    return '<div style="display:flex;gap:8px;'+(isReply?'padding:6px 0 0 34px':'')+'">'+av+'<div style="min-width:0;flex:1">'+nameHtml+editForm+'</div></div>';
+  }
+  var likeBtn='<button type="button" onclick="toggleCommentLike(\''+k+'\',\''+(parentId||c.id)+'\','+(isReply?'\''+c.id+'\'':'null')+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:'+(c.liked?'#E8334A':'var(--ink-4)')+';padding:0">'+(c.liked?'♥':'♡')+(c.likes?' '+c.likes:'')+'</button>';
+  var replyBtn='<button type="button" data-nm="'+escHtml(c.name||'')+'" onclick="startCommentReply(\''+k+'\',\''+tgt+'\',this)" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--ink-4);padding:0">Reply</button>';
+  var editBtn=mine?'<button type="button" onclick="startEditComment(\''+k+'\',\''+c.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--ink-4);padding:0">Edit</button>':'';
+  var delBtn=canDel?'<button type="button" onclick="deleteTripComment(\''+k+'\',\''+c.id+'\')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E8334A;padding:0">Delete</button>':'';
+  var edited=c.edited?' <span style="font-size:10px;color:var(--ink-4)">(edited)</span>':'';
+  return '<div style="display:flex;gap:8px;'+(isReply?'padding:6px 0 0 34px':'')+'">'+av+'<div style="min-width:0;flex:1">'+nameHtml+'<div style="font-size:13px;color:var(--ink-2);line-height:1.45">'+_renderMentions(c.text||'')+edited+'</div><div style="display:flex;gap:16px;margin-top:4px;align-items:center;flex-wrap:wrap">'+likeBtn+replyBtn+editBtn+delBtn+'</div></div></div>';
+}
+function _cmtBlockHtml(k,c,ownPost){ var reps=(c.replies||[]).map(function(r){ return _cmtRowHtml(k,r,true,c.id,ownPost); }).join(''); return '<div style="padding:10px 0;border-bottom:1px solid var(--paper-3)">'+_cmtRowHtml(k,c,false,c.id,ownPost)+reps+'</div>'; }
+function openTripComments(k){
+  var list=_normCommentList(k), ownPost=_iOwnPostKey(k);
+  var ov=document.getElementById('trip-cmt-ov'); if(!ov){ ov=document.createElement('div'); ov.id='trip-cmt-ov'; document.body.appendChild(ov); }
+  var rows = list.length ? list.map(function(c){ return _cmtBlockHtml(k,c,ownPost); }).join('') : '<div style="padding:22px;text-align:center;color:var(--ink-4);font-size:13px">'+(tt('noCommentsYet')||'No comments yet — be the first.')+'</div>';
+  var replying = _cmtReply && _cmtReply.k===k;
+  var replyChip = replying ? '<div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;color:var(--ink-3);padding:2px 2px 8px"><span>Replying to <b style="color:var(--ember)">@'+escHtml(_cmtReply.name||'')+'</b></span><button onclick="cancelCmtReply(\''+k+'\')" style="background:none;border:none;color:var(--ink-4);cursor:pointer;font-size:14px">✕</button></div>' : '';
+  ov.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(0,28,48,.45);display:flex;align-items:flex-end';
+  ov.innerHTML='<div onclick="event.stopPropagation()" style="background:#fff;border-radius:18px 18px 0 0;width:100%;max-height:76vh;display:flex;flex-direction:column;padding:16px 16px calc(14px + env(safe-area-inset-bottom,0px))">'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-family:Cormorant Garamond,serif;font-size:20px;font-weight:600">'+(tt('commentsTitle')||'Comments')+'</div><button onclick="closeTripComments()" style="background:none;border:none;font-size:22px;color:var(--ink-3);cursor:pointer">×</button></div>'
+    +'<div style="flex:1;overflow-y:auto;margin-bottom:10px">'+rows+'</div>'
+    +replyChip
+    +'<div style="position:relative"><div id="cmt-tagdd" style="display:none;position:absolute;bottom:100%;left:0;right:0;margin-bottom:6px;background:#fff;border:1px solid var(--paper-3);border-radius:12px;box-shadow:0 -6px 24px rgba(0,28,48,.16);max-height:210px;overflow-y:auto;z-index:5"></div>'
+    +'<div style="display:flex;gap:8px"><input id="trip-cmt-input" class="inp" autocomplete="off" placeholder="'+(replying?'Write a reply… use @ to tag':(tt('addCommentPh')||'Add a comment… use @ to tag'))+'" style="flex:1" oninput="onCmtInput(this)" onkeydown="if(event.key===\'Enter\'){addTripComment(\''+k+'\');}else if(event.key===\'Escape\'){var d=document.getElementById(\'cmt-tagdd\');if(d)d.style.display=\'none\';}"><button class="btn btn-ember" onclick="addTripComment(\''+k+'\')">'+(tt('postBtn')||'Post')+'</button></div></div>'
+  +'</div>';
+  ov.onclick=function(){ closeTripComments(); };
+  setTimeout(function(){ if(_cmtEdit&&_cmtEdit.k===k){ var e=document.getElementById('cmt-edit-inp'); if(e){ e.focus(); try{e.setSelectionRange(e.value.length,e.value.length);}catch(_){} } return; } var i=document.getElementById('trip-cmt-input'); if(i)i.focus(); },120);
+}
+function closeTripComments(){ _cmtReply=null; _cmtEdit=null; var ov=document.getElementById('trip-cmt-ov'); if(ov)ov.remove(); }
+function startCommentReply(k,cid,btn){ _cmtReply={k:k,cid:cid,name:(btn?btn.getAttribute('data-nm'):'')||''}; _cmtEdit=null; openTripComments(k); var inp=document.getElementById('trip-cmt-input'); if(inp)inp.focus(); }
+function cancelCmtReply(k){ _cmtReply=null; openTripComments(k); }
+// Edit / delete a comment or reply (edit = your own only; delete = your own OR when you own the post).
+function startEditComment(k,id){ _cmtEdit={k:k,id:id}; _cmtReply=null; openTripComments(k); }
+function cancelEditComment(k){ _cmtEdit=null; openTripComments(k); }
+function saveEditComment(k){ if(!_cmtEdit)return; var e=document.getElementById('cmt-edit-inp'); var v=(e&&e.value||'').trim(); var f=_cmtFind(k,_cmtEdit.id); if(f&&_cmtIsMine(f.c)&&v){ f.c.text=v; f.c.edited=true; } _cmtEdit=null; if(typeof persistSoon==='function')persistSoon(); openTripComments(k); if(typeof renderFeed==='function')renderFeed(); }
+function deleteTripComment(k,id){ var f=_cmtFind(k,id); if(!f)return; if(!(_cmtIsMine(f.c)||_iOwnPostKey(k)))return; if(typeof confirm==='function'&&!confirm('Delete this comment?'))return; var removed=f.arr.splice(f.idx,1)[0]; _cmtEdit=null; if(typeof persistSoon==='function')persistSoon(); if(typeof dbDeleteTripComment==='function')dbDeleteTripComment(k,removed); openTripComments(k); if(typeof renderFeed==='function')renderFeed(); }
+function toggleCommentLike(k,cid,rid){ var arr=_normCommentList(k); var c=null; for(var i=0;i<arr.length;i++){ if(arr[i].id===cid){ c=arr[i]; break; } } if(!c)return; var t=c; if(rid && rid!=='null'){ t=null; for(var j=0;j<(c.replies||[]).length;j++){ if(c.replies[j].id===rid){ t=c.replies[j]; break; } } if(!t)return; } t.liked=!t.liked; t.likes=(t.likes||0)+(t.liked?1:-1); if(t.likes<0)t.likes=0; if(typeof persistSoon==='function')persistSoon(); openTripComments(k); }
+// @tag autocomplete
+function onCmtInput(inp){ var dd=document.getElementById('cmt-tagdd'); if(!dd)return; var v=inp.value||''; var pos=(inp.selectionStart!=null?inp.selectionStart:v.length); var upto=v.slice(0,pos); var m=upto.match(/@([\w.]*)$/);
+  if(!m){ dd.style.display='none'; return; }
+  var q=(m[1]||'').toLowerCase();
+  var cands=_tagCandidates().filter(function(u){ if(!q)return true; return String(u.handle||'').toLowerCase().indexOf(q)===0 || String(u.name||'').toLowerCase().indexOf(q)>=0; });
+  cands.sort(function(a,b){ return a.pri-b.pri; });
+  cands=cands.slice(0,6);
+  if(!cands.length){ dd.style.display='none'; return; }
+  dd.innerHTML=cands.map(function(u){ var tok=(u.handle||String(u.name||'').replace(/\s+/g,'')).replace(/'/g,''); return '<div onmousedown="event.preventDefault();pickCmtTag(\''+tok+'\')" style="display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;border-bottom:1px solid var(--paper-2)"><div style="width:26px;height:26px;border-radius:50%;background:var(--ember-lt);color:var(--ember-dk);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;flex-shrink:0">'+escHtml((u.name||u.handle||'?').charAt(0).toUpperCase())+'</div><div style="min-width:0"><div style="font-size:12px;font-weight:600;color:var(--ink)">'+escHtml(u.name||('@'+u.handle))+'</div><div style="font-size:11px;color:var(--ink-4)">@'+escHtml(u.handle||tok)+(u.pri===0?' · trafollower':'')+'</div></div></div>'; }).join('');
+  dd.style.display='block';
+}
+function pickCmtTag(tok){ var inp=document.getElementById('trip-cmt-input'); if(!inp)return; var v=inp.value||''; var pos=(inp.selectionStart!=null?inp.selectionStart:v.length); var upto=v.slice(0,pos), rest=v.slice(pos); upto=upto.replace(/@([\w.]*)$/,'@'+tok+' '); inp.value=upto+rest; var np=upto.length; inp.focus(); try{ inp.setSelectionRange(np,np); }catch(e){} var dd=document.getElementById('cmt-tagdd'); if(dd)dd.style.display='none'; }
+function addTripComment(k){ var inp=document.getElementById('trip-cmt-input'); var txt=(inp&&inp.value||'').trim(); if(!txt)return;
+  var arr=_normCommentList(k); var replying=_cmtReply&&_cmtReply.k===k, parentId=null;
+  if(replying){ var c=null; for(var i=0;i<arr.length;i++){ if(arr[i].id===_cmtReply.cid){ c=arr[i]; break; } } if(c){ parentId=c.id; c.replies.push({id:_cmtId('r'),uid:userData.id,name:userData.name||'You',text:txt,ts:Date.now(),likes:0,liked:false}); } else { arr.push({id:_cmtId('c'),uid:userData.id,name:userData.name||'You',text:txt,ts:Date.now(),likes:0,liked:false,replies:[]}); } _cmtReply=null; }
+  else { arr.push({id:_cmtId('c'),uid:userData.id,name:userData.name||'You',text:txt,ts:Date.now(),likes:0,liked:false,replies:[]}); }
+  _tripComments[k]=arr;
+  if(typeof persistSoon==='function')persistSoon(); if(typeof dbSaveTripComment==='function')dbSaveTripComment(k,txt,parentId);
+  openTripComments(k); if(typeof renderFeed==='function')renderFeed();
+}
+// Best-effort cloud sync (tables optional; works locally without them).
+async function dbSaveTripLike(k,liked){ if(!sb||!userData.id)return; try{ if(liked){ await sb.from('trip_post_likes').upsert({post_key:k,user_id:userData.id},{onConflict:'post_key,user_id'}); } else { await sb.from('trip_post_likes').delete().eq('post_key',k).eq('user_id',userData.id); } }catch(e){} }
+async function dbSaveTripComment(k,txt,parentId){ if(!sb||!userData.id)return; try{ await sb.from('trip_post_comments').insert({post_key:k,user_id:userData.id,name:userData.name||'',text:txt,parent_id:parentId||null}); }catch(e){ try{ await sb.from('trip_post_comments').insert({post_key:k,user_id:userData.id,name:userData.name||'',text:txt}); }catch(e2){} } }
+async function dbDeleteTripComment(k,c){ if(!sb||!userData.id||!c)return; try{ if(c.uid&&c.uid!==userData.id)return; /* only cloud-delete your own row */ await sb.from('trip_post_comments').delete().eq('post_key',k).eq('user_id',userData.id).eq('text',c.text); }catch(e){} }
 function shareCheck(on){return'<div style="width:24px;height:24px;border-radius:50%;flex-shrink:0;border:2px solid '+(on?'var(--ember)':'var(--paper-3)')+';background:'+(on?'var(--ember)':'transparent')+';display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff">'+(on?'✓':'')+'</div>';}
 function shareSelOf(trip){
   if(!trip.shareSel)trip.shareSel={everything:true,photos:true,notes:true,blog:true,missed:true,cats:{eat:true,stay:true,see:true,do:true,fun:true,view:true,shop:true}};
@@ -4728,14 +4931,14 @@ function renderProfile(){
 function renderProfileStories(){
   var wrap=document.getElementById('profile-stories');if(!wrap)return;
   if(typeof userStories==='undefined'||!userStories.length){
-    wrap.innerHTML='<div style="padding:18px;text-align:center;background:var(--paper-2);border-radius:var(--r-md);color:var(--ink-4)"><div style="font-size:22px;margin-bottom:6px">✍️</div><div style="font-size:13px">'+t('noStoriesYet')+'</div><div style="font-size:11px;margin-top:3px">'+t('noStoriesSub')+'</div></div>';
+    wrap.innerHTML='<div style="margin:0 16px;padding:18px;text-align:center;background:var(--paper-2);border-radius:var(--r-md);color:var(--ink-4)"><div style="font-size:22px;margin-bottom:6px">✍️</div><div style="font-size:13px">'+t('noStoriesYet')+'</div><div style="font-size:11px;margin-top:3px">'+t('noStoriesSub')+'</div></div>';
     return;
   }
   wrap.innerHTML=userStories.map(function(s,i){
     var vm=storyVisMeta(s.visibility||'public');
     var sph=s.photo||((typeof USER_CITY_IMG!=='undefined'&&USER_CITY_IMG[s.city])||'');
     var sthumb=sph?'<div style="width:80px;height:80px;border-radius:12px;overflow:hidden;flex-shrink:0;background:'+((typeof cityGradient==='function')?cityGradient(s.city):'var(--paper-3)')+'"><img src="'+escHtml(sph)+'" loading="lazy" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.style.display=\'none\'"></div>':'';
-    return '<div class="profile-story-card" data-sidx="'+i+'" style="padding:13px 0;border-bottom:1px solid var(--paper-3);cursor:pointer;display:flex;gap:12px;align-items:flex-start">'
+    return '<div class="profile-story-card" data-sidx="'+i+'" style="padding:13px 16px;border-bottom:1px solid var(--paper-3);cursor:pointer;display:flex;gap:12px;align-items:flex-start">'
       +'<div style="flex:1;min-width:0">'
       +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">'
       +'<div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">'+cityFlag(s.city)+' '+escHtml((s.city||'').toUpperCase())+' · '+escHtml(s.date||'')+'</div>'
@@ -5596,8 +5799,6 @@ function closeTripMenu(){ var m=document.getElementById('trip-menu'); if(m)m.sty
 // ── Elevated "+" speed-dial: a semi-circle of quick actions fanning up from the center nav button.
 function _addDialActions(){
   var a=[];
-  // Add Place first when you're working a trip (so "add place under the +" is right there).
-  if(typeof currentTrip!=='undefined' && currentTrip){ a.push({icon:'📍', label:(tt('addPlaceShort')||'Place'), fn:'openAddPlace'}); }
   a.push({icon:'✈️', label:(tt('tripWord')||'Trip'), fn:'openAddTrip'});
   a.push({icon:'✍️', label:(tt('storyWord')||'Story'), fn:'openWriteStory'});
   return a;
@@ -6446,6 +6647,8 @@ function setEditTripType(tt){
   document.querySelectorAll('#et-type-toggle .fpill').forEach(function(b){b.classList.toggle('active',b.dataset.tt===_editTripType);});
   var hint=document.getElementById('et-multicity-hint'); if(hint)hint.style.display=(_editTripType==='country')?'block':'none';
 }
+var _editTripWith='solo';
+function selEditTripWith(el){ _editTripWith=el.dataset.w; document.querySelectorAll('#et-with-pills .fpill').forEach(function(p){p.classList.toggle('active',p===el);}); }
 function openEditTrip(){
   if(!currentTrip)return;
   setEditTripType(currentTrip.tripType==='country'?'country':'city');
@@ -6453,6 +6656,9 @@ function openEditTrip(){
   var c=document.getElementById('et-country'); if(c)c.value=currentTrip.country||'';
   var f=document.getElementById('et-from'); if(f)f.value=currentTrip.startDate||'';
   var tdt=document.getElementById('et-to'); if(tdt)tdt.value=currentTrip.endDate||'';
+  // Companion (solo/couple/friends/family/business) — default solo if the trip never had one set.
+  _editTripWith=currentTrip.with||'solo';
+  document.querySelectorAll('#et-with-pills .fpill').forEach(function(p){p.classList.toggle('active',p.dataset.w===_editTripWith);});
   openModal('sheet-edit-trip');
 }
 function saveEditTrip(){
@@ -6483,6 +6689,7 @@ function saveEditTrip(){
   if(to)currentTrip.endDate=to;
   if(from&&to)currentTrip.days=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
   currentTrip.tripType=_editTripType;
+  currentTrip.with=_editTripWith||'solo';
   closeModal();
   // refresh everything that shows trip identity
   document.getElementById('trip-hero-dest').textContent=currentTrip.dest;
@@ -6493,7 +6700,7 @@ function saveEditTrip(){
   if(typeof renderDash==='function')renderDash();
   if(typeof renderProfileGrid==='function')renderProfileGrid();
   if(typeof persistSoon==='function')persistSoon();
-  if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{dest:currentTrip.dest,country:currentTrip.country,date_from:currentTrip.startDate||null,date_to:currentTrip.endDate||null,trip_type:currentTrip.tripType,cities:currentTrip.cities||[]});
+  if(typeof dbUpdateTrip==='function')dbUpdateTrip(currentTrip,{dest:currentTrip.dest,country:currentTrip.country,date_from:currentTrip.startDate||null,date_to:currentTrip.endDate||null,trip_type:currentTrip.tripType,cities:currentTrip.cities||[],trip_with:currentTrip.with||''});
   toast(t('tripUpdated')||'Trip updated');
 }
 function uploadTripCover(input){
@@ -7228,7 +7435,7 @@ function renderViewedProfile(o){
   var cover=o.cover||VIEW_FALLBACK_COVER;
   var tile=function(v,lab){ return '<div style="text-align:center"><div style="font-family:Cormorant Garamond,serif;font-size:22px;font-weight:600;color:var(--ink)">'+v+'</div><div style="font-size:11px;color:var(--ink-4)">'+lab+'</div></div>'; };
   var html='<button onclick="profileBack()" title="Back" aria-label="Back" style="position:absolute;top:12px;left:12px;z-index:40;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.42);backdrop-filter:blur(6px);color:#fff;font-size:18px;cursor:pointer">←</button>';
-  html+='<div style="position:relative;height:148px;overflow:hidden;background:var(--ink);margin:0 -20px"><img src="'+escHtml(cover)+'" style="width:100%;height:100%;object-fit:cover" onerror="imgErr(this)"><div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.12),transparent 50%,rgba(250,250,248,1))"></div></div>';
+  html+='<div style="position:relative;height:148px;overflow:hidden;background:var(--ink);margin:0 -20px"><img src="'+escHtml(cover)+'" style="width:100%;height:100%;object-fit:cover;opacity:1" onerror="imgErr(this)"></div>';
   html+='<div style="padding:0 20px;text-align:center">';
   html+='<div style="position:relative;z-index:3;margin-top:-44px;margin-bottom:8px"><div style="width:84px;height:84px;border-radius:50%;'+avBg+';display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;color:white;margin:0 auto;border:3.5px solid var(--paper);box-shadow:0 4px 16px rgba(0,28,48,.2)">'+(o.photo?'':escHtml(o.initial||''))+'</div></div>';
   html+='<div style="font-family:Cormorant Garamond,serif;font-size:26px;font-weight:500;letter-spacing:-.01em">'+escHtml(o.name||'')+'</div>';
@@ -7236,9 +7443,9 @@ function renderViewedProfile(o){
   if((o.instagram||o.tiktok)&&typeof socialBadgesHtml==='function')html+='<div style="display:flex;gap:10px;justify-content:center;margin:-2px 0 10px">'+socialBadgesHtml(o.instagram,o.tiktok)+'</div>';
   var _vloc=[]; if(o.livesIn)_vloc.push('📍 '+t('livesInPrefix')+' '+escHtml(o.livesIn)); if(o.from)_vloc.push(t('fromPrefix')+' '+escHtml(o.from));
   if(_vloc.length)html+='<div style="font-size:12px;color:var(--ink-4);margin:0 0 9px">'+_vloc.join('  ·  ')+'</div>';
-  if(o.tier)html+='<div style="margin:0 0 10px"><span style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border-radius:30px;padding:5px 12px;font-size:11px;font-weight:600">'+o.tier.emoji+' '+escHtml(o.tier.label)+'</span></div>';
+  if(o.tier)html+='<div style="margin:0 0 10px"><button type="button" onclick="openViewedTierCard()" title="Traveller tier" style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border:none;border-radius:30px;padding:6px 14px;font-size:11px;font-weight:600;cursor:pointer">'+o.tier.emoji+' '+escHtml(o.tier.label)+' <span style="opacity:.55">›</span></button></div>';
   if(o.bio)html+='<div style="font-size:13px;color:var(--ink-3);line-height:1.55;margin-bottom:14px;padding:0 10px">'+escHtml(o.bio)+'</div>';
-  html+='<div style="display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px;flex-wrap:wrap">'+tile(o.following||0,'👀 '+t('following'))+tile(o.followers||0,'🫂 '+t('followers'))+tile(o.countries||0,'🌍 '+t('countriesWordCap'))+tile(trips.length,'🧳 '+t('trips'))+tile(o.places||0,'🏙️ '+t('tabPlaces'))+(stories.length?tile(stories.length,'✍️ '+t('tabStories')):'')+'</div>';
+  html+='<div style="display:flex;align-items:center;justify-content:center;gap:18px;margin-bottom:14px;flex-wrap:wrap">'+tile(o.following||0,'👀 '+t('following'))+tile(o.followers||0,'🫂 '+t('followers'))+tile(o.places||0,'🏙️ '+t('tabPlaces'))+tile(o.countries||0,'🌍 '+t('countriesWordCap'))+'</div>';
   if(o.isPrivate && o.followStatus==='none')html+='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.1em;color:var(--ink-4);margin-bottom:8px">🔒 '+t('privateProfileNote')+'</div>';
   html+='<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn '+(o.followStatus==='none'?'btn-ember':'btn-ghost')+'" style="flex:1" id="upm-follow-btn" onclick="viewedFollow(this)">'+followLabel(o.id)+'</button><button class="btn btn-ghost" onclick="viewedMessage()" style="flex:1">'+t('messageBtn')+'</button></div></div>';
   if(!canView){ html+='<div style="border-top:8px solid var(--paper-2);padding:28px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">🔒</div><div style="font-size:13px;line-height:1.5;padding:0 16px">'+t('privateLockMsg')+'</div></div>'; body.innerHTML=html; return; }
@@ -7282,6 +7489,16 @@ function renderViewedProfile(o){
   }
   body.innerHTML=html;
 }
+// Tapping the tier badge on a viewed profile → show that traveller's tier standing in the tier sheet.
+function openViewedTierCard(){
+  var o=_lastViewedOpts||{}, g=o.tier;
+  var set=function(id,v){var e=document.getElementById(id);if(e)e.textContent=v;};
+  set('tier-count', o.countries||0);
+  if(g){ set('tier-emoji',g.emoji); set('tier-global-label',g.label); set('tier-global-word',g.word||g.label); }
+  var lb=document.getElementById('tier-local-block'), lp=document.getElementById('tier-local-prompt');
+  if(lb)lb.style.display='none'; if(lp)lp.style.display='none'; // local ranking is self-only
+  openModal('sheet-tier');
+}
 function openUserProfile(id){
   var u=allUsers.find(function(x){return x.id===id;});
   if(!u){
@@ -7311,7 +7528,7 @@ async function openRealUserProfile(u){
   if(sb && u.id){
     try{
       var pr=await sb.from('profiles').select('*').eq('id',u.id).maybeSingle();
-      if(pr&&pr.data){ prof=Object.assign({}, u, _mapProfileToUser(pr.data)); prof.bio=pr.data.bio||''; prof.livesIn=pr.data.lives_in||prof.livesIn||''; prof.from=pr.data.origin||prof.from||''; prof.instagram=pr.data.instagram||''; prof.tiktok=pr.data.tiktok||''; }
+      if(pr&&pr.data){ prof=Object.assign({}, u, _mapProfileToUser(pr.data)); prof.bio=pr.data.bio||''; prof.livesIn=pr.data.lives_in||prof.livesIn||''; prof.from=pr.data.origin||prof.from||''; prof.instagram=pr.data.instagram||''; prof.tiktok=pr.data.tiktok||''; prof.cover=(pr.data.cover&&String(pr.data.cover).indexOf('blob:')!==0)?pr.data.cover:''; }
       // Load all their trips, then hide only the explicitly-private ones (null privacy = public).
       var tr=await sb.from('trips').select('*').eq('user_id',u.id).order('created_at',{ascending:false}).limit(80);
       if(tr&&tr.data) utrips=tr.data.filter(function(t){ return (t.privacy||'public')!=='private'; });
@@ -7355,7 +7572,7 @@ async function openRealUserProfile(u){
       author:{id:u.id,name:prof.name,initial:(prof.name||'?')[0]}};
   });
   _viewedStories.forEach(function(s,i){ s.id='v'+i; });
-  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', livesIn:prof.livesIn||'', from:prof.from||'', tier:gtier, cover:(trips[0]&&trips[0].img)||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:_viewedStories, canView:(!prof.priv||followStatusOf(u.id)==='following'), isPrivate:!!prof.priv, followStatus:followStatusOf(u.id), instagram:prof.instagram||'', tiktok:prof.tiktok||'' });
+  renderViewedProfile({ id:u.id, name:prof.name, handle:prof.handle, photo:prof.photo||'', color:prof.color||'', avbg:avBg, initial:prof.initial, bio:prof.bio||'', livesIn:prof.livesIn||'', from:prof.from||'', tier:gtier, cover:(prof.cover||(trips[0]&&trips[0].img))||'', countries:nC, places:placesTotal, followers:folCount, following:followingCount, trips:trips, stories:_viewedStories, canView:(!prof.priv||followStatusOf(u.id)==='following'), isPrivate:!!prof.priv, followStatus:followStatusOf(u.id), instagram:prof.instagram||'', tiktok:prof.tiktok||'' });
 }
 
 var CITY_PLACES={
@@ -8209,6 +8426,9 @@ const S={
     tripNotes:'Trip notes',
     thingsMissed:'Things we missed',
     addMissed:'Add something you wish you had done...',
+    shareTripBtn:'Share Trip',
+    appsUsed:'Apps we used locally',
+    appsPh:'Add a local app that helped — ride-hailing, food, transit, payments…',
     aiPlanner:'AI Trip Planner',
     aiSub:'Select your interests and generate an itinerary.',
     interests:'Interests',
@@ -8336,6 +8556,23 @@ const S={
     noAds:'No ads',
     continueGoogle:'Continue with Google',
     continueApple:'Continue with Apple',
+    shareToFeed:'Share to your feed',
+    shareToFeedSub:"Post this trip to your followers' feed, using the visibility above and what you chose to share.",
+    postToFeed:'Post to feed',
+    updateInFeed:'Update in feed',
+    sharedToFeed:'Shared to your feed',
+    feedShared:'Trip shared to your feed',
+    feedUpdated:'Trip update shared to your feed',
+    feedPrivateNote:'Private trips aren’t posted. Set visibility to Public or Trafollowers above.',
+    followersShort:'Trafollowers',
+    addedTripAction:'added a trip',
+    updatedTripAction:'updated a trip',
+    feedCaptionPrompt:'Add a caption for your feed (optional):',
+    viewTrip:'View trip',
+    commentsTitle:'Comments',
+    noCommentsYet:'No comments yet — be the first.',
+    addCommentPh:'Add a comment…',
+    postBtn:'Post',
     socialAuthPrompt:"Sign in with {provider} — enter your {provider} email:",
     socialAuthFailed:"Google sign-in failed. Please try again.",
     continueFacebook:'Continue with Facebook',
@@ -8401,6 +8638,11 @@ const S={
     writeBtn:'Write',
     exploreTitle:'Explore',
     exploreSearchPh:'Travelers, cities, stories...',
+    popularInRegion:'Popular Travellers in',
+    popularWorldwide:'Popular Travellers Worldwide',
+    alsoFrom:'Also from',
+    discoverTravelers:'Discover more travellers',
+    beenTo:'Travellers who’ve been to',
     tabPeople:'Travelers',
     tabCities:'Cities',
     tabStories:'Stories',
@@ -8798,6 +9040,7 @@ const S={
     navAddTrip:"Add Trip",
     navAdd:"Add",
     addPlaceShort:"Place",
+    addPlaceFab:"Add place",
     tripWord:"Trip",
     storyWord:"Story",
     bbTextPage:"Text page",
@@ -16839,6 +17082,24 @@ function renderFeedMain() {
     });
   });
 
+  // Trips YOU posted to your feed (from the Share tab) — visible to you as "you added/updated a trip".
+  (trips||[]).forEach(function(tr,i){
+    if(!tr.feedVisibility || tr.feedVisibility==='private') return;
+    posts.unshift({ id:'mt'+i, userId:0, userName:userData.name, userInitial:(userData.name||'?')[0],
+      userColor:'linear-gradient(135deg,var(--ember),var(--gold))', type:'trip', dest:tr.dest, flag:tr.flag,
+      cover:((tr.cover&&tr.cover.indexOf('blob:')!==0)?tr.cover:''), days:tr.days||0, places:(tr.places||[]).length,
+      with:tr.with||'', caption:tr.feedCaption||'', time:'', preview:'', vis:tr.feedVisibility, kind:tr.feedKind||'added',
+      _own:true, _tripId:tr.id, _key:(userData.id||'me')+'|'+String(tr.dest||'').toLowerCase() });
+  });
+  // Trips people you follow posted (from the cloud).
+  (typeof feedTripPosts!=='undefined'?feedTripPosts:[]).forEach(function(tp,i){
+    posts.unshift({ id:'ft'+i, userId:tp.user_id, userName:tp._authorName||'Traveler', userInitial:(tp._authorName||'?')[0],
+      userColor:'linear-gradient(135deg,var(--ember),var(--gold))', type:'trip', dest:tp.dest, flag:tp.flag,
+      cover:((tp.cover&&tp.cover.indexOf('blob:')!==0)?tp.cover:''), days:tp.days||0, places:tp.places_count||0,
+      with:tp.trip_with||'', caption:tp.caption||'', time:'', preview:'', vis:tp.visibility, kind:tp.kind||'added',
+      _postUserId:tp.user_id, _postDest:tp.dest, _key:tp.user_id+'|'+String(tp.dest||'').toLowerCase() });
+  });
+
   if (!posts.length) {
     body.innerHTML = '<div style="padding:60px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:32px;margin-bottom:10px">&#128101;</div><div>'+t('noFollowing')+'</div></div>';
     return;
@@ -16859,6 +17120,7 @@ function renderFeedMain() {
   }
   // Helper: build a single feed card's HTML
   function feedCardHtml(p, i){
+    if(p.type==='trip') return _tripFeedCard(p, i);   // rich trip card (cover + caption + companion + likes/comments)
     var typeLabel = {trip: t('trips'), place: t('tabPlaces'), story: t('storyLabel')}[p.type] || '';
     var sub = p.type === 'trip' ? (p.days||0)+' '+t('days')+' \xB7 '+(p.places||0)+' '+t('places') : typeLabel;
     var cover = p.cover ? '<div style="height:150px;overflow:hidden"><img src="'+escHtml(p.cover)+'" style="width:100%;height:100%;object-fit:cover" loading="lazy"></div>' : '';
@@ -16867,9 +17129,9 @@ function renderFeedMain() {
     return '<div class="feed-card" data-feedidx="'+i+'" style="background:white;border-radius:var(--r-lg);border:1px solid var(--paper-3);overflow:hidden;margin-bottom:12px">'
       + '<div style="display:flex;align-items:center;gap:10px;padding:14px 16px 12px">'
       + '<div class="feed-av" data-uid="'+p.userId+'" style="width:36px;height:36px;border-radius:50%;'+avStyle+';display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:white;flex-shrink:0">'+(avPhoto?'':p.userInitial)+'</div>'
-      + '<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:16px;font-weight:500;color:var(--ink)">'+escHtml(p.userName||'')+'</div>'
+      + '<div style="flex:1;min-width:0"><div style="font-family:Cormorant Garamond,serif;font-size:16px;font-weight:500;color:var(--ink)">'+escHtml(p.userName||'')+(p.type==='trip'?('<span style="color:var(--ink-4);font-weight:400;font-size:13px"> '+((p.kind==='updated')?(tt('updatedTripAction')||'updated a trip'):(tt('addedTripAction')||'added a trip'))+'</span>'):'')+'</div>'
       + '<div style="font-size:11px;color:var(--ink-4);font-family:DM Mono,monospace">'+escHtml(p.dest||'')+(p.flag ? ' '+escHtml(p.flag) : '')+(sub ? ' \xB7 '+sub : '')+'</div></div>'
-      + '<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4)">'+p.time+'</div></div>'
+      + (p.type==='trip'?('<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);white-space:nowrap">'+((p.vis==='followers')?'👥 ':'🌍 ')+(p.vis==='followers'?(tt('followersShort')||'Trafollowers'):(tt('publicLabel')||'Public'))+'</div>'):('<div style="font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4)">'+p.time+'</div>'))+'</div>'
       // Story with a photo → preview text + square photo on the right (matches the profile/Explore
       // story cards). Other posts keep the full-width cover banner.
       + ((p.type==='story' && p.photo)
@@ -16916,6 +17178,7 @@ function renderFeedMain() {
     el.style.cursor = 'pointer';
     el.addEventListener('click', function() {
       if (p.type === 'story') { openCityStory(String(p.storyId||p.id), p.dest); }
+      else if (p.type === 'trip') { openFeedTrip(p); }
       else if (p.userId) { openUserProfile(p.userId); }
     });
     var _fsh=el.querySelector('.feed-share'); if(_fsh) _fsh.addEventListener('click', function(e){ e.stopPropagation(); shareFeedPost(p); });
@@ -16992,23 +17255,31 @@ function placeRaters(name, baseRating){
 // city guides — each carrying the REAL ratings people gave it (so the average/count is real).
 function allKnownPlaces(){
   var seen={},out=[];
-  function add(name,city,rating,emoji,photo){
+  function add(name,city,rating,emoji,photo,cat){
     var k=String(name||'').toLowerCase().trim(); if(!k)return;
-    if(!seen[k]){ seen[k]={name:name,city:city||'',emoji:emoji||'',photo:'',ratings:[]}; out.push(seen[k]); }
+    if(!seen[k]){ seen[k]={name:name,city:city||'',emoji:emoji||'',photo:'',cat:'',ratings:[]}; out.push(seen[k]); }
     if(!seen[k].city && city) seen[k].city=city;
     if(!seen[k].emoji && emoji) seen[k].emoji=emoji;
+    if(!seen[k].cat){ seen[k].cat = cat || _catFromEmoji(emoji) || ''; }
     if(!seen[k].photo && photo && String(photo).indexOf('blob:')!==0) seen[k].photo=photo;
     if(typeof rating==='number' && rating>0) seen[k].ratings.push(rating);
   }
   var CI=(typeof CAT_ICONS!=='undefined')?CAT_ICONS:{};
-  (trips||[]).forEach(function(tp){(tp.places||[]).forEach(function(p){ add(p.name, p.city||tp.dest, p.rating, CI[p.cat], p.photo); });});
-  (typeof feedPlaces!=='undefined'?feedPlaces:[]).forEach(function(p){ add(p.name, p.city, p.rating, CI[p.cat], p.photo); }); // other travellers' places
+  (trips||[]).forEach(function(tp){(tp.places||[]).forEach(function(p){ add(p.name, p.city||tp.dest, p.rating, CI[p.cat], p.photo, p.cat); });});
+  (typeof feedPlaces!=='undefined'?feedPlaces:[]).forEach(function(p){ add(p.name, p.city, p.rating, CI[p.cat], p.photo, p.cat); }); // other travellers' places
+  (typeof _cityPlaces!=='undefined'?_cityPlaces:[]).forEach(function(p){ add(p.name, p.city, p.rating, CI[p.cat], p.photo, p.cat); }); // on-demand city search results
   if(typeof CITY_PLACES!=='undefined'){for(var city in CITY_PLACES){CITY_PLACES[city].forEach(function(p){ add(p.n, city, 0, p.e); });}}
   return out;
 }
+// Category helpers for Explore → Places (filter tabs + per-card icon/label).
+var _placeCat='all';
+function _catFromEmoji(em){ if(!em)return ''; if(typeof CAT_ICONS!=='undefined'){ for(var c in CAT_ICONS){ if(CAT_ICONS[c]===em) return c; } } var extra={'🍽️':'eat','🍜':'eat','🍣':'eat','🍕':'eat','🍔':'eat','🥐':'eat','🥘':'eat','🍷':'eat','🍺':'fun','🍸':'fun','🎉':'fun','🎢':'fun','🎨':'do','🖼️':'see','⛩️':'see','🕌':'see','⛪':'see','🏰':'see','🗿':'see','🏙️':'see','🌅':'view','🏖️':'fun','🛒':'shop','🏨':'stay','🛏️':'stay'}; return extra[em]||''; }
+function _catLabel(cat){ var m={eat:'eat',coffee:'coffee',stay:'stay',see:'see',do:'doAct',fun:'fun',shop:'shop',view:'view'}; var key=m[cat]; return (key&&t(key))||cat; }
+function explorePlaceCat(cat){ _placeCat=cat||'all'; if(typeof renderExploreContent==='function')renderExploreContent(); }
 // Places from OTHER users' PUBLIC trips, loaded from the cloud so Explore → Places shows what the
 // whole community visited & rated — not just your own. Cached in feedPlaces.
 var feedPlaces=[];
+var _cityPlaces=[], _cityPlacesQ=''; // on-demand results when searching Places by a specific city
 async function dbLoadExplorePlaces(){
   if(!sb) return;
   try{
@@ -17024,8 +17295,16 @@ async function dbLoadExplorePlaces(){
 }
 function renderPlacesTab(body){
   var q=(_exploreQuery||'').toLowerCase().trim();
+  // On-demand: pull EVERY public place in the searched city from the cloud (not just your own
+  // trips / the cached feed) so e.g. "Bali" shows places other travellers added there too.
+  if(!q){ _cityPlaces=[]; _cityPlacesQ=''; }
+  else if(q.length>=2 && sb && _cityPlacesQ!==q){ _cityPlacesQ=q; dbSearchPlacesByCity(q).then(function(res){ if((_exploreQuery||'').toLowerCase().trim()===q){ _cityPlaces=res||[]; if(_exploreTab==='places'&&typeof renderExploreContent==='function')renderExploreContent(); } }); }
   var places=allKnownPlaces();
   if(q)places=places.filter(function(p){return p.name.toLowerCase().indexOf(q)>=0||(p.city||'').toLowerCase().indexOf(q)>=0;});
+  if(_placeCat&&_placeCat!=='all')places=places.filter(function(p){return (p.cat||'')===_placeCat;});
+  // Category filter tabs (All · Eat · Coffee · Stay · See · Do · Fun · Shop).
+  var _cats=[['all',''],['eat','🍴'],['coffee','☕'],['stay','🛎️'],['see','🏛️'],['do','🎫'],['fun','🎡'],['shop','🛍️']];
+  var catStrip='<div class="filter-strip" style="padding:12px 16px 8px">'+_cats.map(function(c){ var on=(_placeCat===c[0]); var lbl=(c[0]==='all')?t('all'):_catLabel(c[0]); return '<div class="filter-pill'+(on?' active':'')+'" onclick="explorePlaceCat(\''+c[0]+'\')">'+(c[1]?c[1]+' ':'')+'<span>'+lbl+'</span></div>'; }).join('')+'</div>';
   // Popular cities on top (same as the Cities tab) — tap to filter places by that city.
   var pills='';
   if(!q){
@@ -17035,11 +17314,11 @@ function renderPlacesTab(body){
       + popular.map(function(c){return '<div class="filter-pill" onclick="explorePickCity(\''+c.replace(/'/g,"\\'")+'\')">'+cityFlag(c)+' '+c+'</div>';}).join('')
       +'</div></div><div style="height:1px;background:var(--paper-3);margin:0 0 2px"></div>';
   }
-  var head=pills+'<div style="padding:14px 20px 4px">'
-    +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">'+t('tabPlaces')+'</div>'
+  var head=pills+catStrip+'<div style="padding:8px 20px 4px">'
+    +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);margin-bottom:6px">'+t('tabPlaces')+(_placeCat!=='all'?' · '+_catLabel(_placeCat):'')+'</div>'
     +'<div style="font-size:12px;color:var(--ink-4);line-height:1.5;margin-bottom:6px">'+t('placesRatedHint')+'</div></div>';
   if(!places.length){ body.innerHTML=head+'<div style="padding:20px;text-align:center;color:var(--ink-4)">'+(q?t('placeSearchEmpty'):t('noResults'))+'</div>'; return; }
-  body.innerHTML=head + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 16px 22px">'
+  body.innerHTML=head + '<div class="explore-places-grid">'
     + places.slice(0,60).map(function(p){
     var rts=p.ratings||[], recos=rts.length, avg=recos?(rts.reduce(function(a,b){return a+b;},0)/recos):0;
     var saves=_placeSaveCount(p.name);
@@ -17048,8 +17327,9 @@ function renderPlacesTab(body){
     var mapUrl='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p.name+' '+(p.city||''));
     var recoChip='<span style="background:rgba(255,255,255,.2);border-radius:20px;padding:2px 7px;font-size:9px;font-family:DM Mono,monospace;white-space:nowrap">'+(recos?('⭐ '+avg.toFixed(1)+' · '+recos+' '+(recos===1?'reco':'recos')):'New')+'</span>';
     var saveChip='<span style="background:rgba(255,255,255,.2);border-radius:20px;padding:2px 7px;font-size:9px;font-family:DM Mono,monospace;white-space:nowrap">🔖 '+saves+'</span>';
+    var catBadge=p.cat?'<div style="position:absolute;top:8px;right:8px;background:rgba(0,28,48,.55);backdrop-filter:blur(4px);border-radius:20px;padding:3px 8px;font-size:9px;font-weight:600;color:#fff;display:flex;align-items:center;gap:3px;white-space:nowrap">'+(p.emoji||'📍')+' '+escHtml(_catLabel(p.cat))+'</div>':'';
     return '<div onclick="window.open(\''+mapUrl+'\',\'_blank\',\'noopener\')" style="position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;cursor:pointer;background:linear-gradient(135deg,#7B2FBE,#00A8E8)">'
-      +'<div style="position:absolute;top:12px;left:14px;font-size:34px;opacity:.9">'+(p.emoji||'📍')+'</div>'
+      +'<div style="position:absolute;top:12px;left:14px;font-size:34px;opacity:.9">'+(p.emoji||'📍')+'</div>'+catBadge
       +'<img '+(img?('src="'+escHtml(img)+'"'):('data-place-q="'+escHtml(q)+'"'))+' alt="" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;'+(img?'':'display:none')+'" onerror="this.style.display=\'none\'">'
       +'<div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,28,48,.85),rgba(0,28,48,.05) 55%,transparent)"></div>'
       +'<div style="position:absolute;left:10px;right:10px;bottom:9px;color:#fff">'
@@ -17081,8 +17361,13 @@ function _mapProfileToUser(pr){
   return {id:pr.id, name:nm, handle:pr.username||'', initial:(nm.trim()[0]||'T').toUpperCase(),
     color:'linear-gradient(135deg,var(--ember),var(--gold))', photo:pr.avatar||'',
     livesIn:pr.lives_in||'', from:pr.origin||'', trips:0, mutuals:[], _real:true,
+    instagram:pr.instagram||'', tiktok:pr.tiktok||'',
     priv:(pr.is_public===false)}; // private account → following needs an approval request
 }
+// Country a traveller lives in / is from — derived from their city via the concierge-city table
+// (falls back to the raw string when the city isn't in the table). Used to group Explore travellers.
+function _userCountry(city){ if(!city)return ''; var c=(typeof cityCountryName==='function'&&cityCountryName(city))||''; return (c||city); }
+function _sameCountry(a,b){ a=_userCountry(a); b=_userCountry(b); return a&&b&&a.toLowerCase().trim()===b.toLowerCase().trim(); }
 async function dbSearchUsers(q){
   if(!sb||!q||q.length<2) return [];
   try{
@@ -17114,62 +17399,96 @@ var exploreUsers=[];
 async function dbLoadExploreUsers(){
   if(!sb) return;
   try{
-    var res=await sb.from('profiles').select('id,name,username,avatar,lives_in,origin,is_public').limit(60);
-    if(res.error){ res=await sb.from('profiles').select('id,name,username,avatar').limit(60); } // minimal retry if columns differ
+    var res=await sb.from('profiles').select('id,name,username,avatar,lives_in,origin,is_public,instagram,tiktok').limit(120);
+    if(res.error){ res=await sb.from('profiles').select('id,name,username,avatar,lives_in,origin,is_public').limit(120); } // retry without social cols
+    if(res.error){ res=await sb.from('profiles').select('id,name,username,avatar').limit(120); } // minimal retry if columns differ
     if(res.error||!res.data) return;
     exploreUsers=res.data.filter(function(pr){ return pr.id && pr.id!==userData.id && pr.is_public!==false; }).map(_mapProfileToUser);
+    // Fill each member's REAL public trip count (for "popular" ranking).
+    var ids=exploreUsers.map(function(u){return u.id;});
+    if(ids.length){ try{
+      var tc=await sb.from('trips').select('user_id,dest,date_from,privacy').in('user_id',ids).limit(2000);
+      if(tc&&tc.data){ var seen={},cnt={}; tc.data.forEach(function(tt){ if((tt.privacy||'public')==='private')return; var k=tt.user_id+'|'+String(tt.dest||'').toLowerCase()+'|'+(tt.date_from||''); if(seen[k])return; seen[k]=1; cnt[tt.user_id]=(cnt[tt.user_id]||0)+1; });
+        exploreUsers.forEach(function(u){ u.trips=cnt[u.id]||0; }); }
+    }catch(e){} }
     if(_exploreTab==='people' && typeof renderExploreContent==='function') renderExploreContent();
   }catch(e){ console.warn('dbLoadExploreUsers:',e); }
 }
+// Trafolio members who have travelled to a given city/destination — for searching Travellers by place
+// (e.g. type "Bali" under Travellers → see everyone who's been to Bali). Cloud-only; needs public read.
+async function dbSearchTravelersByCity(q){
+  if(!sb||!q||q.length<2) return [];
+  try{
+    var term=String(q).replace(/[%,()]/g,' ').trim(); if(!term) return [];
+    var tr=await sb.from('trips').select('user_id,dest,country,privacy').neq('privacy','private')
+      .or('dest.ilike.%'+term+'%,country.ilike.%'+term+'%').limit(300);
+    if(!tr||tr.error||!tr.data||!tr.data.length) return [];
+    var uids=[],seen={}; tr.data.forEach(function(t){ if(t.user_id&&t.user_id!==userData.id&&!seen[t.user_id]){ seen[t.user_id]=1; uids.push(t.user_id); } });
+    if(!uids.length) return [];
+    var pr=await sb.from('profiles').select('id,name,username,avatar,lives_in,origin,is_public,instagram,tiktok').in('id',uids).limit(60);
+    if(pr&&pr.error){ pr=await sb.from('profiles').select('id,name,username,avatar').in('id',uids).limit(60); }
+    if(!pr||pr.error||!pr.data) return [];
+    var cntByUser={}; tr.data.forEach(function(t){ cntByUser[t.user_id]=(cntByUser[t.user_id]||0)+1; });
+    return pr.data.filter(function(p){ return p.is_public!==false; }).map(function(p){ var u=_mapProfileToUser(p); u.trips=cntByUser[p.id]||u.trips; return u; });
+  }catch(e){ return []; }
+}
+// Places in a given city from ANY public trip — for searching Places by city (e.g. "Bali" shows
+// what everyone added there, not just your own). Cloud-only; needs public read on trips+places.
+async function dbSearchPlacesByCity(q){
+  if(!sb||!q||q.length<2) return [];
+  try{
+    var term=String(q).replace(/[%,()]/g,' ').trim(); if(!term) return [];
+    var tr=await sb.from('trips').select('id,dest,country,privacy').neq('privacy','private')
+      .or('dest.ilike.%'+term+'%,country.ilike.%'+term+'%').limit(300);
+    if(!tr||tr.error||!tr.data||!tr.data.length) return [];
+    var tmap={},ids=[]; tr.data.forEach(function(t){ tmap[t.id]={dest:t.dest,country:t.country}; ids.push(t.id); });
+    var pl=await sb.from('places').select('name,cat,rating,city,trip_id,photo').in('trip_id',ids).limit(2000);
+    if(pl&&pl.error){ pl=await sb.from('places').select('name,cat,rating,city,trip_id').in('trip_id',ids).limit(2000); }
+    if(!pl||pl.error||!pl.data) return [];
+    return pl.data.map(function(p){ var tm=tmap[p.trip_id]||{}; return {name:p.name,cat:p.cat||'see',rating:p.rating||0,city:p.city||tm.dest||'',photo:(p.photo&&String(p.photo).indexOf('blob:')!==0)?p.photo:''}; });
+  }catch(e){ return []; }
+}
+// Section header used across the Travellers tab.
+function _peopleSectionHead(label,icon){ var d=document.createElement('div'); d.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-dk);padding:16px 20px 8px">'+(icon?icon+' ':'')+escHtml(label)+'</div>'; return d; }
+function _shuffle(a){ a=a.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var tmp=a[i]; a[i]=a[j]; a[j]=tmp; } return a; }
 function renderPeopleTab(body) {
-  var q = _exploreQuery.toLowerCase();
-  var list = allUsers.filter(function(u) {
-    if (!q) return true;
-    return u.name.toLowerCase().includes(q) ||
-           u.handle.toLowerCase().includes(q) ||
-           (u.bio && u.bio.toLowerCase().includes(q));
-  });
+  var q = _exploreQuery.toLowerCase().trim();
   body.innerHTML = '';
 
-  // When searching, look up REAL Trafolio members and show them at the top.
-  if(q && q.length>=2 && sb){
-    var rw=document.createElement('div'); rw.id='exp-real-users';
-    rw.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);padding:14px 20px 8px">'+t('searching')+'</div>';
-    body.appendChild(rw);
-    dbSearchUsers(q).then(function(users){
-      _searchedUsers=users;
-      if(!users.length){ rw.innerHTML=''; return; }
-      rw.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-dk);padding:14px 20px 8px">🧭 '+t('tabPeople')+' · Trafolio</div>';
-      users.forEach(function(u){ rw.appendChild(peopleRow(u)); });
-    });
+  // SEARCH MODE - match members by name/@handle AND by city visited (e.g. "Bali").
+  if(q){
+    var localMatch = allUsers.filter(function(u){ return u.name.toLowerCase().includes(q)||u.handle.toLowerCase().includes(q)||(u.bio&&u.bio.toLowerCase().includes(q)); });
+    if(localMatch.length){ body.appendChild(_peopleSectionHead(t('tabPeople'),'\uD83D\uDC65')); localMatch.forEach(function(u){ body.appendChild(peopleRow(u)); }); }
+    if(sb && q.length>=2){
+      var rw=document.createElement('div'); rw.id='exp-real-users'; body.appendChild(rw);
+      dbSearchUsers(q).then(function(users){ _searchedUsers=users; if(!users.length){ rw.innerHTML=''; return; } rw.innerHTML=''; rw.appendChild(_peopleSectionHead(t('tabPeople')+' \u00B7 Trafolio','\uD83E\uDDED')); users.forEach(function(u){ rw.appendChild(peopleRow(u)); }); });
+      var cw=document.createElement('div'); cw.id='exp-city-travelers'; body.appendChild(cw);
+      dbSearchTravelersByCity(q).then(function(users){ if(!users.length){ cw.innerHTML=''; return; } cw.innerHTML=''; cw.appendChild(_peopleSectionHead((tt('beenTo')||'Travellers who have been to')+' '+_exploreQuery,'\u2708\uFE0F')); users.forEach(function(u){ cw.appendChild(peopleRow(u)); }); });
+    }
+    if(!localMatch.length){ var ph=document.createElement('div'); ph.style.cssText='padding:22px 20px;text-align:center;color:var(--ink-4);font-size:13px'; ph.textContent=t('searching'); body.appendChild(ph); }
+    return;
   }
 
-  // Recommendation rails (only on the unfiltered list).
-  if(!q){
-    var sameCity=function(a,b){return a&&b&&a.toLowerCase().trim()===b.toLowerCase().trim();};
-    var near=allUsers.filter(function(u){return sameCity(u.livesIn,userData.livesIn);});
-    var fromHome=allUsers.filter(function(u){return sameCity(u.from,userData.from);});
-    if(near.length) body.appendChild(peopleRail(t('peopleNearYou').replace('{place}',userData.livesIn||''), near, '📍'));
-    if(userData.from && fromHome.length) body.appendChild(peopleRail(t('peopleFrom').replace('{place}',userData.from), fromHome, '🏠'));
+  // DEFAULT MODE - curated discovery sections.
+  var pool=[], byId={};
+  (typeof exploreUsers!=='undefined'?exploreUsers:[]).concat(allUsers).forEach(function(u){ if(u&&u.id!=null&&!byId[u.id]){ byId[u.id]=1; pool.push(u); } });
+  var shown={};
+  // horizontal=true renders a swipeable rail of cards; false renders a vertical list of rows.
+  function section(label,icon,users,limit,horizontal){ users=users.filter(function(u){ return !shown[u.id]; }); if(!users.length)return; if(limit)users=users.slice(0,limit); body.appendChild(_peopleSectionHead(label,icon));
+    if(horizontal){ var rail=document.createElement('div'); rail.style.cssText='display:flex;gap:12px;overflow-x:auto;padding:2px 16px 14px;-webkit-overflow-scrolling:touch;scrollbar-width:none'; users.forEach(function(u){ shown[u.id]=1; rail.appendChild(_peopleRailCard(u)); }); body.appendChild(rail); }
+    else { users.forEach(function(u){ shown[u.id]=1; body.appendChild(peopleRow(u)); }); }
   }
+  var byPopular=function(a,b){ return (b.trips||0)-(a.trips||0); };
+  var myCountry=_userCountry(userData.livesIn), myFrom=_userCountry(userData.from);
 
-  // Real Trafolio members (new sign-ups) — shown in the default list, not only when searching.
-  if(!q && typeof exploreUsers!=='undefined' && exploreUsers.length){
-    var rh=document.createElement('div');
-    rh.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-dk);padding:14px 20px 8px">🧭 '+t('tabPeople')+' · Trafolio</div>';
-    body.appendChild(rh);
-    exploreUsers.forEach(function(u){ body.appendChild(peopleRow(u)); });
-    var dh=document.createElement('div');
-    dh.innerHTML='<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4);padding:14px 20px 8px">'+(tt('suggestedTravelers')||'Suggested')+'</div>';
-    body.appendChild(dh);
-  }
-  // Demo travellers (suggested).
-  list.forEach(function(u) { body.appendChild(peopleRow(u)); });
+  if(myCountry){ var region=pool.filter(function(u){ return _sameCountry(u.livesIn,userData.livesIn); }).sort(byPopular);
+    section((tt('popularInRegion')||'Popular Travellers in')+' '+myCountry,'\uD83D\uDCCD',region,15,true); }
+  section((tt('popularWorldwide')||'Popular Travellers Worldwide'),'\uD83C\uDF0D',pool.slice().sort(byPopular),15,true);
+  if(myFrom && myFrom.toLowerCase()!==myCountry.toLowerCase()){ var fromHome=pool.filter(function(u){ return _sameCountry(u.from,userData.from); }).sort(byPopular);
+    section((tt('alsoFrom')||'Also from')+' '+myFrom,'\uD83C\uDFE0',fromHome,15,true); }
+  section((tt('discoverTravelers')||'Discover more travellers'),'\u2728',_shuffle(pool),40,false);
 
-  // Truly nothing to show.
-  if(!list.length && !(q && q.length>=2 && sb)){
-    body.innerHTML = '<div style="padding:40px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:28px;margin-bottom:8px">\uD83D\uDD0D</div>'+t('noResults')+'</div>';
-  }
+  if(!body.children.length){ body.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:28px;margin-bottom:8px">\uD83D\uDD0D</div>'+t('noResults')+'</div>'; }
 }
 // A single traveller row (avatar + info + follow), reused by the list and the recommendation rails.
 // Open the right profile view: real Trafolio members (UUID ids) go through openRealUserProfile
@@ -17178,6 +17497,29 @@ function renderPeopleTab(body) {
 function _openPersonProfile(u){
   if(u && u._real && typeof openRealUserProfile==='function') openRealUserProfile(u);
   else if(typeof openUserProfile==='function') openUserProfile(u.id);
+}
+// Compact card for the horizontally-scrolling "Popular Travellers" rails.
+function _peopleRailCard(u){
+  var isF=(userData.following||[]).some(function(f){ return f.id===u.id; });
+  var card=document.createElement('div');
+  card.style.cssText='flex:0 0 auto;width:134px;border:1px solid var(--paper-3);border-radius:14px;padding:14px 10px;text-align:center;background:#fff';
+  var av=makeAv(u.initial,u.color,54,u.photo); av.style.margin='0 auto 8px'; av.style.cursor='pointer';
+  av.addEventListener('click',function(){ _openPersonProfile(u); });
+  card.appendChild(av);
+  var nm=document.createElement('div');
+  nm.style.cssText='font-family:Cormorant Garamond,serif;font-size:15px;font-weight:500;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+  nm.textContent=u.name; nm.addEventListener('click',function(){ _openPersonProfile(u); });
+  card.appendChild(nm);
+  var sub=document.createElement('div');
+  sub.style.cssText='font-family:DM Mono,monospace;font-size:9px;color:var(--ink-4);margin:1px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+  sub.textContent='@'+(u.handle||'')+((u.trips)?(' · '+u.trips+' '+t('trips').toLowerCase()):'');
+  card.appendChild(sub);
+  var btn=document.createElement('button');
+  btn.className='follow-btn '+(isF?'following':'follow'); btn.style.cssText='width:100%;padding:6px 0;font-size:12px';
+  btn.textContent=isF?t('following2'):t('follow'); btn.setAttribute('data-uid',u.id);
+  btn.addEventListener('click',function(){ toggleFollow(u.id,this); });
+  card.appendChild(btn);
+  return card;
 }
 function peopleRow(u){
   var isF = (userData.following||[]).some(function(f){ return f.id === u.id; });
@@ -17199,7 +17541,10 @@ function peopleRow(u){
   btn.textContent = isF ? t('following2') : t('follow');
   btn.setAttribute('data-uid', u.id); // so _syncFollowButtons can flip its style too (was only updating text)
   btn.addEventListener('click', function() { toggleFollow(u.id, this); });
-  row.appendChild(av); row.appendChild(info); row.appendChild(btn);
+  row.appendChild(av); row.appendChild(info);
+  // Clickable Instagram / TikTok (handles the member added to their profile).
+  if((u.instagram||u.tiktok)&&typeof socialBadgesHtml==='function'){ var soc=document.createElement('div'); soc.style.cssText='display:flex;gap:6px;flex-shrink:0;transform:scale(.82);transform-origin:right center'; soc.innerHTML=socialBadgesHtml(u.instagram,u.tiktok); row.appendChild(soc); }
+  row.appendChild(btn);
   return row;
 }
 // A labelled horizontally-scrolling rail of recommended travellers.
@@ -17716,19 +18061,35 @@ function storyCommentsNode(story){
   box.appendChild(comp);
   return box;
 }
+var _storyCmtEdit=null; // index of the story comment being edited
+function _iOwnStory(s){ return !!(s && s.author && s.author.id===userData.id); }
+function _storyCmtMine(c){ return !!c && (c.byId===userData.id || (!c.byId && String(c.by||'')===String(userData.name||'You'))); }
 function renderStoryComments(story, list){
   list=list||document.getElementById('story-comments-list'); if(!list)return;
-  var cs=story.comments||[];
+  var cs=story.comments||[], own=_iOwnStory(story);
   if(!cs.length){ list.innerHTML='<div style="font-size:12.5px;color:var(--ink-4);font-style:italic">'+t('noComments')+'</div>'; return; }
-  list.innerHTML=cs.map(function(c){
+  list.innerHTML=cs.map(function(c,i){
     var nm=escHtml(c.by||'You');
+    var av='<div style="width:26px;height:26px;border-radius:50%;background:'+(c.color||'linear-gradient(135deg,var(--ember),var(--gold))')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+escHtml(String(c.by||'Y').charAt(0).toUpperCase())+'</div>';
+    var mine=_storyCmtMine(c), canDel=mine||own;
+    if(_storyCmtEdit===i){
+      return '<div style="display:flex;gap:9px;margin-bottom:12px">'+av+'<div style="flex:1;min-width:0"><div style="display:flex;gap:6px"><input id="story-cmt-edit" class="inp" value="'+escHtml(c.text||'')+'" style="flex:1;font-size:13px;padding:6px 10px" onkeydown="if(event.key===\'Enter\')saveEditStoryComment();else if(event.key===\'Escape\')cancelEditStoryComment()"><button class="btn btn-ember" style="padding:6px 12px;font-size:12px" onclick="saveEditStoryComment()">Save</button><button style="background:none;border:none;color:var(--ink-4);font-size:12px;cursor:pointer" onclick="cancelEditStoryComment()">Cancel</button></div></div></div>';
+    }
     var txt=escHtml(c.text||'').replace(/@([\w][\w.\-]*)/g,'<span style="color:var(--ember);font-weight:600">@$1</span>');
-    return '<div style="display:flex;gap:9px;margin-bottom:12px">'
-      +'<div style="width:26px;height:26px;border-radius:50%;background:'+(c.color||'linear-gradient(135deg,var(--ember),var(--gold))')+';display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0">'+escHtml(String(c.by||'Y').charAt(0).toUpperCase())+'</div>'
-      +'<div style="flex:1;min-width:0;font-size:13px;line-height:1.5"><span style="font-weight:600;color:var(--ink)">'+nm+'</span> <span style="color:var(--ink-2)">'+txt+'</span></div>'
+    var edited=c.edited?' <span style="font-size:10px;color:var(--ink-4)">(edited)</span>':'';
+    var acts='';
+    if(mine)acts+='<button type="button" onclick="startEditStoryComment('+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--ink-4);padding:0">Edit</button>';
+    if(canDel)acts+='<button type="button" onclick="deleteStoryComment('+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;color:#E8334A;padding:0">Delete</button>';
+    return '<div style="display:flex;gap:9px;margin-bottom:12px">'+av
+      +'<div style="flex:1;min-width:0;font-size:13px;line-height:1.5"><span style="font-weight:600;color:var(--ink)">'+nm+'</span> <span style="color:var(--ink-2)">'+txt+'</span>'+edited+(acts?'<div style="display:flex;gap:14px;margin-top:3px">'+acts+'</div>':'')+'</div>'
       +'</div>';
   }).join('');
+  if(_storyCmtEdit!=null){ setTimeout(function(){ var e=document.getElementById('story-cmt-edit'); if(e){ e.focus(); try{e.setSelectionRange(e.value.length,e.value.length);}catch(_){} } },50); }
 }
+function startEditStoryComment(i){ _storyCmtEdit=i; renderStoryComments(_readerStory); }
+function cancelEditStoryComment(){ _storyCmtEdit=null; renderStoryComments(_readerStory); }
+function saveEditStoryComment(){ var s=_readerStory; if(!s||_storyCmtEdit==null)return; var e=document.getElementById('story-cmt-edit'); var v=(e&&e.value||'').trim(); var c=(s.comments||[])[_storyCmtEdit]; if(c&&_storyCmtMine(c)&&v){ c.text=v; c.edited=true; } _storyCmtEdit=null; renderStoryComments(s); if(typeof persistSoon==='function')persistSoon(); if(typeof refreshStoriesList==='function')refreshStoriesList(); }
+function deleteStoryComment(i){ var s=_readerStory; if(!s)return; var c=(s.comments||[])[i]; if(!c)return; if(!(_storyCmtMine(c)||_iOwnStory(s)))return; if(typeof confirm==='function'&&!confirm('Delete this comment?'))return; s.comments.splice(i,1); _storyCmtEdit=null; renderStoryComments(s); var head=document.getElementById('story-comments-head'); if(head)head.textContent=t('commentsLabel')+' ('+s.comments.length+')'; if(typeof persistSoon==='function')persistSoon(); if(typeof refreshStoriesList==='function')refreshStoriesList(); }
 function postStoryComment(){
   var s=_readerStory; if(!s)return;
   if(!Array.isArray(s.comments)) s.comments=[];
@@ -18709,6 +19070,12 @@ async function dbLoadUserTrips(){
       dbTrips.forEach(function(ct){
         var lt=(ct.dbId!=null&&_lByDb[ct.dbId])||_lByKey[(String(ct.dest||'').toLowerCase())+'|'+(ct.startDate||'')];
         if(!lt)return;
+        // Cloud trip rows don't carry the "posted to feed" fields — keep them from local so a feed
+        // post (and its caption) survives a reload instead of vanishing ("trip not sticking").
+        ['feedVisibility','feedKind','feedPostedAt','feedCaption'].forEach(function(k){ if(lt[k]!=null && ct[k]==null) ct[k]=lt[k]; });
+        // Companion (family/solo/…) is often blank from the cloud (trip_with column missing) — keep
+        // the local value so the icon/label doesn't vanish on reload.
+        if(lt.with && !ct.with) ct.with=lt.with;
         var pIds={},pNames={}; (ct.places||[]).forEach(function(p){ if(p.dbId!=null)pIds[p.dbId]=1; pNames[String(p.name||'').toLowerCase()]=1; });
         (lt.places||[]).forEach(function(p){ var has=(p.dbId!=null&&pIds[p.dbId])||(p.dbId==null&&pNames[String(p.name||'').toLowerCase()]); if(!has){ ct.places.push(p);
           // Not in the cloud yet (added before the trip had a cloud id) → push it up so it syncs to
@@ -18848,6 +19215,50 @@ async function dbLoadStories(){
 // Stories from OTHER users for the Explore feed: every public story, plus 'trafollowers-only'
 // stories from people you follow. Private stories are never loaded. This is what makes one
 // user's story visible to another (dbLoadStories above only ever loads your OWN).
+// ── Trips posted to the feed ──────────────────────────────────────────────
+async function dbSaveTripPost(trip){
+  if(!sb||!userData.id||!trip)return {ok:false,reason:'no-session'};
+  var realTripId = trip.dbId || (typeof ensureTripDbId==='function'? await ensureTripDbId(trip):null);
+  if(!realTripId){ console.warn('dbSaveTripPost: trip not in cloud yet'); return {ok:false,reason:'not-synced'}; }
+  var row={ user_id:userData.id, trip_id:realTripId, dest:trip.dest||'', country:trip.country||'',
+    flag:trip.flag||'', cover:((trip.cover&&trip.cover.indexOf('blob:')!==0)?trip.cover:''), dates:trip.dates||'',
+    days:trip.days||0, places_count:(trip.places||[]).length, trip_with:trip.with||'',
+    caption:trip.feedCaption||'',
+    visibility:trip.feedVisibility||'public', kind:trip.feedKind||'added', updated_at:new Date().toISOString() };
+  try{
+    var r=await sb.from('trip_posts').upsert(row,{onConflict:'user_id,trip_id'});
+    if(r&&r.error){
+      console.warn('dbSaveTripPost upsert:',r.error.message);
+      // onConflict needs a unique index on (user_id,trip_id); if it's missing, fall back to delete+insert.
+      try{ await sb.from('trip_posts').delete().eq('user_id',userData.id).eq('trip_id',realTripId); }catch(_){}
+      var r2=await sb.from('trip_posts').insert(row);
+      if(r2&&r2.error){ console.warn('dbSaveTripPost insert:',r2.error.message); return {ok:false,reason:r2.error.message}; }
+    }
+    return {ok:true};
+  }
+  catch(e){ console.warn('dbSaveTripPost',e); return {ok:false,reason:String(e)}; }
+}
+var feedTripPosts=[];
+async function dbLoadFeedTripPosts(){
+  if(!sb||!userData.id)return;
+  try{
+    var followIds=(userData.following||[]).map(function(f){return (f&&typeof f==='object')?f.id:f;}).filter(Boolean);
+    var res=await sb.from('trip_posts').select('*').order('updated_at',{ascending:false}).limit(80);
+    if(!res||res.error||!res.data){ return; }
+    feedTripPosts=res.data.filter(function(tp){
+      if(tp.user_id===userData.id) return false;                 // own trips shown from local
+      if(tp.visibility==='public') return true;                  // public → anyone
+      if(tp.visibility==='followers') return followIds.indexOf(tp.user_id)>=0; // trafollowers-only
+      return false;                                              // private never
+    });
+    var ids=feedTripPosts.map(function(t){return t.user_id;});
+    if(ids.length){ try{ var pr=await sb.from('profiles').select('id,name,username,avatar').in('id',ids);
+      var names={}; (pr.data||[]).forEach(function(p){names[p.id]={name:p.name,avatar:p.avatar};});
+      feedTripPosts.forEach(function(t){ var a=names[t.user_id]||{}; t._authorName=a.name||'Traveler'; if(a.avatar&&typeof _profilePhotos!=='undefined')_profilePhotos[t.user_id]=a.avatar; });
+    }catch(e){} }
+    if(typeof renderFeed==='function'){ var fs=document.getElementById('s-feed'); if(fs&&fs.classList.contains('active'))renderFeed(); }
+  }catch(e){ console.warn('dbLoadFeedTripPosts',e); }
+}
 var feedStories=[];
 async function dbLoadFeedStories(){
   if(!sb||!userData.id) return;
@@ -19222,8 +19633,10 @@ function renderProfileBooks(){
   var cwrap=document.getElementById('pbook-cities'), prev=document.getElementById('pbook-preview');
   if(!cwrap||!prev)return;
   if(!trips.length){ cwrap.innerHTML=''; prev.innerHTML='<div style="padding:40px 20px;text-align:center;color:var(--ink-4)"><div style="font-size:26px;margin-bottom:8px">📖</div>'+t('profBookEmpty')+'</div>'; return; }
-  if(!_pbookTrip || !trips.find(function(t){return t.id===_pbookTrip;})) _pbookTrip=trips[0].id;
-  cwrap.innerHTML=trips.map(function(t){
+  // Memory books listed by trip date — most recent first (same order as the trips grid).
+  var _bookList=trips.slice().sort(function(a,b){return String(b.startDate||b.dates||'').localeCompare(String(a.startDate||a.dates||''))||((b.id||0)-(a.id||0));});
+  if(!_pbookTrip || !trips.find(function(t){return t.id===_pbookTrip;})) _pbookTrip=_bookList[0].id;
+  cwrap.innerHTML=_bookList.map(function(t){
     var on=t.id===_pbookTrip;
     return '<div onclick="selectProfileBook('+t.id+')" style="flex:0 0 auto;cursor:pointer;font-size:12px;padding:6px 13px;border-radius:20px;border:1px solid var(--paper-3);'+(on?'background:var(--ink);color:#fff;border-color:var(--ink)':'background:var(--paper-2);color:var(--ink-2)')+'">'+(t.flag||'📍')+' '+escHtml(t.dest)+'</div>';
   }).join('');
@@ -20361,6 +20774,8 @@ function _persistPayload(level){
     userStories:stories,
     cart:cart||[],
     savedTrips:savedTrips||[],
+    tripLikes:(typeof _tripLikes!=='undefined'?_tripLikes:{}),
+    tripComments:(typeof _tripComments!=='undefined'?_tripComments:{}),
     orders:orders||[],
     user:{
       name:userData.name,username:userData.username,bio:userData.bio,from:userData.from,livesIn:userData.livesIn,
@@ -20368,6 +20783,7 @@ function _persistPayload(level){
       avatar:avatar,cover:cover,currency:userData.currency,isPublic:userData.isPublic,
       plan:userData.plan,subStatus:userData.subStatus,tierIdx:userData.tierIdx,
       vibes:userData.vibes||[], statusNow:userData.statusNow||'', statusNext:userData.statusNext||'',
+      wishlist:userData.wishlist||[],
       following:(userData.following||[]).map(function(f){return f&&f.id;}).filter(function(x){return x!=null;}),
       pendingFollows:userData.pendingFollows||[]
     }
@@ -20458,11 +20874,14 @@ function restoreState(){
     if(Array.isArray(d.userStories)) userStories=d.userStories;
     if(Array.isArray(d.cart)) cart=d.cart;
     if(Array.isArray(d.savedTrips)) savedTrips=d.savedTrips;
+    if(d.tripLikes && typeof d.tripLikes==='object') _tripLikes=d.tripLikes;
+    if(d.tripComments && typeof d.tripComments==='object') _tripComments=d.tripComments;
     if(Array.isArray(d.orders)) orders=d.orders;
     if(d.user){
       var u=d.user;
       ['name','username','bio','from','livesIn','instagram','tiktok','avatar','cover','currency','plan','subStatus','tierIdx','statusNow','statusNext'].forEach(function(k){ if(u[k]!=null)userData[k]=u[k]; });
       if(Array.isArray(u.vibes)) userData.vibes=u.vibes;
+      if(Array.isArray(u.wishlist)) userData.wishlist=u.wishlist;   // <- was never restored → wishlist "didn't stick"
       if(typeof u.isPublic!=='undefined') userData.isPublic=u.isPublic;
       // Keep real (Supabase-UUID) follows too — they aren't in allUsers, so fall back to a {id}
       // stub instead of dropping them (this was wiping "following" on every reload).
@@ -20507,7 +20926,6 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 </script>
 
 <!-- Floating "+ add place" — shown only on the trip screen (toggled in showScreen), fixed top-right -->
-<button id="trip-fab" onclick="openAddPlace()" aria-label="Add a place" title="Add a place" style="display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 72px);right:16px;width:50px;height:50px;border-radius:50%;border:none;background:var(--ember);color:#fff;font-size:28px;font-weight:300;line-height:1;cursor:pointer;z-index:120;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,168,232,.45)">+</button>
 <div id="story-viewer" style="display:none;position:fixed;inset:0;z-index:300;background:#000">
   <div id="sv-bars" style="position:absolute;top:0;left:0;right:0;display:flex;gap:4px;padding:calc(env(safe-area-inset-top,0px) + 14px) 12px 0;z-index:3"></div>
   <div id="sv-head" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 26px);left:14px;right:54px;z-index:3;color:#fff;font-family:'DM Mono',monospace;font-size:12px;text-shadow:0 1px 4px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div>
