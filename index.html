@@ -1379,69 +1379,118 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
   </div>
 </div>
 </div>
+<style>
+  #s-prefs .ob-q{font-family:'Cormorant Garamond',serif;font-size:27px;font-weight:600;line-height:1.15;letter-spacing:-0.01em;margin-bottom:6px;color:var(--ink)}
+  #s-prefs .ob-sub{font-size:13px;color:var(--ink-3);line-height:1.5;margin-bottom:18px}
+  #s-prefs .ob-dd{display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30}
+  #s-prefs .ob-han{display:flex;align-items:center;gap:6px;border:1px solid var(--paper-3);border-radius:12px;padding:0 12px;background:#fff}
+  #s-prefs .ob-han input{flex:1;border:none;outline:none;padding:12px 0;font-size:15px;background:transparent;color:var(--ink)}
+</style>
 <div id="s-prefs" class="screen">
-<div style="min-height:100vh;background:var(--paper);display:flex;flex-direction:column">
-  <div style="background:var(--ink);padding:14px 20px 22px">
-    <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.35);letter-spacing:2px;margin-bottom:3px" data-i18n="stepOf3">STEP 3 OF 3</div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;color:white" data-i18n="travelProfile">Your travel profile</div>
-    <div style="display:flex;gap:3px;margin-top:12px"><div style="height:2.5px;flex:1;background:rgba(255,255,255,.25);border-radius:2px"></div><div style="height:2.5px;flex:1;background:rgba(255,255,255,.25);border-radius:2px"></div><div style="height:2.5px;flex:1;background:rgba(255,255,255,.75);border-radius:2px"></div></div>
+<div style="background:var(--paper)">
+  <div style="background:var(--ink);padding:calc(env(safe-area-inset-top,0px) + 14px) 20px 16px;position:sticky;top:0;z-index:5">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button id="ob-back" onclick="obBack()" style="background:none;border:none;color:rgba(255,255,255,.75);font-size:22px;cursor:pointer;visibility:hidden;line-height:1;padding:0">&#8592;</button>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.42);letter-spacing:.2em" id="ob-step-label">BUILD YOUR TRAFOLIO</div>
+      <div style="width:22px"></div>
+    </div>
+    <div style="display:flex;gap:3px" id="ob-bars"></div>
   </div>
-  <div style="flex:1;overflow-y:auto;padding:18px 18px 120px">
-    <div style="margin-bottom:20px">
-      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px" data-i18n="profilePhoto">Profile photo</div>
-      <div style="display:flex;align-items:center;gap:14px">
-        <div style="position:relative;cursor:pointer" onclick="document.getElementById('prefs-photo-inp').click()">
-          <div id="prefs-av" style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--ember),var(--gold));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:white;overflow:hidden">J</div>
-          <div style="position:absolute;bottom:0;right:0;width:19px;height:19px;background:var(--ember);border-radius:50%;border:2px solid var(--paper);display:flex;align-items:center;justify-content:center;font-size:9px">&#128247;</div>
+  <div style="padding:24px 20px 20px;min-height:38vh">
+
+    <div class="ob-step" data-step="0">
+      <div style="text-align:center;padding:16px 6px">
+        <div style="font-size:54px;margin-bottom:14px">&#10024;</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:31px;font-weight:600;line-height:1.12;margin-bottom:12px;color:var(--ink)">Let&#8217;s build your Trafolio!</div>
+        <div style="font-size:15px;color:var(--ink-3);line-height:1.6;max-width:320px;margin:0 auto">Six quick questions and your travel profile comes to life &#8212; your map, your style, the places you&#8217;ve been. Let&#8217;s go! &#127881;</div>
+      </div>
+    </div>
+
+    <div class="ob-step" data-step="1" style="display:none">
+      <div class="ob-q">Where do you live?</div>
+      <div class="ob-sub">We&#8217;ll connect you with travellers near you.</div>
+      <div style="position:relative"><input class="inp" id="ep-plives" autocomplete="off" placeholder="Start typing a city&#8230;" oninput="epPlaceSearch('plives',this.value)"><div class="ob-dd" id="ep-plives-dd"></div></div>
+    </div>
+
+    <div class="ob-step" data-step="2" style="display:none">
+      <div class="ob-q">Where are you from?</div>
+      <div class="ob-sub">Your hometown &#8212; shown on your profile.</div>
+      <div style="position:relative"><input class="inp" id="ep-pfrom" autocomplete="off" placeholder="Start typing a city&#8230;" oninput="epPlaceSearch('pfrom',this.value)"><div class="ob-dd" id="ep-pfrom-dd"></div></div>
+    </div>
+
+    <div class="ob-step" data-step="3" style="display:none">
+      <div class="ob-q">What should we call you?</div>
+      <div class="ob-sub">This is your name and public handle.</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-bottom:20px">
+        <div style="position:relative;cursor:pointer;flex-shrink:0" onclick="document.getElementById('prefs-photo-inp').click()">
+          <div id="prefs-av" style="width:104px;height:104px;border-radius:50%;background:linear-gradient(135deg,var(--ember),var(--gold));display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:600;color:#fff;overflow:hidden;box-shadow:0 6px 20px rgba(0,28,48,.18)"></div>
+          <div style="position:absolute;bottom:2px;right:2px;width:30px;height:30px;background:var(--ember);border-radius:50%;border:3px solid var(--paper);display:flex;align-items:center;justify-content:center;font-size:14px">&#128247;</div>
           <input type="file" id="prefs-photo-inp" accept="image/*" style="display:none" onchange="setProfilePhoto(this)">
         </div>
-        <div><div id="prefs-name-disp" style="font-size:14px;font-weight:600;color:var(--ink)">John K</div><div style="font-size:11px;color:var(--ink-3)" data-i18n="tapAddPhoto">Tap to add photo</div></div>
+        <div style="font-size:13px;color:var(--ink-3);font-weight:500">Add a photo <span style="color:var(--ink-4);font-weight:400">(optional)</span></div>
+      </div>
+      <input class="inp" id="ob-name" placeholder="Your name" oninput="obNameInput(this.value)" style="margin-bottom:14px">
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px">Pick a handle</div>
+      <div class="ob-han"><span style="color:var(--ink-4);font-size:15px">@</span><input id="ob-handle" placeholder="yourhandle" autocomplete="off" oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_.]/g,'')"></div>
+    </div>
+
+    <div class="ob-step" data-step="4" style="display:none">
+      <div class="ob-q">How do you usually travel?</div>
+      <div class="ob-sub">Pick all that apply.</div>
+      <div style="display:flex;flex-wrap:wrap" id="pp-obwith">
+        <span class="ppill ppm" data-g="obwith" data-v="solo" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#129399; Solo</span>
+        <span class="ppill ppm" data-g="obwith" data-v="couple" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128145; Couple</span>
+        <span class="ppill ppm" data-g="obwith" data-v="family" data-c="#F5A623"><span class="pdot" style="background:#F5A623"></span>&#128106; Family</span>
+        <span class="ppill ppm" data-g="obwith" data-v="friends" data-c="#003052"><span class="pdot" style="background:#003052"></span>&#128107; Friends</span>
+        <span class="ppill ppm" data-g="obwith" data-v="business" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128188; Business</span>
       </div>
     </div>
-    <!-- Public profile basics — shown to other travellers -->
-    <div style="display:flex;align-items:flex-start;gap:7px;background:var(--ember-lt);border-radius:var(--r-md);padding:10px 12px;margin-bottom:16px">
-      <span style="flex-shrink:0">&#128064;</span>
-      <span style="font-size:12px;line-height:1.45;color:var(--ember-dk)" data-i18n="profileVisibleNote">Your bio, where you’re from and where you live are shown on your public profile — other travellers will see them.</span>
-    </div>
-    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="bio">Bio</div><textarea id="pref-bio" rows="2" class="inp" data-i18n-ph="bioPh" placeholder="Tell travellers about yourself..." style="resize:none"></textarea></div>
-    <div style="display:flex;gap:10px;margin-bottom:18px">
-      <div style="flex:1;position:relative"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="fromLabel">From</div><input type="text" id="ep-pfrom" class="inp" data-i18n-ph="fromPh" placeholder="Where you're from (city)" autocomplete="off" oninput="epPlaceSearch('pfrom',this.value)"><div id="ep-pfrom-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30"></div></div>
-      <div style="flex:1;position:relative"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="livesLabel">Lives in</div><input type="text" id="ep-plives" class="inp" data-i18n-ph="livesPh" placeholder="Where you live now (city)" autocomplete="off" oninput="epPlaceSearch('plives',this.value)"><div id="ep-plives-dd" style="display:none;position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--paper-3);border-radius:12px;margin-top:4px;overflow:hidden;max-height:200px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,28,48,.14);z-index:30"></div></div>
-    </div>
-    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px" data-i18n="yourAge">Your age</div><input type="number" id="pref-age" value="30" class="inp" style="width:110px;padding:9px 12px"></div>
-    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px" data-i18n="homeCurrencyPref">Home currency</div>
-      <div style="display:flex;flex-wrap:wrap" id="pp-currency">
-        <span class="ppill" data-g="currency" data-v="AED" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127462;&#127466; AED</span>
-        <span class="ppill" data-g="currency" data-v="USD" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127482;&#127480; USD</span>
-        <span class="ppill" data-g="currency" data-v="EUR" data-c="#003052"><span class="pdot" style="background:#003052"></span>&#127466;&#127482; EUR</span>
-        <span class="ppill" data-g="currency" data-v="GBP" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127468;&#127463; GBP</span>
-        <span class="ppill" data-g="currency" data-v="SAR" data-c="#F5A623"><span class="pdot" style="background:#F5A623"></span>&#127480;&#127462; SAR</span>
-        <span class="ppill" data-g="currency" data-v="JPY" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127471;&#127477; JPY</span>
+
+    <div class="ob-step" data-step="5" style="display:none">
+      <div class="ob-q">What kind of traveller are you?</div>
+      <div class="ob-sub">Pick all that fit.</div>
+      <div style="display:flex;flex-wrap:wrap" id="pp-obstyle">
+        <span class="ppill ppm" data-g="obstyle" data-v="luxury" data-c="#F5A623"><span class="pdot" style="background:#F5A623"></span>&#10024; Luxury</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="relaxing" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127796; Relaxing</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="adventure" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127957; Adventure</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="cultural" data-c="#003052"><span class="pdot" style="background:#003052"></span>&#127963; Cultural</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="foodie" data-c="#F5A623"><span class="pdot" style="background:#F5A623"></span>&#127860; Foodie</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="nature" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127794; Nature</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="nightlife" data-c="#003052"><span class="pdot" style="background:#003052"></span>&#127864; Nightlife</span>
+        <span class="ppill ppm" data-g="obstyle" data-v="budget" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128176; Budget</span>
       </div>
     </div>
-    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px" data-i18n="travelStyle">Travel style</div>
-      <div style="display:flex;flex-wrap:wrap" id="pp-style">
-        <span class="ppill" data-g="style" data-v="luxury" data-c="#F5A623"><span class="pdot" style="background:#F5A623"></span>&#10024; <span data-i18n="luxury">Luxury</span></span>
-        <span class="ppill" data-g="style" data-v="comfort" data-c="#003052"><span class="pdot" style="background:#003052"></span>&#127968; <span data-i18n="comfort">Comfort</span></span>
-        <span class="ppill" data-g="style" data-v="budget" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128176; <span data-i18n="budgetTravel">Budget</span></span>
-        <span class="ppill" data-g="style" data-v="adventure" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#127957; <span data-i18n="adventure">Adventure</span></span>
+
+    <div class="ob-step" data-step="6" style="display:none">
+      <div class="ob-q">Where have you travelled before?</div>
+      <div class="ob-sub">Add the places you&#8217;ve been &#8212; they build your map &amp; countries. No date? Add it later.</div>
+      <div style="position:relative;margin-bottom:10px"><input class="inp" id="ep-obcity" autocomplete="off" placeholder="Add a city or country&#8230;" oninput="epPlaceSearch('obcity',this.value)"><div class="ob-dd" id="ep-obcity-dd"></div></div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px">When did you go? <span style="color:var(--ink-4);text-transform:none;letter-spacing:0">(optional)</span></div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <input type="month" class="inp" id="ob-trip-date" style="flex:1">
+        <button class="btn btn-ember" onclick="obAddTrip()" style="flex-shrink:0;padding:0 18px">+ Add</button>
       </div>
+      <div id="ob-trips"></div>
     </div>
-    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:9px" data-i18n="travelWith">I travel with</div>
-      <div style="display:flex;flex-wrap:wrap" id="pp-with">
-        <span class="ppill" data-g="with" data-v="solo" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128100; <span data-i18n="solo">Solo</span></span>
-        <span class="ppill" data-g="with" data-v="couple" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128107; <span data-i18n="couple">Couple</span></span>
-        <span class="ppill" data-g="with" data-v="family" data-c="#00A8E8"><span class="pdot" style="background:#00A8E8"></span>&#128106; <span data-i18n="family">Family</span></span>
-        <span class="ppill" data-g="with" data-v="friends" data-c="#003052"><span class="pdot" style="background:#003052"></span><span data-i18n="friends">Friends</span></span>
-      </div>
+
+    <div class="ob-step" data-step="7" style="display:none">
+      <div class="ob-q">Your socials</div>
+      <div class="ob-sub">Optional &#8212; shown on your profile so your followers can find you.</div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px">Instagram</div>
+      <div class="ob-han" style="margin-bottom:16px"><span style="color:var(--ink-4);font-size:15px">@</span><input id="ob-ig" placeholder="instagram handle" autocomplete="off" oninput="this.value=this.value.replace(/^@+/,'')"></div>
+      <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px">TikTok</div>
+      <div class="ob-han"><span style="color:var(--ink-4);font-size:15px">@</span><input id="ob-tk" placeholder="tiktok handle" autocomplete="off" oninput="this.value=this.value.replace(/^@+/,'')"></div>
     </div>
-    <div style="margin-bottom:18px"><div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px" data-i18n="allergies">Allergies / restrictions</div><input type="text" id="pref-allergies" placeholder="e.g. nuts, dairy, shellfish..." class="inp" data-i18n-ph="phAllergies"></div>
+
+    <div class="ob-step" data-step="8" style="display:none">
+      <div class="ob-q">Follow travellers to fill your feed</div>
+      <div class="ob-sub">Follow a few people and their latest trips, stories &amp; recs show up in your feed. You can change this anytime.</div>
+      <div id="ob-follow-list"></div>
+    </div>
+
   </div>
-  <!-- STICKY (not fixed): the .screen's entry animation creates a transform containing block, which
-       makes position:fixed pin to the screen (stranding the button off-screen). Sticky pins to the
-       viewport bottom reliably, so "Let's go" is always visible & tappable. -->
-  <div style="position:sticky;bottom:0;left:0;right:0;z-index:60;background:#fff;border-top:1px solid var(--paper-3);padding:14px 20px calc(env(safe-area-inset-bottom,0px)+20px);margin-top:auto">
-    <button onclick="savePrefs()" class="btn btn-ember btn-full" data-i18n="letsGo">Let&#8217;s go &#8594;</button>
+  <div style="position:sticky;bottom:0;left:0;right:0;z-index:60;background:#fff;border-top:1px solid var(--paper-3);padding:14px 20px calc(env(safe-area-inset-bottom,0px)+16px)">
+    <button id="ob-next" onclick="obNext()" class="btn btn-ember btn-full">Continue</button>
   </div>
 </div>
 </div>
@@ -2059,6 +2108,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         <div onclick="closeProfileMenu();editProfile()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">&#9998; <span data-i18n="editProfile">Edit profile</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-cover-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">📷 <span data-i18n="changeCover">Change cover</span></div>
         <div onclick="closeProfileMenu();document.getElementById('profile-av-input').click()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">🖼️ <span data-i18n="changePhoto">Change photo</span></div>
+        <div onclick="closeProfileMenu();syncNow()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:var(--ink);border-bottom:1px solid var(--paper-3)">🔄 <span data-i18n="syncFromCloud">Sync from cloud</span></div>
         <div onclick="closeProfileMenu();deleteAccount()" style="display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;font-size:14px;color:#E8334A">&#128465;&#65039; <span data-i18n="deleteAccount">Delete account</span></div>
       </div>
       <!-- Subtle Trafolio brand mark, bottom-right of the cover (dark pill keeps it legible on any photo) -->
@@ -2252,11 +2302,8 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
     if(window._onboardingDone) return;
     if(!force){ var _cur=document.querySelector('.screen.active'); if(_cur && _cur.id!=='s-prefs' && _cur.id!=='s-auth' && typeof appMode!=='undefined' && appMode) return; }
     try{
-      var first=((userData.name||'there').split(' ')[0]);
-      if(typeof initPPills==='function') initPPills();
-      if(typeof showScreen==='function') showScreen('s-prefs');
-      // small delay so the screen is mounted before the toast
-      setTimeout(function(){ if(typeof toast==='function') toast('Welcome to Trafolio, '+first+'! Let’s set up your profile.'); }, 300);
+      if(typeof obStart==='function') obStart();               // the new "Let's build your Trafolio" wizard
+      else { if(typeof showScreen==='function') showScreen('s-prefs'); }
     }catch(e){ console.error('onboarding:',e); }
   }
   function applySession(user, showWelcome){
@@ -2531,6 +2578,9 @@ function showScreen(id,_fromBack){
   // (landing, auth, profile setup) so it doesn't cover the "Let's go" button etc.
   var _bn=document.getElementById('bottom-nav'); if(_bn && (id==='s-prefs'||id==='s-auth'||id==='s-home')) _bn.style.display='none';
   var nav=document.getElementById('topnav');if(nav){
+    // The onboarding wizard is a full-screen flow with its own header — hide the app top bar (logo)
+    // so questions don't render underneath it. Restore it everywhere else.
+    nav.style.display=(id==='s-prefs')?'none':'';
     if(id==='s-home'){nav.classList.add('lp-topnav-transparent');window.addEventListener('scroll',window._lpScrollHandler||function(){});}
     else{nav.classList.remove('lp-topnav-transparent');if(window._lpScrollHandler)window.removeEventListener('scroll',window._lpScrollHandler);}
   }
@@ -5546,8 +5596,10 @@ function epPickLoc(which,el){
   var parts=label.split(',').map(function(s){return s.trim();}).filter(Boolean);
   var city=parts[0]||label, country=parts.length>1?parts[parts.length-1]:'', state=parts.length>=3?parts[1]:'';
   var isFrom=(which==='from'||which==='pfrom');
+  var isLives=(which==='lives'||which==='plives');
   if(isFrom){ userData.from=label; userData.fromCity=city; userData.fromCountry=country; if(state)userData.fromState=state; }
-  else { userData.livesIn=label; userData.livesCity=city; userData.livesCountry=country; if(state)userData.livesState=state; }
+  else if(isLives){ userData.livesIn=label; userData.livesCity=city; userData.livesCountry=country; if(state)userData.livesState=state; }
+  else { return; } // e.g. onboarding travel-history city (which='obcity') — just fill the input, don't touch profile
   if(typeof dbSaveProfile==='function')dbSaveProfile();
   if(typeof persistSoon==='function')persistSoon();
 }
@@ -7295,17 +7347,135 @@ function sendWelcomeEmail(name,email){
   if(typeof toast==='function')toast('✉️ '+t('welcomeEmailToast'));
   openModal('sheet-welcome-email');
 }
-function dismissWelcomeEmail(){closeModal();showScreen('s-prefs');initPPills();}
+function dismissWelcomeEmail(){closeModal();if(typeof obStart==='function')obStart();else showScreen('s-prefs');}
 function initPPills(){document.querySelectorAll('.ppill').forEach(function(pill){if(pill._init)return;pill._init=true;pill.addEventListener('click',function(){var g=this.dataset.g;var multi=this.classList.contains('ppm');var on=this.classList.contains('on');function clr(p){p.classList.remove('on');p.style.background='';p.style.borderColor='';p.style.color='';var d=p.querySelector('.pdot');if(d)d.style.background=p.dataset.c||'var(--ember)';}function sel(p){var c=p.dataset.c||'var(--ember)';p.classList.add('on');p.style.background=c;p.style.borderColor=c;p.style.color='white';var d=p.querySelector('.pdot');if(d)d.style.background='rgba(255,255,255,.4)';}if(!multi){document.querySelectorAll('.ppill[data-g="'+g+'"]').forEach(function(x){clr(x);});if(!on)sel(this);}else{if(on)clr(this);else sel(this);}});});}
-function savePrefs(){
-  window._onboardingDone=true; // setup complete — block any late async onboarding from bouncing back
-  var c=document.querySelector('.ppill[data-g="currency"].on');if(c)userData.currency=c.dataset.v;
-  var bio=document.getElementById('pref-bio'); if(bio&&bio.value.trim())userData.bio=bio.value.trim();
-  var from=document.getElementById('ep-pfrom'); if(from&&from.value.trim())userData.from=from.value.trim();
-  var lives=document.getElementById('ep-plives'); if(lives&&lives.value.trim())userData.livesIn=lives.value.trim();
+function savePrefs(){ obFinish(); } // legacy entry — now runs the wizard finish
+// ══════════════════════════════════════════════════════════════════════════
+// ONBOARDING WIZARD ("Let's build your Trafolio") — replaces the old profile setup.
+// ══════════════════════════════════════════════════════════════════════════
+var _obStep=0, _OB_LAST=8, _obTrips=[], _obFollowLoaded=false;
+function obStart(){
+  _obStep=0; _obTrips=[]; _obFollowLoaded=false; window._onboardingDone=false;
+  // Fresh start: clear any inputs / pill selections from a previous run.
+  ['ep-plives','ep-pfrom','ep-obcity','ob-ig','ob-tk','ob-trip-date'].forEach(function(id){ var e=document.getElementById(id); if(e)e.value=''; });
+  document.querySelectorAll('#s-prefs .ppill.on').forEach(function(p){ p.classList.remove('on'); p.style.background=''; p.style.borderColor=''; p.style.color=''; var d=p.querySelector('.pdot'); if(d)d.style.background=p.dataset.c||'var(--ember)'; });
+  var nm=document.getElementById('ob-name'); if(nm)nm.value=(userData.name&&userData.name!=='John K')?userData.name:'';
+  var hd=document.getElementById('ob-handle'); if(hd)hd.value=(userData.username&&userData.username!=='johnk')?userData.username:'';
+  var av=document.getElementById('prefs-av'); if(av && !userData.avatar) av.textContent=((nm&&nm.value)||'?').charAt(0).toUpperCase();
+  if(typeof initPPills==='function') initPPills();
+  if(typeof showScreen==='function') showScreen('s-prefs');
+  renderObTrips(); obRender();
+}
+function obRender(){
+  document.querySelectorAll('#s-prefs .ob-step').forEach(function(s){ s.style.display=(parseInt(s.dataset.step,10)===_obStep)?'':'none'; });
+  var bars=document.getElementById('ob-bars'); if(bars){ var h=''; for(var i=1;i<=_OB_LAST;i++){ h+='<div style="height:2.5px;flex:1;border-radius:2px;background:rgba(255,255,255,'+(i<=_obStep?'0.85':'0.22')+')"></div>'; } bars.innerHTML=h; }
+  var back=document.getElementById('ob-back'); if(back)back.style.visibility=(_obStep>0)?'visible':'hidden';
+  var next=document.getElementById('ob-next'); if(next)next.textContent=(_obStep===0?'Start ✨':(_obStep===_OB_LAST?'Finish & see my profile 🎉':'Continue'));
+  var lbl=document.getElementById('ob-step-label'); if(lbl)lbl.textContent=(_obStep===0?'BUILD YOUR TRAFOLIO':('STEP '+_obStep+' OF '+_OB_LAST));
+  if(_obStep===8){ obRenderFollow();
+    if(!_obFollowLoaded && typeof dbLoadExploreUsers==='function'){ _obFollowLoaded=true; try{ var _p=dbLoadExploreUsers(); if(_p&&_p.then)_p.then(function(){ if(_obStep===8)obRenderFollow(); }); }catch(e){} } }
+  var body=document.querySelector('#s-prefs [style*="overflow-y:auto"]'); if(body)body.scrollTop=0;
+}
+// ── Onboarding: "Follow travellers to fill your feed" ──────────────────────
+var _OB_STYLE_KW={ luxury:['luxur','five-star','fine dining','boutique'], relaxing:['relax','beach','wellness','spa','slow'], adventure:['adventur','hike','trek','outdoor','dive','climb'], cultural:['culture','history','museum','art','heritage'], foodie:['food','eat','culinary','coffee','restaurant','chef'], nature:['nature','wildlife','mountain','safari','national park'], nightlife:['nightlife','party','bar','club'], budget:['budget','backpack'] };
+function _obFollowRow(u){
+  var isF=(userData.following||[]).some(function(f){ return f&&f.id===u.id; });
+  var row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--paper-3)';
+  var av=document.createElement('div');
+  av.style.cssText='width:44px;height:44px;border-radius:50%;flex-shrink:0;color:#fff;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;'+(u.photo?('background:#ccc center/cover no-repeat url('+u.photo+')'):('background:'+(u.color||'linear-gradient(135deg,var(--ember),var(--gold))')));
+  av.textContent=u.photo?'':((u.initial||(u.name||'?').charAt(0)||'?').toUpperCase());
+  var info=document.createElement('div'); info.style.cssText='flex:1;min-width:0';
+  info.innerHTML='<div style="font-family:Cormorant Garamond,serif;font-size:16px;font-weight:500;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escHtml(u.name||'')+'</div><div style="font-family:DM Mono,monospace;font-size:10px;color:var(--ink-4)">@'+escHtml(u.handle||'')+(u.trips?(' · '+u.trips+' '+String(t('trips')).toLowerCase()):'')+'</div>';
+  var btn=document.createElement('button');
+  btn.className='follow-btn '+(isF?'following':'follow'); btn.setAttribute('data-uid',u.id); btn.style.flexShrink='0';
+  btn.textContent=isF?(t('following2')||'Following'):(t('follow')||'Follow');
+  btn.addEventListener('click',function(){ if(typeof toggleFollow==='function')toggleFollow(u.id,this); });
+  row.appendChild(av); row.appendChild(info); row.appendChild(btn);
+  return row;
+}
+function obRenderFollow(){
+  var box=document.getElementById('ob-follow-list'); if(!box)return; box.innerHTML='';
+  var pool=[], byId={};
+  (typeof exploreUsers!=='undefined'?exploreUsers:[]).concat(typeof allUsers!=='undefined'?allUsers:[]).forEach(function(u){ if(u&&u.id!=null&&!byId[u.id]){ byId[u.id]=1; pool.push(u); } });
+  var shown={}, added=0, byPop=function(a,b){ return (b.trips||0)-(a.trips||0); };
+  function section(label,icon,users){ users=(users||[]).filter(function(u){ return !shown[u.id]; }).slice(0,6); if(!users.length)return;
+    var h=document.createElement('div'); h.style.cssText='font-family:DM Mono,monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ember-dk);padding:16px 0 2px'; h.textContent=(icon?icon+' ':'')+label; box.appendChild(h);
+    users.forEach(function(u){ shown[u.id]=1; added++; box.appendChild(_obFollowRow(u)); });
+  }
+  // 1. Based on interests — match your chosen travel styles against travellers' bios.
+  var styles=userData.travelStyle||[], kw=[]; styles.forEach(function(s){ (_OB_STYLE_KW[s]||[]).forEach(function(k){ kw.push(k); }); });
+  if(kw.length){ section('Recommended for you','✨', pool.filter(function(u){ var b=String(u.bio||'').toLowerCase(); return kw.some(function(k){ return b.indexOf(k)>=0; }); }).sort(byPop)); }
+  // 2. Popular near you (same country as where you live) — real members carry a location.
+  var myC=(typeof _userCountry==='function')?_userCountry(userData.livesIn):'';
+  if(myC && typeof _sameCountry==='function'){ section('Popular near you in '+myC,'📍', pool.filter(function(u){ return _sameCountry(u.livesIn,userData.livesIn); }).sort(byPop)); }
+  // 3. From your hometown
+  var myF=(typeof _userCountry==='function')?_userCountry(userData.from):'';
+  if(myF && myF.toLowerCase()!==String(myC||'').toLowerCase() && typeof _sameCountry==='function'){ section('From your hometown ('+myF+')','🏠', pool.filter(function(u){ return _sameCountry(u.from,userData.from); }).sort(byPop)); }
+  // 4. Popular on Trafolio
+  section('Popular on Trafolio','🌍', pool.slice().sort(byPop));
+  if(!added){ box.innerHTML='<div style="padding:22px 0;color:var(--ink-4);font-size:13px;text-align:center">We&#8217;ll suggest people to follow as more travellers join.</div>'; }
+}
+function obBack(){ if(_obStep>0){ _obStep--; obRender(); } }
+function obNext(){
+  if(_obStep===3){ var nm=((document.getElementById('ob-name')||{}).value||'').trim(); var hd=((document.getElementById('ob-handle')||{}).value||'').trim();
+    if(!nm){ if(typeof toast==='function')toast('What should we call you?'); return; }
+    if(!hd){ if(typeof toast==='function')toast('Pick a handle'); return; } }
+  if(_obStep<_OB_LAST){ _obStep++; obRender(); return; }
+  obFinish();
+}
+function obNameInput(v){ var av=document.getElementById('prefs-av'); if(av && !userData.avatar) av.textContent=((v||'?').trim().charAt(0)||'?').toUpperCase();
+  var hd=document.getElementById('ob-handle'); if(hd && !hd.value) hd.value=(v||'').toLowerCase().replace(/[^a-z0-9_.]/g,''); }
+function _obFmtDate(m){ try{ var p=String(m).split('-'); var d=new Date(parseInt(p[0],10),parseInt(p[1],10)-1,1); return d.toLocaleDateString('en-GB',{month:'short',year:'numeric'}); }catch(e){ return m; } }
+function obAddTrip(){
+  var inp=document.getElementById('ep-obcity'); var label=(inp&&inp.value||'').trim();
+  if(!label){ if(typeof toast==='function')toast('Type a city first'); return; }
+  var d=(document.getElementById('ob-trip-date')||{}).value||'';
+  _obTrips.push({label:label, date:d});
+  if(inp)inp.value=''; var dd=document.getElementById('ep-obcity-dd'); if(dd){dd.style.display='none';dd.innerHTML='';}
+  var dinp=document.getElementById('ob-trip-date'); if(dinp)dinp.value='';
+  renderObTrips(); if(inp)inp.focus();
+}
+function obRemoveTrip(i){ _obTrips.splice(i,1); renderObTrips(); }
+function renderObTrips(){
+  var box=document.getElementById('ob-trips'); if(!box)return;
+  if(!_obTrips.length){ box.innerHTML=''; return; } // nothing yet — the field + "Add" above is enough
+  var pills=_obTrips.map(function(t,i){ var city=(String(t.label).split(',')[0]||t.label).trim(); var fl=(typeof cityFlag==='function')?cityFlag(city):'📍'; var dt=t.date?(' · '+_obFmtDate(t.date)):'';
+    return '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border-radius:20px;padding:7px 12px;font-size:13px;font-weight:600">'+fl+' '+escHtml(city)+'<span style="color:var(--ink-4);font-weight:400">'+escHtml(dt)+'</span><button onclick="obRemoveTrip('+i+')" style="background:none;border:none;color:var(--ember-dk);cursor:pointer;font-size:16px;line-height:1;padding:0 0 0 2px">×</button></span>'; }).join('');
+  box.innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px">'+pills+'</div>'
+    +'<button type="button" onclick="var e=document.getElementById(\'ep-obcity\');if(e)e.focus()" style="display:inline-flex;align-items:center;gap:5px;margin-top:12px;background:#fff;border:1px dashed var(--paper-3);color:var(--ink-3);border-radius:20px;padding:8px 14px;font-size:13px;cursor:pointer;font-weight:600">+ Add another place</button>';
+}
+function _obCreateTrip(label, monthStr){
+  var parts=String(label).split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var city=parts[0]||label; var country=parts.length>1?parts[parts.length-1]:((typeof cityCountryName==='function'&&cityCountryName(city))||'');
+  var flag=(typeof cityFlag==='function')?cityFlag(city):'📍';
+  var startDate='', dates='';
+  if(monthStr){ try{ var p=String(monthStr).split('-'); startDate=p[0]+'-'+p[1]+'-01'; dates=_obFmtDate(monthStr); }catch(e){} }
+  var cover=(typeof USER_CITY_IMG!=='undefined' && USER_CITY_IMG[city])?USER_CITY_IMG[city]:(typeof FALLBACK_COVER!=='undefined'?FALLBACK_COVER:'');
+  var tr={ id:Date.now()+Math.floor(Math.random()*100000), dest:city, country:country||city, flag:flag, dates:dates, startDate:startDate, endDate:'', days:0, starred:false, cover:cover, notes:'', missed:[], apps:[], places:[], photos:[], itin:[], actualItin:[], expenses:[], privacy:'public', tripType:'city', cities:[], with:(userData.with||'') };
+  trips.push(tr);
+  if(typeof dbSaveTrip==='function'){ try{ dbSaveTrip(tr); }catch(e){} }
+}
+function obFinish(){
+  window._onboardingDone=true;
+  var nm=((document.getElementById('ob-name')||{}).value||'').trim(); if(nm)userData.name=nm;
+  var hd=((document.getElementById('ob-handle')||{}).value||'').trim(); if(hd)userData.username=hd.replace(/^@+/,'');
+  var lv=((document.getElementById('ep-plives')||{}).value||'').trim(); if(lv)userData.livesIn=lv;
+  var fr=((document.getElementById('ep-pfrom')||{}).value||'').trim(); if(fr)userData.from=fr;
+  var withSel=[].map.call(document.querySelectorAll('.ppill[data-g="obwith"].on'),function(p){return p.dataset.v;});
+  if(withSel.length){ userData.travelWith=withSel; userData.with=withSel[0]; }
+  var styleSel=[].map.call(document.querySelectorAll('.ppill[data-g="obstyle"].on'),function(p){return p.dataset.v;});
+  if(styleSel.length){ userData.travelStyle=styleSel; userData.style=styleSel[0]; }
+  var ig=((document.getElementById('ob-ig')||{}).value||'').trim().replace(/^@+/,''); if(ig)userData.instagram=ig;
+  var tk=((document.getElementById('ob-tk')||{}).value||'').trim().replace(/^@+/,''); if(tk)userData.tiktok=tk;
+  (_obTrips||[]).forEach(function(t){ _obCreateTrip(t.label, t.date); });
+  _obTrips=[];
   if(typeof dbSaveProfile==='function')dbSaveProfile();
-  if(typeof persistSoon==='function')persistSoon();
-  enterApp();
+  if(typeof persistState==='function')persistState(); else if(typeof persistSoon==='function')persistSoon();
+  if(typeof enterApp==='function')enterApp();
+  if(typeof toast==='function')setTimeout(function(){ toast('🎉 Your Trafolio is ready!'); },200);
+  // Land on the profile so they immediately SEE what they built (hooked).
+  setTimeout(function(){ if(typeof showScreen==='function')showScreen('s-profile'); if(typeof setActiveNav==='function')setActiveNav('bnav-profile'); if(typeof renderProfileGrid==='function')renderProfileGrid(); if(typeof renderProfileMap==='function')renderProfileMap(); }, 120);
 }
 function setProfilePhoto(input){var file=input.files[0];if(!file)return;var reader=new FileReader();reader.onload=function(e){
   // Compress to a small JPEG data-URL so it persists in localStorage (uncompressed blobs/data-URLs blow the quota).
@@ -17082,25 +17252,27 @@ function renderFeedMain() {
     });
   });
 
-  // Trips YOU posted to your feed (from the Share tab) — visible to you as "you added/updated a trip".
-  // Local copy renders instantly where you posted; the cloud copy (below) covers other devices/web.
-  var _ownFeedKeys={};
+  // CLOUD is the source of truth so the app, phone-web and laptop-web all show the SAME version.
+  // First note which of your own posts the cloud already has; the local copy is only used to fill a
+  // gap (a post you just made that hasn't synced yet) — otherwise the cloud version wins.
+  var _cloudOwnKeys={};
+  (typeof feedTripPosts!=='undefined'?feedTripPosts:[]).forEach(function(tp){ if(tp.user_id===userData.id) _cloudOwnKeys[tp.user_id+'|'+String(tp.dest||'').toLowerCase()]=1; });
+  // Your own posts not yet in the cloud (just posted / offline) — shown from local so they don't vanish.
   (trips||[]).forEach(function(tr,i){
     if(!tr.feedVisibility || tr.feedVisibility==='private') return;
-    var key=(userData.id||'me')+'|'+String(tr.dest||'').toLowerCase(); _ownFeedKeys[key]=1;
+    var key=(userData.id||'me')+'|'+String(tr.dest||'').toLowerCase();
+    if(_cloudOwnKeys[key]) return; // cloud has the authoritative copy — use that instead
     posts.unshift({ id:'mt'+i, userId:0, userName:userData.name, userInitial:(userData.name||'?')[0],
       userColor:'linear-gradient(135deg,var(--ember),var(--gold))', type:'trip', dest:tr.dest, flag:tr.flag,
       cover:((tr.cover&&tr.cover.indexOf('blob:')!==0)?tr.cover:''), days:tr.days||0, places:(tr.places||[]).length,
       with:tr.with||'', caption:tr.feedCaption||'', time:'', preview:'', vis:tr.feedVisibility, kind:tr.feedKind||'added',
       _own:true, _tripId:tr.id, _key:key });
   });
-  // Trips from the cloud: your own (so they show on web / any device) + people you follow.
-  // Skip any own post already rendered from local above (dedupe by user|dest key).
+  // Trips from the cloud: your own (authoritative, same on every device) + people you follow.
   (typeof feedTripPosts!=='undefined'?feedTripPosts:[]).forEach(function(tp,i){
     var key=tp.user_id+'|'+String(tp.dest||'').toLowerCase();
     var mine=(tp.user_id===userData.id);
-    if(mine && _ownFeedKeys[key]) return; // already shown from local
-    posts.unshift({ id:'ft'+i, userId:tp.user_id, userName:(mine?(userData.name||'You'):(tp._authorName||'Traveler')), userInitial:((mine?userData.name:tp._authorName)||'?')[0],
+    posts.unshift({ id:'ft'+i, userId:(mine?0:tp.user_id), userName:(mine?(userData.name||'You'):(tp._authorName||'Traveler')), userInitial:((mine?userData.name:tp._authorName)||'?')[0],
       userColor:'linear-gradient(135deg,var(--ember),var(--gold))', type:'trip', dest:tp.dest, flag:tp.flag,
       cover:((tp.cover&&tp.cover.indexOf('blob:')!==0)?tp.cover:''), days:tp.days||0, places:tp.places_count||0,
       with:tp.trip_with||'', caption:tp.caption||'', time:'', preview:'', vis:tp.visibility, kind:tp.kind||'added',
@@ -19131,7 +19303,27 @@ async function dbSyncLocalTrips(list){
   }
   if(typeof persistSoon==='function')persistSoon();
 }
-
+// Manual cross-device sync + diagnostic. Pushes any unsynced local trips up, pulls the cloud down,
+// and reports exactly what the cloud holds vs. what's shown — so "not syncing" becomes visible.
+async function syncNow(){
+  if(!sb){ if(typeof toast==='function')toast('Cloud not available on this build.'); return; }
+  if(!userData.id){ if(typeof toast==='function')toast('Not signed in — sign in on this device to sync.'); return; }
+  if(typeof toast==='function')toast('🔄 Syncing…');
+  try{
+    // 1. Can we even READ this account's trips? (surfaces RLS / auth problems)
+    var chk=await sb.from('trips').select('id',{count:'exact'}).eq('user_id',userData.id).limit(1);
+    if(chk.error){ try{ alert('Sync failed reading the cloud:\n\n'+chk.error.message+'\n\n(Usually a Row-Level-Security policy or a missing table.)'); }catch(e){} return; }
+    var cloudCount=(chk.count!=null)?chk.count:0;
+    // 2. Push any local-only trips up, then pull the cloud down and re-render.
+    if(typeof dbSyncLocalTrips==='function'){ try{ await dbSyncLocalTrips((trips||[]).filter(function(t){return !t.dbId;})); }catch(e){} }
+    if(typeof dbLoadUserTrips==='function') await dbLoadUserTrips();
+    if(typeof renderDash==='function')renderDash();
+    if(typeof renderProfileGrid==='function')renderProfileGrid();
+    if(typeof renderProfileMap==='function')try{renderProfileMap();}catch(e){}
+    var shown=(trips||[]).length;
+    if(typeof toast==='function')toast('✅ Synced · '+cloudCount+' trip'+(cloudCount===1?'':'s')+' in the cloud · '+shown+' shown here');
+  }catch(e){ try{ alert('Sync failed: '+e); }catch(_){} }
+}
 async function dbSaveProfile(){
   if(!sb||!userData.id)return;
   var base={
