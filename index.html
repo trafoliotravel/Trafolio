@@ -3132,7 +3132,7 @@ function postTripToFeed(){
   var throttled = currentTrip.feedPostedAt && (now - currentTrip.feedPostedAt) < 20*60*60*1000;
   currentTrip.feedVisibility=vis; currentTrip.feedKind=kind;
   if(!throttled) currentTrip.feedPostedAt=now;
-  if(typeof dbSaveTripPost==='function'){ dbSaveTripPost(currentTrip).then(function(res){ if(res&&res.ok===false && typeof toast==='function'){ toast('⚠️ '+(tt('feedPostFailed')||'Posted locally, but it couldn’t reach the cloud feed — your followers may not see it yet. Check your connection.')); } }); }
+  if(typeof dbSaveTripPost==='function'){ dbSaveTripPost(currentTrip).then(function(res){ if(res&&res.ok===false){ var why={'no-session':'You are not signed in on this device.','not-synced':'This trip isn’t saved to the cloud yet — open it, wait a moment, then post again.'}[res.reason]||('Database error: '+(res.reason||'unknown')); console.warn('postTripToFeed failed:', res.reason); if(typeof toast==='function')toast('⚠️ Cloud feed save failed'); try{ alert('Cloud feed save failed.\n\nReason: '+why+'\n\n(Screenshot or copy this and send it so it can be fixed.)'); }catch(e){} } }); }
   if(typeof persistSoon==='function')persistSoon();
   if(typeof toast==='function')toast('📣 '+(kind==='updated'?(tt('feedUpdated')||'Trip update shared to your feed'):(tt('feedShared')||'Trip shared to your feed'))+' · '+_visLabel(vis));
   _updateShareFeedStatus();
@@ -17083,21 +17083,28 @@ function renderFeedMain() {
   });
 
   // Trips YOU posted to your feed (from the Share tab) — visible to you as "you added/updated a trip".
+  // Local copy renders instantly where you posted; the cloud copy (below) covers other devices/web.
+  var _ownFeedKeys={};
   (trips||[]).forEach(function(tr,i){
     if(!tr.feedVisibility || tr.feedVisibility==='private') return;
+    var key=(userData.id||'me')+'|'+String(tr.dest||'').toLowerCase(); _ownFeedKeys[key]=1;
     posts.unshift({ id:'mt'+i, userId:0, userName:userData.name, userInitial:(userData.name||'?')[0],
       userColor:'linear-gradient(135deg,var(--ember),var(--gold))', type:'trip', dest:tr.dest, flag:tr.flag,
       cover:((tr.cover&&tr.cover.indexOf('blob:')!==0)?tr.cover:''), days:tr.days||0, places:(tr.places||[]).length,
       with:tr.with||'', caption:tr.feedCaption||'', time:'', preview:'', vis:tr.feedVisibility, kind:tr.feedKind||'added',
-      _own:true, _tripId:tr.id, _key:(userData.id||'me')+'|'+String(tr.dest||'').toLowerCase() });
+      _own:true, _tripId:tr.id, _key:key });
   });
-  // Trips people you follow posted (from the cloud).
+  // Trips from the cloud: your own (so they show on web / any device) + people you follow.
+  // Skip any own post already rendered from local above (dedupe by user|dest key).
   (typeof feedTripPosts!=='undefined'?feedTripPosts:[]).forEach(function(tp,i){
-    posts.unshift({ id:'ft'+i, userId:tp.user_id, userName:tp._authorName||'Traveler', userInitial:(tp._authorName||'?')[0],
+    var key=tp.user_id+'|'+String(tp.dest||'').toLowerCase();
+    var mine=(tp.user_id===userData.id);
+    if(mine && _ownFeedKeys[key]) return; // already shown from local
+    posts.unshift({ id:'ft'+i, userId:tp.user_id, userName:(mine?(userData.name||'You'):(tp._authorName||'Traveler')), userInitial:((mine?userData.name:tp._authorName)||'?')[0],
       userColor:'linear-gradient(135deg,var(--ember),var(--gold))', type:'trip', dest:tp.dest, flag:tp.flag,
       cover:((tp.cover&&tp.cover.indexOf('blob:')!==0)?tp.cover:''), days:tp.days||0, places:tp.places_count||0,
       with:tp.trip_with||'', caption:tp.caption||'', time:'', preview:'', vis:tp.visibility, kind:tp.kind||'added',
-      _postUserId:tp.user_id, _postDest:tp.dest, _key:tp.user_id+'|'+String(tp.dest||'').toLowerCase() });
+      _own:mine, _postUserId:tp.user_id, _postDest:tp.dest, _key:key });
   });
 
   if (!posts.length) {
@@ -19220,7 +19227,7 @@ async function dbSaveTripPost(trip){
   if(!sb||!userData.id||!trip)return {ok:false,reason:'no-session'};
   var realTripId = trip.dbId || (typeof ensureTripDbId==='function'? await ensureTripDbId(trip):null);
   if(!realTripId){ console.warn('dbSaveTripPost: trip not in cloud yet'); return {ok:false,reason:'not-synced'}; }
-  var row={ user_id:userData.id, trip_id:realTripId, dest:trip.dest||'', country:trip.country||'',
+  var row={ user_id:userData.id, trip_id:(realTripId==null?null:String(realTripId)), dest:trip.dest||'', country:trip.country||'',
     flag:trip.flag||'', cover:((trip.cover&&trip.cover.indexOf('blob:')!==0)?trip.cover:''), dates:trip.dates||'',
     days:trip.days||0, places_count:(trip.places||[]).length, trip_with:trip.with||'',
     caption:trip.feedCaption||'',
@@ -19246,7 +19253,7 @@ async function dbLoadFeedTripPosts(){
     var res=await sb.from('trip_posts').select('*').order('updated_at',{ascending:false}).limit(80);
     if(!res||res.error||!res.data){ return; }
     feedTripPosts=res.data.filter(function(tp){
-      if(tp.user_id===userData.id) return false;                 // own trips shown from local
+      if(tp.user_id===userData.id) return true;                  // your OWN posts — show on every device (web + app), not just where you posted
       if(tp.visibility==='public') return true;                  // public → anyone
       if(tp.visibility==='followers') return followIds.indexOf(tp.user_id)>=0; // trafollowers-only
       return false;                                              // private never
