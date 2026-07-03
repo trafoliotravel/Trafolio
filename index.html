@@ -1483,6 +1483,12 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     </div>
 
     <div class="ob-step" data-step="8" style="display:none">
+      <div class="ob-q">A little about you</div>
+      <div class="ob-sub">Write a few things about yourself or your travels — this shows on your profile.</div>
+      <textarea id="ob-bio" class="inp" rows="4" placeholder="e.g. Beirut-born, Dubai-based. Food-first explorer chasing sunsets, street eats and good coffee…" style="resize:vertical;min-height:110px;line-height:1.6"></textarea>
+    </div>
+
+    <div class="ob-step" data-step="9" style="display:none">
       <div class="ob-q">Follow travellers to fill your feed</div>
       <div class="ob-sub">Follow a few people and their latest trips, stories &amp; recs show up in your feed. You can change this anytime.</div>
       <div id="ob-follow-list"></div>
@@ -5742,6 +5748,7 @@ function promoGrant(msg){
 // 100-use cap). Fallback: if the server is unreachable/unconfigured, a valid code still works
 // so it bypasses checkout even with no backend wired.
 async function redeemPromo(){
+ try{
   var inp=document.getElementById('promo-input'), msg=document.getElementById('promo-msg');
   var code=(inp&&inp.value||'').trim(); var lc=code.toLowerCase();
   if(!code){ if(msg){msg.textContent=t('enterPromo');msg.style.color='var(--ink-4)';} return; }
@@ -5753,19 +5760,31 @@ async function redeemPromo(){
       var _ctrl=new AbortController(); var _to=setTimeout(function(){try{_ctrl.abort();}catch(e){}},5000);
       var r=await fetch(API_BASE+'/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code}),signal:_ctrl.signal});
       clearTimeout(_to);
-      if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.ok){ promoGrant(msg); return; } }
+      if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.ok){ promoGrant(msg); return; }
+        // Server reachable and explicitly said this isn't a free-Pro code → it may still be a
+        // checkout discount. Don't show a scary error — guide the user to Subscribe.
+        if(PROMO_LOCAL.indexOf(lc)>=0){ promoGrant(msg); return; }
+        _promoCheckoutHint(msg); return;
+      }
       else if(r.status===409){ // server says: fully redeemed (real per-code cap) → respect it
         var de=await r.json().catch(function(){return{};});
-        if(msg){msg.textContent=(de&&de.error)||t('promoInvalid');msg.style.color='#E8334A';}
+        if(msg){msg.textContent=(de&&de.error)||'This code has reached its limit.';msg.style.color='#E8334A';}
         return;
       }
       // 404 (endpoint not deployed) / 503 / 5xx / timeout → fall through to the local fallback below
       // so a valid code still works when the backend isn't wired up (e.g. on the website build).
     }catch(e){ /* network error / abort → fall through to local fallback */ }
   }
-  // 2) Fallback: code is valid locally → grant Pro and bypass checkout.
+  // 2) Fallback: recognised local code → grant Pro and bypass checkout.
   if(PROMO_LOCAL.indexOf(lc)>=0){ promoGrant(msg); return; }
-  if(msg){msg.textContent=t('promoInvalid');msg.style.color='#E8334A';}
+  // 3) Couldn't verify the code here (offline / backend not wired / a checkout-only discount).
+  // NOT an error — just point them at Subscribe, where the code (e.g. a Stripe coupon) still applies.
+  _promoCheckoutHint(msg);
+ }catch(err){ var m=document.getElementById('promo-msg'); if(m){ m.textContent='Couldn’t apply that here — tap Subscribe to use it at checkout.'; m.style.color='var(--ink-3)'; } }
+}
+// Neutral, non-error guidance when a promo can't be granted directly in-app.
+function _promoCheckoutHint(msg){
+  if(msg){ msg.textContent='Enter this code at checkout — tap Subscribe below to apply it.'; msg.style.color='var(--ink-3)'; }
 }
 // Stripe Checkout — the server (server.js) holds the secret key and creates the session.
 async function startCheckout(){
@@ -7353,11 +7372,11 @@ function savePrefs(){ obFinish(); } // legacy entry — now runs the wizard fini
 // ══════════════════════════════════════════════════════════════════════════
 // ONBOARDING WIZARD ("Let's build your Trafolio") — replaces the old profile setup.
 // ══════════════════════════════════════════════════════════════════════════
-var _obStep=0, _OB_LAST=8, _obTrips=[], _obFollowLoaded=false;
+var _obStep=0, _OB_LAST=9, _obTrips=[], _obFollowLoaded=false;
 function obStart(){
   _obStep=0; _obTrips=[]; _obFollowLoaded=false; window._onboardingDone=false;
   // Fresh start: clear any inputs / pill selections from a previous run.
-  ['ep-plives','ep-pfrom','ep-obcity','ob-ig','ob-tk','ob-trip-date'].forEach(function(id){ var e=document.getElementById(id); if(e)e.value=''; });
+  ['ep-plives','ep-pfrom','ep-obcity','ob-ig','ob-tk','ob-trip-date','ob-bio'].forEach(function(id){ var e=document.getElementById(id); if(e)e.value=''; });
   document.querySelectorAll('#s-prefs .ppill.on').forEach(function(p){ p.classList.remove('on'); p.style.background=''; p.style.borderColor=''; p.style.color=''; var d=p.querySelector('.pdot'); if(d)d.style.background=p.dataset.c||'var(--ember)'; });
   var nm=document.getElementById('ob-name'); if(nm)nm.value=(userData.name&&userData.name!=='John K')?userData.name:'';
   var hd=document.getElementById('ob-handle'); if(hd)hd.value=(userData.username&&userData.username!=='johnk')?userData.username:'';
@@ -7372,8 +7391,8 @@ function obRender(){
   var back=document.getElementById('ob-back'); if(back)back.style.visibility=(_obStep>0)?'visible':'hidden';
   var next=document.getElementById('ob-next'); if(next)next.textContent=(_obStep===0?'Start ✨':(_obStep===_OB_LAST?'Finish & see my profile 🎉':'Continue'));
   var lbl=document.getElementById('ob-step-label'); if(lbl)lbl.textContent=(_obStep===0?'BUILD YOUR TRAFOLIO':('STEP '+_obStep+' OF '+_OB_LAST));
-  if(_obStep===8){ obRenderFollow();
-    if(!_obFollowLoaded && typeof dbLoadExploreUsers==='function'){ _obFollowLoaded=true; try{ var _p=dbLoadExploreUsers(); if(_p&&_p.then)_p.then(function(){ if(_obStep===8)obRenderFollow(); }); }catch(e){} } }
+  if(_obStep===9){ obRenderFollow();
+    if(!_obFollowLoaded && typeof dbLoadExploreUsers==='function'){ _obFollowLoaded=true; try{ var _p=dbLoadExploreUsers(); if(_p&&_p.then)_p.then(function(){ if(_obStep===9)obRenderFollow(); }); }catch(e){} } }
   var body=document.querySelector('#s-prefs [style*="overflow-y:auto"]'); if(body)body.scrollTop=0;
 }
 // ── Onboarding: "Follow travellers to fill your feed" ──────────────────────
@@ -7430,6 +7449,10 @@ function _obFmtDate(m){ try{ var p=String(m).split('-'); var d=new Date(parseInt
 function obAddTrip(){
   var inp=document.getElementById('ep-obcity'); var label=(inp&&inp.value||'').trim();
   if(!label){ if(typeof toast==='function')toast('Type a city first'); return; }
+  // Free plan is capped at 3 trips — onboarding history counts too, so gate here as well as the + button.
+  var _lim=(typeof FREE_TRIP_LIMIT!=='undefined')?FREE_TRIP_LIMIT:3;
+  if(!(typeof isPro==='function'&&isPro()) && (_obTrips.length + ((typeof trips!=='undefined'&&trips)?trips.length:0)) >= _lim){
+    if(typeof toast==='function')toast('✈️ Free plan includes up to '+_lim+' trips — upgrade to Trafolio Pro anytime for unlimited.'); return; }
   var d=(document.getElementById('ob-trip-date')||{}).value||'';
   _obTrips.push({label:label, date:d});
   if(inp)inp.value=''; var dd=document.getElementById('ep-obcity-dd'); if(dd){dd.style.display='none';dd.innerHTML='';}
@@ -7466,6 +7489,7 @@ function obFinish(){
   if(withSel.length){ userData.travelWith=withSel; userData.with=withSel[0]; }
   var styleSel=[].map.call(document.querySelectorAll('.ppill[data-g="obstyle"].on'),function(p){return p.dataset.v;});
   if(styleSel.length){ userData.travelStyle=styleSel; userData.style=styleSel[0]; }
+  var bio=((document.getElementById('ob-bio')||{}).value||'').trim(); if(bio)userData.bio=bio;
   var ig=((document.getElementById('ob-ig')||{}).value||'').trim().replace(/^@+/,''); if(ig)userData.instagram=ig;
   var tk=((document.getElementById('ob-tk')||{}).value||'').trim().replace(/^@+/,''); if(tk)userData.tiktok=tk;
   (_obTrips||[]).forEach(function(t){ _obCreateTrip(t.label, t.date); });
