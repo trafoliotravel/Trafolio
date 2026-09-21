@@ -615,33 +615,6 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
   <button class="btn btn-ember btn-full" style="margin-top:8px" onclick="savePlace()" data-i18n="savePlace">Save place</button>
 </div>
 
-<!-- UPGRADE / PRO PAYWALL -->
-<div class="modal-sheet" id="sheet-upgrade">
-  <div class="modal-handle"></div>
-  <div style="text-align:center;padding:8px 0 2px">
-    <div style="font-size:34px;line-height:1">&#11088;</div>
-    <div class="modal-title" style="margin-top:4px">Trafo<em style="font-style:italic;color:#1B7FD0">l</em>io <span style="color:var(--ember)">Pro</span></div>
-    <div style="font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--ink);line-height:1.1">$4.99<span style="font-size:14px;color:var(--ink-4)">/<span data-i18n="perMonth">month</span></span></div>
-    <div id="upgrade-reason" style="font-size:13px;color:var(--ink-3);margin:8px 18px 0"></div>
-  </div>
-  <div style="margin:18px 4px;display:flex;flex-direction:column;gap:11px">
-    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#9854;</span><span data-i18n="proFeatUnlimited">Unlimited trips</span></div>
-    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#129302;</span><span data-i18n="proFeatAI">AI story &amp; itinerary writing</span></div>
-    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#128229;</span><span data-i18n="proFeatOffline">Offline access on the road</span></div>
-    <div style="display:flex;gap:10px;align-items:center;font-size:14px;color:var(--ink-2)"><span style="font-size:17px">&#128279;</span><span data-i18n="proFeatShare">Share every trip publicly</span></div>
-  </div>
-  <button id="upgrade-subscribe" class="btn btn-ember btn-full" onclick="startCheckout()" data-i18n="subscribeBtn">Subscribe — $4.99/mo</button>
-  <button id="upgrade-manage" class="btn btn-ghost btn-full" style="display:none;margin-top:8px" onclick="manageSubscription()" data-i18n="manageSub">Manage subscription</button>
-  <div id="upgrade-promo" style="margin-top:14px">
-    <div style="display:flex;gap:8px">
-      <input class="inp" id="promo-input" data-i18n-ph="promoPlaceholder" placeholder="Promo code" autocomplete="off" style="flex:1;text-transform:uppercase" onkeydown="if(event.key==='Enter'){event.preventDefault();redeemPromo();}">
-      <button type="button" class="btn btn-ghost" style="flex-shrink:0" onclick="redeemPromo()" data-i18n="applyCode">Apply</button>
-    </div>
-    <div id="promo-msg" style="font-size:12px;margin-top:7px;text-align:center;min-height:14px"></div>
-  </div>
-  <div style="font-size:11px;color:var(--ink-4);text-align:center;margin-top:12px" data-i18n="cancelAnytime">Cancel anytime. Your past trips always stay yours to view.</div>
-</div>
-
 <!-- TRAVELLER TIER (Global + Local standing) -->
 <div class="modal-sheet" id="sheet-tier">
   <div class="modal-handle"></div>
@@ -1349,7 +1322,10 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
       <span data-i18n="continueApple">Continue with Apple</span>
     </button>
 
-    <button onclick="doSocialAuth('facebook')" style="width:100%;display:flex;align-items:center;justify-content:center;gap:12px;padding:15px 20px;background:#1877F2;border:none;border-radius:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:28px">
+    <!-- Facebook sign-in temporarily hidden: the Meta app is still in Development Mode ("App not
+         active" for anyone outside the dev team). Re-enable by changing style="display:none" to
+         style="display:flex" below once the Facebook app is switched to Live in developers.facebook.com. -->
+    <button onclick="doSocialAuth('facebook')" style="display:none;width:100%;align-items:center;justify-content:center;gap:12px;padding:15px 20px;background:#1877F2;border:none;border-radius:14px;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:28px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M24 12.07C24 5.4 18.63 0 12 0S0 5.4 0 12.07C0 18.1 4.39 23.1 10.13 24v-8.44H7.08v-3.49h3.05V9.41c0-3.02 1.79-4.69 4.53-4.69 1.31 0 2.68.24 2.68.24v2.97h-1.51c-1.49 0-1.95.93-1.95 1.89v2.25h3.32l-.53 3.49h-2.79V24C19.61 23.1 24 18.1 24 12.07"/></svg>
       <span data-i18n="continueFacebook">Continue with Facebook</span>
     </button>
@@ -2283,6 +2259,15 @@ window._shareRoute=null; window._shareViewActive=false;
 var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? String(window.TRAFOLIO_API_BASE).replace(/\/+$/,'') : 'https://trafolio-api.onrender.com';
 
 
+// Persistent (survives a reload / new tab / re-login) record of "this device has already run
+// onboarding for this account" — separate from window._onboardingDone, which is only in-memory
+// and resets on every fresh page load. Without this, a flaky/late cloud profile lookup (RLS lag,
+// a dropped write, a slow network) can look like "no profile yet" and re-open the whole "Let's
+// build your Trafolio" wizard for a RETURNING user — which also lets them re-type their name/
+// handle, silently overwriting what's supposed to be a permanent username.
+function _obDoneKey(){ return 'trafolio_onboarded::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||(userData&&userData.id)||''); }
+function _obMarkDone(){ try{ localStorage.setItem(_obDoneKey(),'1'); }catch(e){} }
+function _obIsDone(){ try{ return localStorage.getItem(_obDoneKey())==='1'; }catch(e){ return false; } }
 // ── Supabase session handling ─────────────────────────────────────────────
 (function initSupabaseSession(){
   if(!sb) return;
@@ -2297,6 +2282,10 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
     // which the brand-new OAuth/Google path passes (we KNOW they're new, so onboard even though
     // enterApp() already showed s-dash; otherwise Google users never get the welcome + setup).
     if(window._onboardingDone) return;
+    // Belt-and-braces: this device has a persistent record of already completing onboarding for
+    // this account — never re-show it, even if the cloud "does a profile exist" check comes back
+    // empty/late (which is exactly what caused onboarding to loop back on a returning user).
+    if(_obIsDone()){ window._onboardingDone=true; return; }
     if(!force){ var _cur=document.querySelector('.screen.active'); if(_cur && _cur.id!=='s-prefs' && _cur.id!=='s-auth' && typeof appMode!=='undefined' && appMode) return; }
     try{
       if(typeof obStart==='function') obStart();               // the new "Let's build your Trafolio" wizard
@@ -2337,6 +2326,10 @@ var API_BASE = (typeof window!=='undefined' && window.TRAFOLIO_API_BASE) ? Strin
       sb.from('profiles').select('*').eq('id', userData.id).maybeSingle().then(function(pr){
         var existing = pr.data;
         if(existing){
+          // A real profile row exists in the cloud → this is a confirmed returning user. Mark it
+          // persistently on THIS device too, so onboarding never gets a chance to re-open for them.
+          window._onboardingDone=true;
+          if(typeof _obMarkDone==='function') _obMarkDone();
           // Restore saved profile data
           if(existing.bio) userData.bio = existing.bio;
           if(existing.avatar) userData.avatar = existing.avatar;
@@ -2822,7 +2815,6 @@ function openTrip(id){
   setTimeout(function(){renderShareTab();},100);
 }
 function openShareSheet(){
-  if(currentTrip && !canShareTrip(currentTrip)){ openPaywall(t('paywallShare')); return; }
   // Share is no longer a tab — activate its content directly (from the hero "Share Trip" button).
   currentTab='share';
   document.querySelectorAll('#trip-tabs .tab-btn').forEach(function(b){b.classList.remove('active');});
@@ -5730,102 +5722,10 @@ function canAddTrip(){ return true; } // unlimited trips for all users
 // Trip limit removed — no trip is gated behind Pro anymore (old requiresPro flags are ignored).
 function tripRequiresPro(t){ return false; }
 function canShareTrip(t){ return isPro() || !tripRequiresPro(t); }
-function openPaywall(reason){
-  var sub=document.getElementById('upgrade-reason');
-  if(sub)sub.textContent = reason || t('paywallDefault');
-  // reflect current plan in the sheet
-  var mng=document.getElementById('upgrade-manage'); if(mng)mng.style.display=isPro()?'block':'none';
-  var go=document.getElementById('upgrade-subscribe'); if(go)go.style.display=isPro()?'none':'block';
-  var promo=document.getElementById('upgrade-promo'); if(promo)promo.style.display=isPro()?'none':'block';
-  var pm=document.getElementById('promo-msg'); if(pm)pm.textContent='';
-  var pi=document.getElementById('promo-input'); if(pi)pi.value='';
-  openModal('sheet-upgrade');
-}
-// Known good codes for the client-side fallback (used only when the backend isn't reachable,
-// so a valid promo can still bypass checkout in demo / pre-launch). The server enforces the
-// real per-code usage cap; the fallback cannot.
-var PROMO_LOCAL=['trafolio90210'];
-function promoGrant(msg){
-  userData.plan='pro'; userData.subStatus='promo';
-  if(typeof applyPlanUI==='function')applyPlanUI();
-  if(typeof persistSoon==='function')persistSoon();                 // survive reload locally
-  try{ if(sb&&userData.id) sb.from('profiles').update({plan:'pro',sub_status:'promo'}).eq('id',userData.id); }catch(e){} // best-effort cross-device
-  if(msg){msg.textContent=t('promoApplied');msg.style.color='#1a9d5a';}
-  toast(t('proWelcome'));
-  setTimeout(function(){ closeModal(); if(typeof renderProfile==='function')renderProfile(); },1000);
-}
-// Redeem a promo code. Primary: SERVER-SIDE check against Supabase promo_codes (enforces the
-// 100-use cap). Fallback: if the server is unreachable/unconfigured, a valid code still works
-// so it bypasses checkout even with no backend wired.
-async function redeemPromo(){
- try{
-  var inp=document.getElementById('promo-input'), msg=document.getElementById('promo-msg');
-  var code=(inp&&inp.value||'').trim(); var lc=code.toLowerCase();
-  if(!code){ if(msg){msg.textContent=t('enterPromo');msg.style.color='var(--ink-4)';} return; }
-  if(msg){msg.textContent='…';msg.style.color='var(--ink-4)';}
-  // 1) Secure server path (only when we have a Supabase user to attribute the redemption to).
-  if(sb && userData.id){
-    try{
-      // Hard 5s timeout so a slow/unreachable endpoint can't leave Apply stuck on "…".
-      var _ctrl=new AbortController(); var _to=setTimeout(function(){try{_ctrl.abort();}catch(e){}},5000);
-      var r=await fetch(API_BASE+'/api/redeem-promo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,code:code}),signal:_ctrl.signal});
-      clearTimeout(_to);
-      if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.ok){ promoGrant(msg); return; }
-        // Server reachable and explicitly said this isn't a free-Pro code → it may still be a
-        // checkout discount. Don't show a scary error — guide the user to Subscribe.
-        if(PROMO_LOCAL.indexOf(lc)>=0){ promoGrant(msg); return; }
-        _promoCheckoutHint(msg); return;
-      }
-      else if(r.status===409){ // server says: fully redeemed (real per-code cap) → respect it
-        var de=await r.json().catch(function(){return{};});
-        if(msg){msg.textContent=(de&&de.error)||'This code has reached its limit.';msg.style.color='#E8334A';}
-        return;
-      }
-      // 404 (endpoint not deployed) / 503 / 5xx / timeout → fall through to the local fallback below
-      // so a valid code still works when the backend isn't wired up (e.g. on the website build).
-    }catch(e){ /* network error / abort → fall through to local fallback */ }
-  }
-  // 2) Fallback: recognised local code → grant Pro and bypass checkout.
-  if(PROMO_LOCAL.indexOf(lc)>=0){ promoGrant(msg); return; }
-  // 3) Couldn't verify the code here (offline / backend not wired / a checkout-only discount).
-  // NOT an error — just point them at Subscribe, where the code (e.g. a Stripe coupon) still applies.
-  _promoCheckoutHint(msg);
- }catch(err){ var m=document.getElementById('promo-msg'); if(m){ m.textContent='Couldn’t apply that here — tap Subscribe to use it at checkout.'; m.style.color='var(--ink-3)'; } }
-}
-// Neutral, non-error guidance when a promo can't be granted directly in-app.
-function _promoCheckoutHint(msg){
-  if(msg){ msg.textContent='Enter this code at checkout — tap Subscribe below to apply it.'; msg.style.color='var(--ink-3)'; }
-}
-// Stripe Checkout — the server (server.js) holds the secret key and creates the session.
-async function startCheckout(){
-  if(!sb||!userData.id){ toast(t('signInToSubscribe')); return; }
-  var btn=document.getElementById('upgrade-subscribe');
-  try{
-    if(btn){btn.disabled=true;btn.textContent='…';}
-    var r=await fetch(API_BASE+'/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id,email:userData.email||''})});
-    var d=await r.json();
-    if(d&&d.url){ location.href=d.url; return; }
-    toast((d&&d.error)||t('checkoutUnavailable'));
-  }catch(e){ toast(t('checkoutUnavailable')); }
-  if(btn){btn.disabled=false;btn.textContent=t('subscribeBtn');}
-}
-async function manageSubscription(){
-  if(!sb||!userData.id){ toast(t('signInToSubscribe')); return; }
-  try{
-    var r=await fetch(API_BASE+'/api/portal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id})});
-    var d=await r.json();
-    if(d&&d.url){ location.href=d.url; return; }
-    toast((d&&d.error)||t('checkoutUnavailable'));
-  }catch(e){ toast(t('checkoutUnavailable')); }
-}
-// Pull the latest plan from the DB (e.g. after returning from Stripe Checkout).
-async function refreshSubStatus(){
-  if(!sb||!userData.id) return;
-  try{
-    var r=await sb.from('profiles').select('plan,sub_status').eq('id',userData.id).maybeSingle();
-    if(r&&r.data){ userData.plan=r.data.plan||'free'; userData.subStatus=r.data.sub_status||null; applyPlanUI(); }
-  }catch(e){}
-}
+// Trip limit + share lock are permanently open (see above) so the Stripe/Pro checkout,
+// paywall modal, promo-code redemption and subscription-management flows they used to gate
+// are unreachable from the UI and have been removed. isPro()/applyPlanUI() stay: a "Pro" badge
+// can still show for any account whose profiles.plan is already 'pro' in Supabase.
 function applyPlanUI(){
   // Trips are unlimited for everyone — no upgrade button / trips-left hint. The plan row only
   // surfaces a PRO badge for promo/Pro members; free users see nothing.
@@ -5833,19 +5733,6 @@ function applyPlanUI(){
   if(row) row.style.display=isPro()?'flex':'none';
   var badge=document.getElementById('profile-plan-badge');
   if(badge) badge.textContent=t('planPro')||'Pro';
-}
-function onProfileUpgradeClick(){ if(isPro())unsubscribePro(); else openPaywall(); }
-// Cancel the subscription. Cancels the real Stripe subscription when wired (server),
-// and always downgrades the user to Free locally so it works in demo / promo too.
-function unsubscribePro(){
-  if(!confirm(t('confirmUnsub'))) return;
-  try{ if(sb&&userData.id) fetch(API_BASE+'/api/cancel-sub',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({userId:userData.id})}); }catch(e){}
-  userData.plan='free'; userData.subStatus='canceled';
-  if(typeof applyPlanUI==='function')applyPlanUI();
-  if(typeof persistSoon==='function')persistSoon();
-  try{ if(sb&&userData.id) sb.from('profiles').update({plan:'free',sub_status:'canceled'}).eq('id',userData.id); }catch(e){}
-  if(typeof renderProfile==='function')renderProfile();
-  toast(t('unsubscribed'));
 }
 // City vs Country (multi-city) toggle in the Add Trip flow.
 function setTripType(tt){
@@ -5924,7 +5811,6 @@ function closeAddDial(){
   var btn=document.getElementById('bnav-add-btn'); if(btn)btn.style.transform='';
 }
 function openAddTrip(){
-  if(!canAddTrip()){ openPaywall(t('paywallTripLimit')); return; }
   resetAddTripForm();
   openModal('sheet-add-trip');
   // Always open scrolled to the TOP (it was sometimes showing scrolled down).
@@ -5934,7 +5820,6 @@ function openAddTrip(){
   },60);
 }
 function createTrip(){
-  if(!canAddTrip()){ closeModal(); openPaywall(t('paywallTripLimit')); return; }
   var ls=document.getElementById('at-loc-search');
   var dh=document.getElementById('at-dest');
   var dest=(dh&&dh.value?dh.value:(ls?ls.value:'')).trim();
@@ -7488,8 +7373,12 @@ function _obCreateTrip(label, monthStr){
 }
 function obFinish(){
   window._onboardingDone=true;
+  if(typeof _obMarkDone==='function') _obMarkDone();
   var nm=((document.getElementById('ob-name')||{}).value||'').trim(); if(nm)userData.name=nm;
-  var hd=((document.getElementById('ob-handle')||{}).value||'').trim(); if(hd)userData.username=hd.replace(/^@+/,'');
+  // Username is permanent once set (same rule the Edit Profile screen enforces) — onboarding may
+  // only CHOOSE it for a genuine first-timer, never silently change an existing one.
+  var _hadRealHandle=!!(userData.username && userData.username!=='johnk');
+  var hd=((document.getElementById('ob-handle')||{}).value||'').trim(); if(hd && !_hadRealHandle)userData.username=hd.replace(/^@+/,'');
   var lv=((document.getElementById('ep-plives')||{}).value||'').trim(); if(lv)userData.livesIn=lv;
   var fr=((document.getElementById('ep-pfrom')||{}).value||'').trim(); if(fr)userData.from=fr;
   var withSel=[].map.call(document.querySelectorAll('.ppill[data-g="obwith"].on'),function(p){return p.dataset.v;});
@@ -8709,6 +8598,8 @@ const S={
     orderBook:'📚 Order book',
     placesWeLoved:'Places we loved',
     editProfile:'Edit profile',
+    syncFromCloud:'Sync from cloud',
+    inviteFromContacts:'From contacts',
     followers:'Trafollowers',
     following:'Following',
     profileVisibility:'Profile visibility',
@@ -21206,15 +21097,6 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
   if(typeof initSearchClears==='function')initSearchClears();
   // Re-run after the whole document (incl. later screens/modals) has parsed.
   window.addEventListener('load', function(){ if(typeof initSearchClears==='function')initSearchClears(); });
-  // Returning from Stripe Checkout — confirm the new plan and clean the URL.
-  try{
-    if(/[?&]checkout=success/.test(location.search)){
-      setTimeout(function(){ if(typeof refreshSubStatus==='function')refreshSubStatus(); toast(t('proWelcome')); },1200);
-      if(history&&history.replaceState)history.replaceState({},'',location.pathname);
-    } else if(/[?&]checkout=cancel/.test(location.search)){
-      if(history&&history.replaceState)history.replaceState({},'',location.pathname);
-    }
-  }catch(e){}
   initGoogleAuth();
   // Shared trip/profile link (/<username>/<slug>) → resolve + show the public share view.
   if(window._shareRoute && typeof _resolveShareRoute==='function'){ setTimeout(_resolveShareRoute, 0); }
