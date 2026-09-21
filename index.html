@@ -1955,8 +1955,7 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
     .bb-format-card.selected{border-color:var(--ember);background:rgba(0,168,232,.06)}
     .bb-format-card.bb-format-wide{grid-column:1 / -1}
     .bb-format-name{font-size:14px;font-weight:600;color:var(--ink)}
-    .bb-format-spec{font-size:10px;color:var(--ink-4);margin:3px 0 8px;font-family:'DM Mono',monospace;letter-spacing:.03em}
-    .bb-format-price{font-family:'Cormorant Garamond',serif;font-size:23px;color:var(--ink)}
+    .bb-format-spec{font-size:10px;color:var(--ink-4);margin:3px 0;font-family:'DM Mono',monospace;letter-spacing:.03em}
     .bb-cover-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--ink-3);margin-bottom:8px}
     .bb-cover-row{display:flex;gap:8px;margin-bottom:18px}
     .bb-cover-pill{border:1.5px solid var(--paper-3);border-radius:30px;padding:8px 16px;font-size:13px;cursor:pointer;color:var(--ink-3)}
@@ -1998,27 +1997,22 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
           <div class="bb-format-card selected" data-sku="BOOK-FE-A4-L-HARD-G" data-name="A4 Landscape" data-price="A$22.50" onclick="bbSelectFormat(this)">
             <div class="bb-format-name" data-i18n="bbFmtA4">A4 Landscape</div>
             <div class="bb-format-spec">Gloss &middot; 200gsm &middot; Hardcover</div>
-            <div class="bb-format-price">A$22.50</div>
           </div>
           <div class="bb-format-card" data-sku="BOOK-FE-A5-L-HARD-G" data-name="A5 Landscape" data-price="A$19.50" onclick="bbSelectFormat(this)">
             <div class="bb-format-name" data-i18n="bbFmtA5L">A5 Landscape</div>
             <div class="bb-format-spec">Gloss &middot; 200gsm &middot; Hardcover</div>
-            <div class="bb-format-price">A$19.50</div>
           </div>
           <div class="bb-format-card" data-sku="BOOK-FE-A4-P-HARD-G" data-name="A4 Portrait" data-price="A$22.50" onclick="bbSelectFormat(this)">
             <div class="bb-format-name" data-i18n="bbFmtA4P">A4 Portrait</div>
             <div class="bb-format-spec">Gloss &middot; 200gsm &middot; Hardcover</div>
-            <div class="bb-format-price">A$22.50</div>
           </div>
           <div class="bb-format-card" data-sku="BOOK-FE-A5-P-HARD-G" data-name="A5 Portrait" data-price="A$19.50" onclick="bbSelectFormat(this)">
             <div class="bb-format-name" data-i18n="bbFmtA5P">A5 Portrait</div>
             <div class="bb-format-spec">Gloss &middot; 200gsm &middot; Hardcover</div>
-            <div class="bb-format-price">A$19.50</div>
           </div>
           <div class="bb-format-card bb-format-wide" data-sku="BOOK-FE-8_3-SQ-HARD-G" data-name="8&times;8&quot; Square" data-price="A$22.50" onclick="bbSelectFormat(this)">
             <div class="bb-format-name" data-i18n="bbFmtSquare">8&times;8&quot; Square</div>
             <div class="bb-format-spec">Gloss &middot; 200gsm &middot; Hardcover</div>
-            <div class="bb-format-price">A$22.50</div>
           </div>
         </div>
         <div class="bb-cover-label" data-i18n="bbCoverLabel">COVER FINISH</div>
@@ -2028,11 +2022,8 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
         </div>
         <div class="bb-actions">
           <button class="btn btn-ghost" onclick="bbPreview()">&#128065; <span data-i18n="bbPreviewBtn">Preview &amp; download</span></button>
-          <button type="button" class="btn btn-ghost" onclick="event.preventDefault();event.stopPropagation();bbPrintWindow();return false;">&#128424; <span data-i18n="bbPrint">Print</span></button>
-          <button class="btn btn-ghost" onclick="bbAddToCart()">&#128722; <span data-i18n="addToCartBtn">Add to cart</span></button>
-          <button class="btn btn-ember" onclick="bbBuy()">&#128213; <span data-i18n="buyNowBtn">Buy now</span></button>
+          <button type="button" class="btn btn-ember" onclick="event.preventDefault();event.stopPropagation();bbPrintWindow();return false;">&#128424; <span data-i18n="bbPrint">Print</span></button>
         </div>
-        <button id="bb-cart-btn" onclick="openCart()" style="display:none;width:100%;margin-top:10px;align-items:center;justify-content:center;gap:8px;background:var(--paper-2);border:1px solid var(--paper-3);border-radius:var(--r-md);padding:11px;font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--ink-2);cursor:pointer">&#128722; <span data-i18n="viewCartBtn">View cart</span> (<span id="bb-cart-count">0</span>)</button>
       </div>
     </div>
 
@@ -2137,10 +2128,10 @@ html, body { max-width: 100%; overflow-x: hidden; overscroll-behavior-x: none; }
       <div style="text-align:center;margin-bottom:12px">
         <button id="tier-badge" type="button" onclick="openTierCard()" title="Your traveller tier" style="display:inline-flex;align-items:center;gap:6px;background:var(--ember-lt);color:var(--ember-dk);border:none;border-radius:30px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer"><span id="tier-badge-emoji">🌍</span> <span id="tier-chip-label">Explorer</span> <span style="opacity:.55">›</span></button>
       </div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
-        <span id="profile-plan-badge" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:var(--paper-3);color:var(--ink-3)">Free</span>
-        <button id="profile-upgrade-btn" onclick="onProfileUpgradeClick()" style="background:var(--ember);color:#fff;border:none;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer" data-i18n="upgradeCta">Upgrade to Pro</button>
-        <span id="profile-trips-left" style="font-size:11px;color:var(--ink-4)"></span>
+      <!-- Upgrade button + trips-left removed: trips are unlimited for everyone. The plan row
+           only shows a PRO badge for promo/Pro members (hidden for free users). -->
+      <div id="profile-plan-row" style="display:none;align-items:center;justify-content:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <span id="profile-plan-badge" style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:var(--ember);color:#fff">Pro</span>
       </div>
       <!-- Stats row: Following | Edit button | Followers (OOO style) -->
       <div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:14px;flex-wrap:wrap">
@@ -2970,7 +2961,7 @@ function bbShotFail(img){
 // ─── MULTI-CITY (country) trips ──────────────────────────────────
 function refreshTripHeroMeta(){
   if(!currentTrip)return;var el=document.getElementById('trip-hero-meta');if(!el)return;
-  var hm=String(currentTrip.dates||'').toUpperCase()+' · '+(currentTrip.days||0)+' DAYS · '+(currentTrip.country||'').toUpperCase();
+  var hm=String(currentTrip.dates||'').toUpperCase()+' · '+(currentTrip.days||0)+' '+((currentTrip.days===1)?'DAY':'DAYS')+' · '+(currentTrip.country||'').toUpperCase();
   if(currentTrip.tripType==='country'&&currentTrip.cities&&currentTrip.cities.length)hm+=' · '+currentTrip.cities.length+' '+(currentTrip.cities.length===1?t('cityWord'):t('citiesWord')).toUpperCase();
   var tw=(typeof tripWithMeta==='function')?tripWithMeta(currentTrip.with):null;
   if(tw)hm+=' · '+tw[0]+' '+String(tw[1]).toUpperCase();
@@ -3236,7 +3227,7 @@ function _tripFeedCard(p,i){
       + (tw?'<div title="'+escHtml(tw[1])+'" style="position:absolute;top:10px;left:10px;width:26px;height:26px;border-radius:50%;background:rgba(0,28,48,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:14px">'+tw[0]+'</div>':'')
       +'<div style="position:absolute;left:12px;right:12px;bottom:10px">'
         +'<div style="font-family:Cormorant Garamond,serif;font-size:23px;font-weight:600;color:#fff;line-height:1.05;text-shadow:0 1px 4px rgba(0,0,0,.55)">'+escHtml(p.flag||'')+' '+escHtml(p.dest||'')+'</div>'
-        +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:#fff;opacity:.85;margin-top:4px">'+(p.days||0)+' '+String(t('days')).toUpperCase()+' · '+(p.places||0)+' '+String(t('places')).toUpperCase()+compTxt+'</div>'
+        +'<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.06em;color:#fff;opacity:.85;margin-top:4px">'+(p.days||0)+' '+((p.days===1)?'DAY':String(t('days')).toUpperCase())+' · '+(p.places||0)+' '+((p.places===1)?'PLACE':String(t('places')).toUpperCase())+compTxt+'</div>'
       +'</div>'
     +'</div>'
     +'<div style="display:flex;align-items:center;gap:18px;padding:10px 16px 12px">'
@@ -5001,6 +4992,7 @@ function renderProfileStories(){
       +'<span class="story-vis-badge">'+vm.icon+' '+escHtml(vm.label)+'</span>'
       +'<span style="margin-left:auto;display:flex;gap:12px;align-items:center">'
       +'<button type="button" class="pstory-like" onclick="event.stopPropagation();toggleStoryLike(\'u\'+'+i+')" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:'+(s.liked?'#E8334A':'var(--ink-4)')+'">'+(s.liked?'♥':'♡')+' '+(s.likes||0)+'</button>'
+      +'<button type="button" onclick="event.stopPropagation();editUserStory('+i+')" title="Edit story" style="background:none;border:none;cursor:pointer;font-size:12px;padding:0;color:var(--ink-4);line-height:1">✏️</button>'
       +'<button type="button" onclick="event.stopPropagation();deleteUserStory('+i+')" title="'+escHtml(tt('deleteStory')||'Delete story')+'" style="background:none;border:none;cursor:pointer;font-size:13px;padding:0;color:var(--ink-4);line-height:1">🗑️</button>'
       +'</span></div>'
       +'<div style="font-family:Cormorant Garamond,serif;font-size:18px;font-weight:500;color:var(--ink);line-height:1.2;margin-bottom:4px">'+escHtml(s.title||'')+'</div>'
@@ -5023,6 +5015,25 @@ function deleteUserStory(i){
   if(typeof renderProfileStories==='function')renderProfileStories();
   if(typeof refreshStoriesList==='function')refreshStoriesList(); // update Explore/Feed too
   if(typeof toast==='function')toast(tt('storyDeleted')||'Story deleted');
+}
+// Edit one of YOUR OWN stories (title + text).
+function editUserStory(i){
+  if(typeof userStories==='undefined'||!userStories[i])return;
+  var st=userStories[i]; var nt=null,nb=null;
+  try{ nt=prompt('Edit story title:', st.title||''); }catch(e){}
+  if(nt==null)return;
+  try{ nb=prompt('Edit story text:', st.body||''); }catch(e){}
+  if(nb==null)return;
+  st.title=String(nt).trim(); st.body=String(nb).trim();
+  if(typeof dbUpdateStory==='function')dbUpdateStory(st);
+  if(typeof persistSoon==='function')persistSoon();
+  if(typeof renderProfileStories==='function')renderProfileStories();
+  if(typeof refreshStoriesList==='function')refreshStoriesList();
+  if(typeof toast==='function')toast(tt('storyUpdated')||'Story updated');
+}
+function dbUpdateStory(story){
+  if(!sb||!userData.id||!story||!story.dbId)return;
+  try{ sb.from('stories').update({title:story.title||'',body:story.body||''}).eq('id',story.dbId).then(function(r){ if(r&&r.error)console.warn('dbUpdateStory:',r.error.message); }); }catch(e){}
 }
 function dbDeleteStory(story){
   if(!sb||!userData.id||!story||!story.dbId)return;
@@ -5712,13 +5723,12 @@ function toggleProfilePrivacy(){userData.isPublic=!userData.isPublic;renderProfi
 var _tripWith='solo',_selectedCover=null,_tripType='city',_cityFilter='all',_placeCity='';
 // ─── MONETIZATION / ENTITLEMENTS ──────────────────────────────────
 // Free plan = up to 3 active trips. Pro ($4.99/mo) = unlimited trips + AI + offline.
-var FREE_TRIP_LIMIT=3;
+var FREE_TRIP_LIMIT=Infinity; // trips are unlimited for everyone (limit removed at launch)
 function isPro(){ return userData && userData.plan==='pro'; }
 function activeTripCount(){ return (trips||[]).length; }
-function canAddTrip(){ return isPro() || activeTripCount() < FREE_TRIP_LIMIT; }
-// A trip created beyond the free quota is a "Pro-era" trip: visible to others & shareable
-// only while the author is Pro. When Pro lapses, the owner can still view it.
-function tripRequiresPro(t){ return !!(t && t.requiresPro); }
+function canAddTrip(){ return true; } // unlimited trips for all users
+// Trip limit removed — no trip is gated behind Pro anymore (old requiresPro flags are ignored).
+function tripRequiresPro(t){ return false; }
 function canShareTrip(t){ return isPro() || !tripRequiresPro(t); }
 function openPaywall(reason){
   var sub=document.getElementById('upgrade-reason');
@@ -5817,11 +5827,12 @@ async function refreshSubStatus(){
   }catch(e){}
 }
 function applyPlanUI(){
+  // Trips are unlimited for everyone — no upgrade button / trips-left hint. The plan row only
+  // surfaces a PRO badge for promo/Pro members; free users see nothing.
+  var row=document.getElementById('profile-plan-row');
+  if(row) row.style.display=isPro()?'flex':'none';
   var badge=document.getElementById('profile-plan-badge');
-  if(badge){ badge.textContent=isPro()?t('planPro'):t('planFree'); badge.style.background=isPro()?'var(--ember)':'var(--paper-3)'; badge.style.color=isPro()?'#fff':'var(--ink-3)'; }
-  var up=document.getElementById('profile-upgrade-btn'); if(up){up.textContent=isPro()?t('unsubscribe'):t('upgradeCta');up.style.background=isPro()?'var(--paper-3)':'var(--ember)';up.style.color=isPro()?'var(--ink-2)':'#fff';}
-  var hint=document.getElementById('profile-trips-left');
-  if(hint){ if(isPro()){ hint.style.display='none'; } else { hint.style.display=''; hint.textContent=Math.max(0,FREE_TRIP_LIMIT-activeTripCount())+' '+t('freeTripsLeft'); } }
+  if(badge) badge.textContent=t('planPro')||'Pro';
 }
 function onProfileUpgradeClick(){ if(isPro())unsubscribePro(); else openPaywall(); }
 // Cancel the subscription. Cancels the real Stripe subscription when wired (server),
@@ -5953,7 +5964,7 @@ function createTrip(){
     }
   }
   // Trips created beyond the free quota are "Pro-era" — visible to others & shareable only while Pro.
-  var _requiresPro = activeTripCount() >= FREE_TRIP_LIMIT;
+  var _requiresPro = false; // unlimited trips — never flag a trip as Pro-gated
   var newTrip={id:Date.now(),dest:tripDest,country:tripCountry,flag:flag,dates:dateStr,startDate:from||'',endDate:to||'',days:days,starred:false,cover:cu,notes:'',missed:[],places:[],photos:[],itin:[],actualItin:[],expenses:[],privacy:'public',tripType:_tripType,cities:seedCities,requiresPro:_requiresPro,with:_tripWith||'solo'};
   trips.unshift(newTrip);closeModal();renderDash();toast(flag+' '+newTrip.dest+' '+t('addedToast'));
   dbSaveTrip(newTrip);
@@ -7449,10 +7460,6 @@ function _obFmtDate(m){ try{ var p=String(m).split('-'); var d=new Date(parseInt
 function obAddTrip(){
   var inp=document.getElementById('ep-obcity'); var label=(inp&&inp.value||'').trim();
   if(!label){ if(typeof toast==='function')toast('Type a city first'); return; }
-  // Free plan is capped at 3 trips — onboarding history counts too, so gate here as well as the + button.
-  var _lim=(typeof FREE_TRIP_LIMIT!=='undefined')?FREE_TRIP_LIMIT:3;
-  if(!(typeof isPro==='function'&&isPro()) && (_obTrips.length + ((typeof trips!=='undefined'&&trips)?trips.length:0)) >= _lim){
-    if(typeof toast==='function')toast('✈️ Free plan includes up to '+_lim+' trips — upgrade to Trafolio Pro anytime for unlimited.'); return; }
   var d=(document.getElementById('ob-trip-date')||{}).value||'';
   _obTrips.push({label:label, date:d});
   if(inp)inp.value=''; var dd=document.getElementById('ep-obcity-dd'); if(dd){dd.style.display='none';dd.innerHTML='';}
@@ -7565,11 +7572,35 @@ function svRender(){
     // how many stories there are. Many photos just make thinner segments.
     bars.innerHTML=_sv.items.map(function(_,k){ return '<div style="flex:1;height:3px;border-radius:2px;min-width:2px;background:rgba(255,255,255,'+((k<=_sv.i)?'0.95':'0.32')+')"></div>'; }).join('');
   }
+  if(typeof svRenderActions==='function')svRenderActions();
+  if(typeof dbLoadPhotoNotes==='function'){ var _k=_photoKey((it&&it.url)||''); dbLoadPhotoNotes(_k); }
   clearTimeout(_sv.timer); _sv.timer=setTimeout(svNext, 4200);
 }
 function svNext(){ if(_sv.i<_sv.items.length-1){ _sv.i++; svRender(); } else { svClose(); } }
 function svPrev(){ if(_sv.i>0){ _sv.i--; svRender(); } }
 function svClose(){ clearTimeout(_sv.timer); var v=document.getElementById('story-viewer'); if(v)v.style.display='none'; }
+// ── Private per-photo like + comment (visible ONLY to the viewer and the photo's owner) ──
+var _photoNotes={}; // { photoKey: {liked, comments:[{by,byId,text,_id}]} } — this device's view
+function _photoKey(u){ u=String(u||''); var h=0; for(var i=0;i<u.length;i++){ h=(h*31+u.charCodeAt(i))>>>0; } return 'p'+h.toString(36); }
+function _svOwnerId(){ try{ var up=document.getElementById('sheet-user-profile'); if(up&&up.classList.contains('on')&&typeof _viewedUserId!=='undefined'&&_viewedUserId) return _viewedUserId; }catch(e){} return userData.id||'me'; }
+function svRenderActions(){
+  var box=document.getElementById('sv-actions'); if(!box)return;
+  var it=_sv.items[_sv.i]||{}; var key=_photoKey(it.url); var owner=_svOwnerId();
+  var mineOwn=(owner===userData.id||owner==='me');
+  var n=_photoNotes[key]||{liked:false,comments:[]}; var cmts=(n.comments||[]);
+  var list=cmts.length?cmts.map(function(c){ return '<div style="font-size:13px;line-height:1.45;margin-bottom:3px"><b style="opacity:.92">'+escHtml(c.by||'You')+'</b> <span style="opacity:.92">'+escHtml(c.text)+'</span></div>'; }).join(''):'';
+  box.innerHTML=(list?'<div style="max-height:84px;overflow-y:auto;margin-bottom:8px;color:#fff">'+list+'</div>':'')
+    +'<div style="display:flex;align-items:center;gap:10px">'
+      +'<button type="button" onclick="svToggleLike()" style="background:none;border:none;cursor:pointer;font-size:23px;line-height:1;color:'+(n.liked?'#E8334A':'#fff')+';padding:0">'+(n.liked?'♥':'♡')+'</button>'
+      +'<input id="sv-cmt-input" placeholder="'+(mineOwn?'Add a private note…':'Comment privately…')+'" autocomplete="off" onfocus="clearTimeout(_sv.timer)" onkeydown="if(event.key===\'Enter\')svAddComment()" style="flex:1;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:22px;padding:10px 14px;color:#fff;font-size:14px;outline:none">'
+      +'<button type="button" onclick="svAddComment()" style="background:var(--ember);border:none;color:#fff;border-radius:22px;padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer">Send</button>'
+    +'</div>'
+    +'<div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:6px">🔒 '+(mineOwn?'Notes people leave here are private — only you &amp; they can see them.':'Only you &amp; the poster can see this.')+'</div>';
+}
+function svToggleLike(){ clearTimeout(_sv.timer); var it=_sv.items[_sv.i]||{}; var key=_photoKey(it.url); var n=_photoNotes[key]||{liked:false,comments:[]}; n.liked=!n.liked; _photoNotes[key]=n; if(typeof persistSoon==='function')persistSoon(); if(typeof dbSavePhotoNote==='function')dbSavePhotoNote(key,_svOwnerId(),{liked:n.liked}); svRenderActions(); }
+function svAddComment(){ clearTimeout(_sv.timer); var inp=document.getElementById('sv-cmt-input'); var txt=(inp&&inp.value||'').trim(); if(!txt)return; var it=_sv.items[_sv.i]||{}; var key=_photoKey(it.url); var n=_photoNotes[key]||{liked:false,comments:[]}; n.comments=n.comments||[]; n.comments.push({by:userData.name||'You',byId:userData.id,text:txt}); _photoNotes[key]=n; if(inp)inp.value=''; if(typeof persistSoon==='function')persistSoon(); if(typeof dbSavePhotoNote==='function')dbSavePhotoNote(key,_svOwnerId(),{text:txt}); svRenderActions(); }
+async function dbSavePhotoNote(key,owner,fields){ if(!sb||!userData.id)return; try{ var row=Object.assign({photo_key:key,owner_id:(owner==='me'?userData.id:owner),from_id:userData.id,from_name:userData.name||''},fields||{}); await sb.from('photo_notes').insert(row); }catch(e){} }
+async function dbLoadPhotoNotes(key){ if(!sb||!userData.id)return; try{ var r=await sb.from('photo_notes').select('*').eq('photo_key',key); if(r&&r.data){ var n=_photoNotes[key]||{liked:false,comments:[]}; n.comments=n.comments||[]; r.data.forEach(function(row){ if(row.text){ if(!n.comments.some(function(c){return c._id===row.id;})) n.comments.push({by:(row.from_id===userData.id?(userData.name||'You'):(row.from_name||'Someone')),byId:row.from_id,text:row.text,_id:row.id}); } if(row.liked && row.from_id===userData.id) n.liked=true; }); _photoNotes[key]=n; svRenderActions(); } }catch(e){} }
 // Your own trip circle → story of that trip's photos (or its cover image if none uploaded).
 function _tripStoryImgs(tr){
   var cc=(tr.dest||'')+((tr.country && String(tr.country).toLowerCase()!==String(tr.dest||'').toLowerCase())?(', '+tr.country):'');
@@ -7868,7 +7899,7 @@ function openChat(id){
   renderChat();
   if(_isRealChatPartner(_chatUser) && typeof dbLoadConversation==='function'){
     var _cu=_chatUser;
-    dbLoadConversation(_cu).then(function(rows){ if(!rows)return; conversations[_cu]=rows.map(function(m){return {from:(m.from_id===userData.id?'me':'them'),text:m.text,time:'',fromName:(m.from_id===userData.id?'':(m.from_name||''))};}); if(typeof _saveChats==='function')_saveChats(); if(_chatUser===_cu)renderChat(); });
+    dbLoadConversation(_cu).then(function(rows){ if(!rows)return; conversations[_cu]=rows.map(function(m){return {from:(m.from_id===userData.id?'me':'them'),text:m.text,time:'',fromName:(m.from_id===userData.id?'':(m.from_name||'')),_mid:m.id};}); if(typeof _saveChats==='function')_saveChats(); if(_chatUser===_cu)renderChat(); });
   }
   closeModal();openModal('sheet-chat');
   setTimeout(function(){var i=document.getElementById('chat-input');if(i)i.focus();},260);
@@ -7885,13 +7916,44 @@ function renderChat(){
   var box=document.getElementById('chat-messages');if(!box||_chatUser==null)return;
   var msgs=conversations[_chatUser]||[];
   if(!msgs.length){box.innerHTML='<div style="margin:auto;text-align:center;color:var(--ink-4);font-size:12px;padding:20px">'+t('noMessagesYet')+'</div>';return;}
-  box.innerHTML=msgs.map(function(m){
+  box.innerHTML=msgs.map(function(m,i){
     var mine=m.from==='me';
     var nameLbl=(!mine&&m.fromName)?'<div style="font-size:10px;color:var(--ink-4);font-family:DM Mono,monospace;margin:0 8px 1px;align-self:flex-start">'+escHtml(m.fromName)+'</div>':'';
-    return nameLbl+'<div style="align-self:'+(mine?'flex-end':'flex-start')+';max-width:78%;background:'+(mine?'var(--ember)':'#fff')+';color:'+(mine?'#fff':'var(--ink)')+';padding:9px 13px;border-radius:'+(mine?'16px 16px 4px 16px':'16px 16px 16px 4px')+';font-size:14px;line-height:1.4;box-shadow:0 1px 3px rgba(0,28,48,.08);margin:0 6px;word-break:break-word">'+escHtml(m.text)+'</div>';
+    var edited=m.edited?' <span style="font-size:9px;opacity:.7">('+'edited'+')</span>':'';
+    // Your OWN messages are tappable → edit / delete menu.
+    var tap=mine?' onclick="msgMenu('+i+',event)" title="Tap to edit or delete" style="cursor:pointer;':' style="';
+    return nameLbl+'<div'+tap+'align-self:'+(mine?'flex-end':'flex-start')+';max-width:78%;background:'+(mine?'var(--ember)':'#fff')+';color:'+(mine?'#fff':'var(--ink)')+';padding:9px 13px;border-radius:'+(mine?'16px 16px 4px 16px':'16px 16px 16px 4px')+';font-size:14px;line-height:1.4;box-shadow:0 1px 3px rgba(0,28,48,.08);margin:0 6px;word-break:break-word">'+escHtml(m.text)+edited+'</div>';
   }).join('');
   box.scrollTop=box.scrollHeight;
 }
+var _msgMenuIdx=-1;
+function closeMsgMenu(){ var p=document.getElementById('msg-menu'); if(p)p.remove(); }
+function msgMenu(i,ev){ if(ev&&ev.stopPropagation)ev.stopPropagation(); closeMsgMenu();
+  var m=(conversations[_chatUser]||[])[i]; if(!m||m.from!=='me')return;
+  var pop=document.createElement('div'); pop.id='msg-menu';
+  pop.style.cssText='position:fixed;z-index:600;background:#fff;border:1px solid var(--paper-3);border-radius:12px;box-shadow:0 10px 30px rgba(0,28,48,.24);overflow:hidden;min-width:140px';
+  pop.innerHTML='<div onclick="editMsg('+i+')" style="padding:12px 15px;font-size:14px;cursor:pointer;border-bottom:1px solid var(--paper-3);display:flex;align-items:center;gap:9px;color:var(--ink)">✏️ '+'Edit'+'</div>'
+    +'<div onclick="deleteMsg('+i+')" style="padding:12px 15px;font-size:14px;cursor:pointer;display:flex;align-items:center;gap:9px;color:#E8334A">🗑️ '+'Delete'+'</div>';
+  document.body.appendChild(pop);
+  var x=(ev&&ev.clientX)||120, y=(ev&&ev.clientY)||160, w=150, vw=window.innerWidth||360, vh=window.innerHeight||640;
+  pop.style.left=Math.max(8,Math.min(x, vw-w-10))+'px'; pop.style.top=Math.max(8,Math.min(y, vh-110))+'px';
+  setTimeout(function(){ document.addEventListener('click', closeMsgMenu, {once:true}); },0);
+}
+function editMsg(i){ closeMsgMenu(); var arr=conversations[_chatUser]||[]; var m=arr[i]; if(!m||m.from!=='me')return;
+  var nv=null; try{ nv=prompt('Edit your message:', m.text||''); }catch(e){}
+  if(nv==null)return; nv=String(nv).trim(); if(!nv){ return deleteMsg(i,true); }
+  m.text=nv; m.edited=true; if(typeof _saveChats==='function')_saveChats();
+  if(typeof dbUpdateMessage==='function')dbUpdateMessage(m,nv); renderChat();
+  if(typeof renderMessagesList==='function')try{renderMessagesList();}catch(e){}
+}
+function deleteMsg(i,skipConfirm){ closeMsgMenu(); var arr=conversations[_chatUser]||[]; var m=arr[i]; if(!m||m.from!=='me')return;
+  if(!skipConfirm && typeof confirm==='function' && !confirm('Delete this message?'))return;
+  arr.splice(i,1); if(typeof _saveChats==='function')_saveChats();
+  if(typeof dbDeleteMessage==='function')dbDeleteMessage(m); renderChat();
+  if(typeof renderMessagesList==='function')try{renderMessagesList();}catch(e){}
+}
+async function dbUpdateMessage(m,newText){ if(!sb||!userData.id||!m)return; try{ if(m._mid){ await sb.from('messages').update({text:newText}).eq('id',m._mid).eq('from_id',userData.id); } }catch(e){} }
+async function dbDeleteMessage(m){ if(!sb||!userData.id||!m)return; try{ if(m._mid){ await sb.from('messages').delete().eq('id',m._mid).eq('from_id',userData.id); } }catch(e){} }
 // ── Real cross-user social: follows + direct messages (Supabase-backed) ──
 function _cloudWarn(){ if(window._cloudWarned)return; window._cloudWarned=true; if(typeof toast==='function')toast('⚠️ Not signed in to the cloud — follows & messages won’t reach others. Sign in online.'); }
 async function dbFollow(u){ if(!u||!u.id)return; if(!sb||!userData.id){ _cloudWarn(); return; } try{ var r=await sb.from('follows').upsert({follower_id:userData.id,following_id:u.id},{onConflict:'follower_id,following_id'}); if(r&&r.error){ console.warn('dbFollow failed:',r.error.message); if(typeof toast==='function')toast('Follow didn\'t save: '+r.error.message); } }catch(e){ console.warn('dbFollow',e); } }
@@ -7929,7 +7991,7 @@ async function dbLoadSocial(){ // load the people who actually follow ME, so the
     }
   }catch(e){}
 }
-async function dbSendMessage(toId,text){ if(!sb||!userData.id){ _cloudWarn(); return; } try{ var r=await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}); if(r&&r.error){ console.warn('dbSendMessage failed:',r.error.message); if(typeof toast==='function')toast('Message didn\'t send: '+r.error.message); } }catch(e){ console.warn('dbSendMessage',e); if(typeof toast==='function')toast('Message didn\'t send'); } }
+async function dbSendMessage(toId,text,msgObj){ if(!sb||!userData.id){ _cloudWarn(); return; } try{ var r=await sb.from('messages').insert({from_id:userData.id,to_id:toId,from_name:userData.name||'',text:text}).select(); if(r&&r.error){ console.warn('dbSendMessage failed:',r.error.message); if(typeof toast==='function')toast('Message didn\'t send: '+r.error.message); } else if(msgObj && r&&r.data&&r.data[0]){ msgObj._mid=r.data[0].id; if(typeof _saveChats==='function')_saveChats(); } }catch(e){ console.warn('dbSendMessage',e); if(typeof toast==='function')toast('Message didn\'t send'); } }
 async function dbLoadConversation(otherId){ if(!sb||!userData.id)return null; try{ var r=await sb.from('messages').select('*').or('and(from_id.eq.'+userData.id+',to_id.eq.'+otherId+'),and(from_id.eq.'+otherId+',to_id.eq.'+userData.id+')').order('created_at',{ascending:true}); return (r&&r.data)||[]; }catch(e){ return null; } }
 function _msgSeenKey(){ return 'traf_msg_seen::'+((typeof _currentAccount!=='undefined'&&_currentAccount)||''); }
 // Per-conversation "last read" timestamps so each thread's unread clears independently
@@ -8131,11 +8193,12 @@ function sendChatMsg(){
   var i=document.getElementById('chat-input');if(!i||_chatUser==null)return;
   var txt=(i.value||'').trim();if(!txt)return;
   conversations[_chatUser]=conversations[_chatUser]||[];
-  conversations[_chatUser].push({from:'me',text:txt,time:t('justNow')});
+  var _mObj={from:'me',text:txt,time:t('justNow')};
+  conversations[_chatUser].push(_mObj);
   i.value='';renderChat();
   if(typeof _saveChats==='function')_saveChats();
   var uid=_chatUser;
-  if(_isRealChatPartner(uid)){ if(typeof dbSendMessage==='function')dbSendMessage(uid, txt); return; } // real delivery, no fake reply
+  if(_isRealChatPartner(uid)){ if(typeof dbSendMessage==='function')dbSendMessage(uid, txt, _mObj); return; } // real delivery, no fake reply
   setTimeout(function(){
     if(!conversations[uid])return;
     var replies=[t('autoReply1'),t('autoReply2'),t('autoReply3')];
@@ -21165,7 +21228,8 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
   <img id="sv-img" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000">
   <div onclick="svPrev()" style="position:absolute;left:0;top:72px;bottom:130px;width:32%;z-index:2"></div>
   <div onclick="svNext()" style="position:absolute;right:0;top:72px;bottom:130px;width:68%;z-index:2"></div>
-  <div id="sv-caption" style="position:absolute;left:0;right:0;bottom:0;padding:26px 18px calc(env(safe-area-inset-bottom,0px) + 24px);color:#fff;background:linear-gradient(to top,rgba(0,0,0,.72),transparent);z-index:3;pointer-events:none"></div>
+  <div id="sv-caption" style="position:absolute;left:0;right:0;bottom:96px;padding:26px 18px 8px;color:#fff;background:linear-gradient(to top,rgba(0,0,0,.72),transparent);z-index:3;pointer-events:none"></div>
+  <div id="sv-actions" style="position:absolute;left:0;right:0;bottom:0;z-index:5;padding:8px 12px calc(env(safe-area-inset-bottom,0px) + 12px);background:linear-gradient(to top,rgba(0,0,0,.85),rgba(0,0,0,.35));pointer-events:auto"></div>
   <button onclick="svClose()" aria-label="Close" style="position:absolute;top:calc(env(safe-area-inset-top,0px) + 22px);right:14px;z-index:4;width:34px;height:34px;border-radius:50%;border:none;background:rgba(0,0,0,.45);color:#fff;font-size:18px;cursor:pointer">✕</button>
 </div>
 <div class="modal-sheet" id="sheet-user-profile" style="max-height:88vh;overflow-y:auto"><div class="modal-handle"></div><div id="upm-body"></div></div>
